@@ -20,7 +20,7 @@ suppressPackageStartupMessages({
 #' @returns SingleCellExperiment with simulated data
 simulate_dataset <- function() {
     message("Simulating data...")
-    sim <- splatter::splatSimulate(
+    sim <- splatter::splatSimulateGroups(
         nGenes       = 10000,
         batchCells   = c(100, 100, 100, 100),
         batch.facLoc = c(0.10, 0.15, 0.25, 0.10),
