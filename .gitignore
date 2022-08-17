@@ -1,0 +1,4 @@
+.nextflow*
+_nf-trace/
+work/
+output/
