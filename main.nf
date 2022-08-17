@@ -16,6 +16,8 @@ nextflow.enable.dsl = 2
 ========================================================================================
 */
 
+include { DATASETS } from './workflows/datasets'
+
 //
 // WORKFLOW: Run main analysis pipeline, prints a message and ends
 //
@@ -27,6 +29,7 @@ workflow WF_MAIN {
     println '\n'
     println 'Current workflows are:'
     println '\n'
+    println '* WF_DATASETS - Download and prepare datasets'
     println '* WF_ALL - Run all analysis steps in order'
     println '\n'
     println 'Stopping.'
@@ -36,10 +39,17 @@ workflow WF_MAIN {
 }
 
 //
+// WORKFLOW: Download and prepare datasets
+//
+workflow WF_DATASETS {
+    DATASETS()
+}
+
+//
 // WORKFLOW: Run all analysis steps in order
 //
 workflow WF_ALL {
-
+    DATASETS()
 }
 
 /*
