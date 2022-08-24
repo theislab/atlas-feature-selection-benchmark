@@ -29,7 +29,7 @@ def select_all_features(adata):
     from pandas import DataFrame
 
     print("Selecting all features...")
-    selected_features = DataFrame({"Feature" : adata.var_names})
+    selected_features = DataFrame({"Feature": adata.var_names})
 
     return selected_features
 

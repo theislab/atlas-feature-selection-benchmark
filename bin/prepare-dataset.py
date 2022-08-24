@@ -47,15 +47,19 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     print("====== RAW DATA =======")
     print(f"Cells: {adata_raw.n_obs}")
     print(f"Genes: {adata_raw.n_vars}")
-    print(f"Batches ({len(adata_raw.obs[batch_col].cat.categories)}): {batch_col} ({', '.join(adata_raw.obs[batch_col].cat.categories)})")
-    print(f"Labels ({len(adata_raw.obs[label_col].cat.categories)}): {label_col} ({', '.join(adata_raw.obs[label_col].cat.categories)})")
+    print(
+        f"Batches ({len(adata_raw.obs[batch_col].cat.categories)}): {batch_col} ({', '.join(adata_raw.obs[batch_col].cat.categories)})"
+    )
+    print(
+        f"Labels ({len(adata_raw.obs[label_col].cat.categories)}): {label_col} ({', '.join(adata_raw.obs[label_col].cat.categories)})"
+    )
     print("Object:")
     print(adata_raw)
     print("=======================")
     print()
 
     print("Creating new AnnData...")
-    adata = AnnData(X = adata_raw.X.copy())
+    adata = AnnData(X=adata_raw.X.copy())
     adata.obs_names = adata_raw.obs_names.copy()
     adata.var_names = adata_raw.var_names.copy()
     adata.obs["Batch"] = adata_raw.obs[batch_col]
@@ -79,7 +83,9 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     adata.var = adata.var.drop(["n_counts"], axis=1)
 
     print("Splitting reference and query...")
-    print(f"Selecting {len(query_batches)} batches as the query: {', '.join(query_batches)}")
+    print(
+        f"Selecting {len(query_batches)} batches as the query: {', '.join(query_batches)}"
+    )
     is_query = adata.obs["Batch"].isin(query_batches)
     adata[adata.obs["Batch"].isin(query_batches)]
     reference = adata[~is_query].copy()
@@ -91,8 +97,12 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     print("====== REFERENCE DATA =======")
     print(f"Cells: {reference.n_obs}")
     print(f"Genes: {reference.n_vars}")
-    print(f"Batches ({len(reference.obs['Batch'].cat.categories)}): Batch ({', '.join(reference.obs['Batch'].cat.categories)})")
-    print(f"Labels ({len(reference.obs['Label'].cat.categories)}): Label ({', '.join(reference.obs['Label'].cat.categories)})")
+    print(
+        f"Batches ({len(reference.obs['Batch'].cat.categories)}): Batch ({', '.join(reference.obs['Batch'].cat.categories)})"
+    )
+    print(
+        f"Labels ({len(reference.obs['Label'].cat.categories)}): Label ({', '.join(reference.obs['Label'].cat.categories)})"
+    )
     print("Object:")
     print(reference)
     print("============================")
@@ -100,8 +110,12 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     print("====== QUERY DATA =======")
     print(f"Cells: {query.n_obs}")
     print(f"Genes: {query.n_vars}")
-    print(f"Batches ({len(query.obs['Batch'].cat.categories)}): Batch ({', '.join(query.obs['Batch'].cat.categories)})")
-    print(f"Labels ({len(query.obs['Label'].cat.categories)}): Label ({', '.join(query.obs['Label'].cat.categories)})")
+    print(
+        f"Batches ({len(query.obs['Batch'].cat.categories)}): Batch ({', '.join(query.obs['Batch'].cat.categories)})"
+    )
+    print(
+        f"Labels ({len(query.obs['Label'].cat.categories)}): Label ({', '.join(query.obs['Label'].cat.categories)})"
+    )
     print("Object:")
     print(query)
     print("=========================")
