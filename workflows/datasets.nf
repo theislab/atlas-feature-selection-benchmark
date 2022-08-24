@@ -106,7 +106,7 @@ workflow DATASETS {
         PREPARE_DATASET(datasets_ch)
 
     emit:
-        prep_ch = PREPARE_DATASET.out
+        prepared_datasets_ch = PREPARE_DATASET.out
 }
 
 /*

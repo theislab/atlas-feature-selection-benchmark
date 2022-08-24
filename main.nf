@@ -17,6 +17,7 @@ nextflow.enable.dsl = 2
 */
 
 include { DATASETS } from './workflows/datasets'
+include { METHODS } from './workflows/methods'
 
 //
 // WORKFLOW: Run main analysis pipeline, prints a message and ends
@@ -30,6 +31,7 @@ workflow WF_MAIN {
     println 'Current workflows are:'
     println '\n'
     println '* WF_DATASETS - Download and prepare datasets'
+    println '* WF_RUN - Run feature selection methods'
     println '* WF_ALL - Run all analysis steps in order'
     println '\n'
     println 'Stopping.'
@@ -48,8 +50,27 @@ workflow WF_DATASETS {
 //
 // WORKFLOW: Run all analysis steps in order
 //
+workflow WF_METHODS {
+
+    prepared_datasets_ch = Channel
+        .fromList(params.datasets)
+        .map { dataset ->
+            tuple(
+                dataset.name,
+                file(params.outdir + "/datasets-prepped/" + dataset.name + "-reference.h5ad"),
+                file(params.outdir + "/datasets-prepped/" + dataset.name + "-query.h5ad")
+            )
+        }
+
+    METHODS(prepared_datasets_ch)
+}
+
+//
+// WORKFLOW: Run all analysis steps in order
+//
 workflow WF_ALL {
     DATASETS()
+    METHODS(DATASETS.out.prepared_datasets_ch)
 }
 
 /*
