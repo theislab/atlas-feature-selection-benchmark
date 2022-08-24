@@ -1,0 +1,30 @@
+name: atlas-feature-selection-scanpy
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - anndata=0.8.0
+  - docopt=0.6.2
+  - h5py=3.7.0
+  - hdf5=1.12.2
+  - igraph=0.9.9
+  - leidenalg=0.8.10
+  - matplotlib-base=3.5.3
+  - matplotlib-inline=0.1.5
+  - networkx=2.8.5
+  - numba=0.55.2
+  - numpy=1.22.4
+  - pandas=1.4.3
+  - pip=22.2.2
+  - pynndescent=0.5.7
+  - python=3.9.13
+  - python-igraph=0.9.11
+  - scanpy=1.9.1
+  - scikit-learn=1.1.2
+  - scikit-misc=0.1.4
+  - scipy=1.9.0
+  - seaborn=0.11.2
+  - seaborn-base=0.11.2
+  - tqdm=4.64.0
+  - umap-learn=0.5.3
