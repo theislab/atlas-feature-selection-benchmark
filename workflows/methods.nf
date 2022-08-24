@@ -5,6 +5,29 @@
 ========================================================================================
 */
 
+process METHOD_ALL {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+
+    input:
+        tuple val(name), path(reference), path(query)
+
+    output:
+        tuple val(name), val("all"), path("all.tsv")
+
+    script:
+        """
+        method-all.py \\
+            --out-file "all.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "all.tsv"
+        """
+}
 
 /*
 ========================================================================================
@@ -19,10 +42,12 @@ workflow METHODS {
 
     main:
 
-        prepared_datasets_ch.view()
+        METHOD_ALL(prepared_datasets_ch)
 
-    // emit:
-    //     prepared_datasets_ch = PREPARE_DATASET.out
+        selected_features_ch = METHOD_ALL.out
+
+    emit:
+        selected_features_ch
 }
 
 /*
