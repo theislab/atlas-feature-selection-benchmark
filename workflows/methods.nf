@@ -142,19 +142,23 @@ workflow METHODS {
 
     main:
 
-        METHOD_ALL(prepared_datasets_ch)
-        METHOD_RANDOM_N500(prepared_datasets_ch)
-        METHOD_RANDOM_N1000(prepared_datasets_ch)
-        METHOD_RANDOM_N2000(prepared_datasets_ch)
-        METHOD_RANDOM_N5000(prepared_datasets_ch)
+        method_names = params.methods.collect{method -> method.name}
 
-        selected_features_ch = METHOD_ALL.out
+        all_ch          = method_names.contains("all")          ? METHOD_ALL(prepared_datasets_ch)          : Channel.empty()
+        random_n500_ch  = method_names.contains("random-N500")  ? METHOD_RANDOM_N500(prepared_datasets_ch)  : Channel.empty()
+        random_n1000_ch = method_names.contains("random-N1000") ? METHOD_RANDOM_N1000(prepared_datasets_ch) : Channel.empty()
+        random_n2000_ch = method_names.contains("random-N2000") ? METHOD_RANDOM_N2000(prepared_datasets_ch) : Channel.empty()
+        random_n5000_ch = method_names.contains("random-N5000") ? METHOD_RANDOM_N5000(prepared_datasets_ch) : Channel.empty()
+
+        selected_features_ch = all_ch
             .mix(
-                METHOD_RANDOM_N500.out,
-                METHOD_RANDOM_N1000.out,
-                METHOD_RANDOM_N2000.out,
-                METHOD_RANDOM_N5000.out
+                random_n500_ch,
+                random_n1000_ch,
+                random_n2000_ch,
+                random_n5000_ch
             )
+
+        selected_features_ch.view()
 
     emit:
         datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
