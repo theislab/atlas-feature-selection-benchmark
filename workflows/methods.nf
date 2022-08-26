@@ -8,13 +8,13 @@
 process METHOD_ALL {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(name), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(name), val("all"), path("all.tsv")
+        tuple val(dataset), val("all"), path("all.tsv")
 
     script:
         """
@@ -32,13 +32,13 @@ process METHOD_ALL {
 process METHOD_RANDOM_N500 {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(name), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(name), val("random-N500"), path("random-N500.tsv")
+        tuple val(dataset), val("random-N500"), path("random-N500.tsv")
 
     script:
         """
@@ -57,13 +57,13 @@ process METHOD_RANDOM_N500 {
 process METHOD_RANDOM_N1000 {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(name), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(name), val("random-N1000"), path("random-N1000.tsv")
+        tuple val(dataset), val("random-N1000"), path("random-N1000.tsv")
 
     script:
         """
@@ -82,13 +82,13 @@ process METHOD_RANDOM_N1000 {
 process METHOD_RANDOM_N2000 {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(name), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(name), val("random-N2000"), path("random-N2000.tsv")
+        tuple val(dataset), val("random-N2000"), path("random-N2000.tsv")
 
     script:
         """
@@ -107,13 +107,13 @@ process METHOD_RANDOM_N2000 {
 process METHOD_RANDOM_N5000 {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${name}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(name), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(name), val("random-N5000"), path("random-N5000.tsv")
+        tuple val(dataset), val("random-N5000"), path("random-N5000.tsv")
 
     script:
         """
@@ -157,8 +157,6 @@ workflow METHODS {
                 random_n2000_ch,
                 random_n5000_ch
             )
-
-        selected_features_ch.view()
 
     emit:
         datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
