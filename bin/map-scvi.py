@@ -1,76 +1,76 @@
 #!/usr/bin/env python
 
 """
-Integrate a dataset using scANVI
+Map a query dataset to an scVI reference model
 
 Usage:
-    integrate-scanvi.py --out-dir=<path> [options] <dir>
+    map-scvi.py --reference=<path> --out-dir=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
+    --reference=<path>   Path to reference model directory.
     --out-dir=<path>     Path to output directory.
 """
 
 import scvi
 
 
-def run_scANVI(scvi_model):
+def map_query_scVI(reference, query):
     """
-    A function that performs analysis
+    Map a query to an scVI reference model
 
     Parameters
     ----------
-    scvi_model
-        A trained scVI model
+    reference
+        The reference model to map to
+    query
+        AnnData object containing the query dataset
 
     Returns
     -------
-    Integrated scANVI model
+    Mapped query model
     """
 
-    print("Setting reference labels...")
-    adata = scvi_model.adata
-    adata.obs["ReferenceLabel"] = adata.obs["Label"].values
-
-    print("Creating scANVI model...")
-    model = scvi.model.SCANVI.from_scvi_model(
-        scvi_model,
-        unlabeled_category="Unknown",
-        labels_key="ReferenceLabel",
+    print("Creating scVI query model...")
+    model = scvi.model.SCVI.load_query_data(
+        query,
+        reference,
     )
     print(model)
     model.view_anndata_setup()
 
-    print("Training scANVI model...")
-    model.train(max_epochs=20, n_samples_per_label=100)
+    print("Training scVI query model...")
+    model.train(max_epochs=200, plan_kwargs=dict(weight_decay=0.0))
     print(model)
 
     return model
 
 
-def add_integrated_embeddings(model):
+def add_integrated_embeddings(model, adata):
     """
     Add embeddings from an integration model to an AnnData
 
     Parameters
     ----------
     model
-        The trained integration model containing an AnnData object
+        The trained integration model
+    adata
+        The AnnData to add embeddings to
 
     Returns
     -------
-    Model with AnnData containing integrated embeddings
+    AnnData containing integrated embeddings
     """
 
-    adata = model.adata
-
-    print("Storing scVI UMAP...")
-    adata.obsm["X_umap_scVI"] = adata.obsm["X_umap"].copy()
+    print("Storing unintegrated embeddings...")
+    for key in adata.obsm_keys():
+        print(f"Storing {key}...")
+        adata.obsm[key + "_unintegrated"] = adata.obsm[key].copy()
 
     print("Adding integrated embedding...")
-    adata.obsm["X_scANVI"] = model.get_latent_representation()
+    adata.obsm["X_scVI"] = model.get_latent_representation(adata)
 
-    add_umap(adata, use_rep="X_scANVI")
+    add_umap(adata, use_rep="X_scVI")
 
     return None
 
@@ -128,10 +128,10 @@ def plot_umap(adata, basis="X_umap"):
     plt = embedding(
         adata,
         basis=basis,
-        color=["Batch", "Label"],
+        color=["Dataset", "Batch", "Label"],
         legend_fontsize="small",
         legend_fontweight="light",
-        title=["Batch", "Label"],
+        title=["Dataset", "Batch", "Label"],
         add_outline=True,
         outline_width=(0.1, 0.05),
         ncols=1,
@@ -145,28 +145,43 @@ def plot_umap(adata, basis="X_umap"):
 def main():
     """The main script function"""
     from docopt import docopt
+    from scanpy import read_h5ad
     from os.path import join
 
     args = docopt(__doc__)
 
-    dir = args["<dir>"]
+    file = args["<file>"]
+    reference_dir = args["--reference"]
     out_dir = args["--out-dir"]
 
-    print(f"Reading model from '{dir}'...")
-    input = scvi.model.SCVI.load(dir)
+    print(f"Reading reference model from '{reference_dir}'...")
+    reference = scvi.model.SCVI.load(reference_dir)
+    del reference.adata.obsm  # Clear the reference embeddings
     print("Read model:")
+    print(reference)
+    print(f"Reading query from '{file}'...")
+    input = read_h5ad(file)
+    print("Read query:")
     print(input)
-    output = run_scANVI(input)
+    print("Subsetting query to selected features...")
+    input = input[:, reference.adata.var_names].copy()
+    print(input)
+    output = map_query_scVI(reference, input)
+    print("Concatenating reference and query...")
+    input.obs["Dataset"] = "Query"
+    reference.adata.obs["Dataset"] = "Reference"
+    full = input.concatenate(reference.adata)
     print("Adding unintegrated UMAP...")
-    add_integrated_embeddings(output)
+    add_umap(full)
+    add_integrated_embeddings(output, full)
     print(f"Writing output to '{out_dir}'...")
     output.save(out_dir, save_anndata=True, overwrite=True)
     umap_file = join(out_dir, "umap-unintegrated.png")
-    umap = plot_umap(output.adata, basis="X_umap_unintegrated")
+    umap = plot_umap(full, basis="X_umap_unintegrated")
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
     umap_file = join(out_dir, "umap-integrated.png")
-    umap = plot_umap(output.adata)
+    umap = plot_umap(full)
     print(f"Saving integrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
     print("Done!")
