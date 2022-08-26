@@ -1,80 +1,50 @@
 #!/usr/bin/env python
 
 """
-Integrate a dataset using scVI
+Integrate a dataset using scANVI
 
 Usage:
-    integrate-scvi.py --features=<path> --out-dir=<path> [options] <file>
+    integrate-scanvi.py --out-dir=<path> [options] <dir>
 
 Options:
     -h --help            Show this screen.
-    --features=<path>    Path to a file containing selected features.
     --out-dir=<path>     Path to output directory.
 """
 
 import scvi
 
-def run_scVI(adata):
+def run_scANVI(scvi_model):
     """
-    Integrate a dataset using scVI
+    A function that performs analysis
 
     Parameters
     ----------
-    adata
-        AnnData object containing the dataset to integrate
+    scvi_model
+        A trained scVI model
 
     Returns
     -------
-    Integrated scVI model
+    Integrated scANVI model
     """
 
-    print("Setting up AnnData for scVI...")
-    scvi.model.SCVI.setup_anndata(adata, batch_key="Batch")
-    print(adata)
+    print("Setting reference labels...")
+    adata = scvi_model.adata
+    adata.obs["ReferenceLabel"] = adata.obs["Label"].values
 
-    print("Creating scVI model...")
-    # Recommended parameters when you plan to use scArches reference mapping
-    # from https://docs.scvi-tools.org/en/stable/tutorials/notebooks/scarches_scvi_tools.html
-    arches_params = dict(
-        use_layer_norm="both",
-        use_batch_norm="none",
-        encode_covariates=True,
-        dropout_rate=0.2,
-        n_layers=2,
-    )
-    model = scvi.model.SCVI(
-        adata,
-        **arches_params
+    print("Creating scANVI model...")
+    model = scvi.model.SCANVI.from_scvi_model(
+        scvi_model,
+        unlabeled_category="Unknown",
+        labels_key="ReferenceLabel",
     )
     print(model)
     model.view_anndata_setup()
 
-    print("Training scVI model...")
-    model.train()
+    print("Training scANVI model...")
+    model.train(max_epochs=20, n_samples_per_label=100)
     print(model)
 
     return model
-
-def select_features(adata, features):
-    """
-    Subset a dataset to selected features
-
-    Parameters
-    ----------
-    adata
-        AnnData object containing the dataset to subset
-    features
-        DataFrame containing the selected features
-
-    Returns
-    -------
-    AnnData containing only the selected features
-    """
-
-    print(f"Subsetting to {features.shape[0]} selected features...")
-    adata = adata[:, features["Feature"]].copy()
-
-    return adata
 
 def add_integrated_embeddings(model):
     """
@@ -172,26 +142,19 @@ def plot_umap(adata, basis="X_umap"):
 def main():
     """The main script function"""
     from docopt import docopt
-    from scanpy import read_h5ad
-    from pandas import read_csv
     from os.path import join
 
     args = docopt(__doc__)
 
-    file = args["<file>"]
-    features_file = args["--features"]
+    dir = args["<dir>"]
     out_dir = args["--out-dir"]
 
-    print(f"Reading data from '{file}'...")
-    input = read_h5ad(file)
-    print("Read data:")
+    print(f"Reading model from '{dir}'...")
+    input = scvi.model.SCVI.load(dir)
+    del input.adata.obsm # Clear the embeddings from scVI
+    print("Read model:")
     print(input)
-    print(f"Reading selected features from '{features_file}'...")
-    features = read_csv(features_file, sep="\t")
-    print("Read features:")
-    print(features)
-    input = select_features(input, features)
-    output = run_scVI(input)
+    output = run_scANVI(input)
     print("Adding unintegrated UMAP...")
     add_umap(output.adata)
     add_integrated_embeddings(output)
