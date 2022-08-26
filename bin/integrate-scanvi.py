@@ -13,6 +13,7 @@ Options:
 
 import scvi
 
+
 def run_scANVI(scvi_model):
     """
     A function that performs analysis
@@ -46,6 +47,7 @@ def run_scANVI(scvi_model):
 
     return model
 
+
 def add_integrated_embeddings(model):
     """
     Add embeddings from an integration model to an AnnData
@@ -73,6 +75,7 @@ def add_integrated_embeddings(model):
     add_umap(adata, use_rep="X_scVI")
 
     return None
+
 
 def add_umap(adata, use_rep=None):
     """
@@ -106,6 +109,7 @@ def add_umap(adata, use_rep=None):
 
     return None
 
+
 def plot_umap(adata, basis="X_umap"):
     """
     Plot a UMAP
@@ -125,7 +129,7 @@ def plot_umap(adata, basis="X_umap"):
     print(f"Plotting UMAP using '{basis}'...")
     plt = embedding(
         adata,
-        basis = basis,
+        basis=basis,
         color=["Batch", "Label"],
         legend_fontsize="small",
         legend_fontweight="light",
@@ -134,10 +138,11 @@ def plot_umap(adata, basis="X_umap"):
         outline_width=(0.1, 0.05),
         ncols=1,
         show=False,
-        return_fig=True
+        return_fig=True,
     )
 
     return plt
+
 
 def main():
     """The main script function"""
@@ -151,7 +156,7 @@ def main():
 
     print(f"Reading model from '{dir}'...")
     input = scvi.model.SCVI.load(dir)
-    del input.adata.obsm # Clear the embeddings from scVI
+    del input.adata.obsm  # Clear the embeddings from scVI
     print("Read model:")
     print(input)
     output = run_scANVI(input)

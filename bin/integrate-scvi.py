@@ -14,6 +14,7 @@ Options:
 
 import scvi
 
+
 def run_scVI(adata):
     """
     Integrate a dataset using scVI
@@ -42,10 +43,7 @@ def run_scVI(adata):
         dropout_rate=0.2,
         n_layers=2,
     )
-    model = scvi.model.SCVI(
-        adata,
-        **arches_params
-    )
+    model = scvi.model.SCVI(adata, **arches_params)
     print(model)
     model.view_anndata_setup()
 
@@ -54,6 +52,7 @@ def run_scVI(adata):
     print(model)
 
     return model
+
 
 def select_features(adata, features):
     """
@@ -75,6 +74,7 @@ def select_features(adata, features):
     adata = adata[:, features["Feature"]].copy()
 
     return adata
+
 
 def add_integrated_embeddings(model):
     """
@@ -103,6 +103,7 @@ def add_integrated_embeddings(model):
     add_umap(adata, use_rep="X_scVI")
 
     return None
+
 
 def add_umap(adata, use_rep=None):
     """
@@ -136,6 +137,7 @@ def add_umap(adata, use_rep=None):
 
     return None
 
+
 def plot_umap(adata, basis="X_umap"):
     """
     Plot a UMAP
@@ -155,7 +157,7 @@ def plot_umap(adata, basis="X_umap"):
     print(f"Plotting UMAP using '{basis}'...")
     plt = embedding(
         adata,
-        basis = basis,
+        basis=basis,
         color=["Batch", "Label"],
         legend_fontsize="small",
         legend_fontweight="light",
@@ -164,10 +166,11 @@ def plot_umap(adata, basis="X_umap"):
         outline_width=(0.1, 0.05),
         ncols=1,
         show=False,
-        return_fig=True
+        return_fig=True,
     )
 
     return plt
+
 
 def main():
     """The main script function"""
