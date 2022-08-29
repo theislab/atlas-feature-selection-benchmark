@@ -13,7 +13,7 @@ Options:
 """
 
 import scvi
-from functions import add_umap, add_integrated_embeddings, suffix_embeddings, plot_embedding
+from _functions import add_umap, add_integrated_embeddings, suffix_embeddings, plot_embedding
 
 
 def run_scVI(adata):
