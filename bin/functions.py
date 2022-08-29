@@ -62,6 +62,7 @@ def suffix_embeddings(adata, suffix="_unintegrated"):
     for key in adata.obsm_keys():
         print(f"Storing {key}...")
         adata.obsm[key + suffix] = adata.obsm[key].copy()
+        del adata.obsm[key]
 
     return None
 
