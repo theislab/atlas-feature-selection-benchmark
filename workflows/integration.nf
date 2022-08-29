@@ -92,6 +92,36 @@ process MAP_SCVI {
         """
 }
 
+process MAP_SCANVI {
+    conda "envs/scvi-tools.yml"
+
+    publishDir "$params.outdir/integration-models/${dataset}/${method}",
+        mode: "copy",
+        pattern: "scANVI-mapped"
+
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path(reference), path("scANVI-mapped")
+
+    script:
+        """
+        map-scanvi.py \\
+            --reference "${reference}" \\
+            --out-dir scANVI-mapped \\
+            ${query}
+        """
+
+    stub:
+        """
+        mkdir scANVI-mapped
+        touch scANVI-mapped/adata.h5ad
+        touch scANVI-mapped/model.pt
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -109,6 +139,7 @@ workflow INTEGRATION {
         INTEGRATE_SCANVI(INTEGRATE_SCVI.out)
 
         MAP_SCVI(INTEGRATE_SCVI.out)
+        MAP_SCANVI(INTEGRATE_SCANVI.out)
 
     // emit:
     //     datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
