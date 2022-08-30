@@ -124,13 +124,14 @@ process PREDICT_LABELS {
     conda "envs/lightgbm.yml"
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy"
+        mode: "copy",
+        pattern: "-labels.tsv"
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
 
     output:
-        tuple val(dataset), val(method), val(integration), val("${reference}/adata.h5ad"), val("${query}/adata.h5ad"), path("${integration}-labels.tsv")
+        tuple val(dataset), val(method), val(integration), path("${query}/adata.h5ad"), path("${integration}-labels.tsv")
 
     script:
         """
@@ -169,8 +170,18 @@ workflow INTEGRATION {
 
         PREDICT_LABELS(mapped_ch)
 
-    // emit:
-    //     datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
+    emit:
+        reference_ch = INTEGRATE_SCVI.out
+            .mix(INTEGRATE_SCANVI.out)
+            .map { it ->
+                tuple(
+                    it[0],                       // Dataset name
+                    it[1],                       // Method name
+                    it[2],                       // Integration name
+                    file(it[3] + "/adata.h5ad"), // Path to reference H5AD
+                )
+            }
+        query_ch = PREDICT_LABELS.out
 }
 
 /*
