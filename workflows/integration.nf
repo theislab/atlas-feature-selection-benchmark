@@ -45,7 +45,7 @@ process INTEGRATE_SCANVI {
         tuple val(dataset), val(method), val(integration), path(scVI), path(query)
 
     output:
-        tuple val(dataset), val(method), val("scANVI-reference"), path("scANVI-reference"), path(query)
+        tuple val(dataset), val(method), val("scANVI"), path("scANVI-reference"), path(query)
 
     script:
         """
@@ -68,7 +68,6 @@ process MAP_SCVI {
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
         pattern: "scVI-mapped"
-
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
@@ -99,7 +98,6 @@ process MAP_SCANVI {
         mode: "copy",
         pattern: "scANVI-mapped"
 
-
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
 
@@ -122,6 +120,32 @@ process MAP_SCANVI {
         """
 }
 
+process PREDICT_LABELS {
+    conda "envs/lightgbm.yml"
+
+    publishDir "$params.outdir/integration-models/${dataset}/${method}",
+        mode: "copy"
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val(method), val(integration), val("${reference}/adata.h5ad"), val("${query}/adata.h5ad"), path("${integration}-labels.tsv")
+
+    script:
+        """
+        predict-labels.py \\
+            --reference "${reference}/adata.h5ad" \\
+            --out-file "${integration}-labels.tsv" \\
+            ${query}/adata.h5ad
+        """
+
+    stub:
+        """
+        mkdir "${integration}-labels.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -140,6 +164,10 @@ workflow INTEGRATION {
 
         MAP_SCVI(INTEGRATE_SCVI.out)
         MAP_SCANVI(INTEGRATE_SCANVI.out)
+
+        mapped_ch = MAP_SCVI.out.mix(MAP_SCANVI.out)
+
+        PREDICT_LABELS(mapped_ch)
 
     // emit:
     //     datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
