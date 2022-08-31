@@ -73,6 +73,34 @@ process METRIC_MIXING {
 ------------------------------
 */
 
+process METRIC_ACCURACY {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "accuracy.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-accuracy.tsv")
+
+    script:
+        """
+        metric-accuracy.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-accuracy.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-accuracy.tsv"
+        """
+}
+
 process METRIC_RAREACCURACY {
     conda "envs/tidyverse.yml"
 
@@ -120,6 +148,7 @@ workflow METRICS {
         METRIC_MIXING(reference_ch)
 
         // Classifcation metrics
+        METRIC_ACCURACY(query_ch)
         METRIC_RAREACCURACY(query_ch)
 }
 

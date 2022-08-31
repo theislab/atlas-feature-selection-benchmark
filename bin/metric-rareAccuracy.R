@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 "
-Calculate classification accuracy for the rarest cell label
+Evaluate cell label classification using the accuracy metric for the rarest cell label
 
 Usage:
     metric-rareAccuracy.R --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
