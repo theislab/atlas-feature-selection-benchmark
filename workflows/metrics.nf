@@ -5,6 +5,12 @@
 ========================================================================================
 */
 
+/*
+------------------------------
+    Integration metrics
+------------------------------
+*/
+
 process METRIC_BATCHPURITY {
     conda "envs/scanpy.yml"
 
@@ -62,6 +68,40 @@ process METRIC_MIXING {
 }
 
 /*
+------------------------------
+    Classification metrics
+------------------------------
+*/
+
+process METRIC_RAREACCURACY {
+    conda "envs/tidyverse.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "rareAccuracy.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-rareAccuracy.tsv")
+
+    script:
+        """
+        metric-rareAccuracy.R \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-rareAccuracy.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-rareAccuracy.tsv"
+        """
+}
+
+/*
 ========================================================================================
     WORKFLOW
 ========================================================================================
@@ -75,8 +115,12 @@ workflow METRICS {
 
     main:
 
+        // Integration metrics
         METRIC_BATCHPURITY(reference_ch)
         METRIC_MIXING(reference_ch)
+
+        // Classifcation metrics
+        METRIC_RAREACCURACY(query_ch)
 }
 
 /*
