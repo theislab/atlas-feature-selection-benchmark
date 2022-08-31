@@ -38,19 +38,19 @@ process METHOD_RANDOM_N500 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("random-N500"), path("random-N500.tsv")
+        tuple val(dataset), val("random_N500"), path("random_N500.tsv")
 
     script:
         """
         method-random.py \\
             --n-features 500 \\
-            --out-file "random-N500.tsv" \\
+            --out-file "random_N500.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "random-N500.tsv"
+        touch "random_N500.tsv"
         """
 }
 
@@ -63,19 +63,19 @@ process METHOD_RANDOM_N1000 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("random-N1000"), path("random-N1000.tsv")
+        tuple val(dataset), val("random_N1000"), path("random_N1000.tsv")
 
     script:
         """
         method-random.py \\
             --n-features 1000 \\
-            --out-file "random-N1000.tsv" \\
+            --out-file "random_N1000.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "random-N1000.tsv"
+        touch "random_N1000.tsv"
         """
 }
 
@@ -88,19 +88,19 @@ process METHOD_RANDOM_N2000 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("random-N2000"), path("random-N2000.tsv")
+        tuple val(dataset), val("random_N2000"), path("random_N2000.tsv")
 
     script:
         """
         method-random.py \\
             --n-features 2000 \\
-            --out-file "random-N2000.tsv" \\
+            --out-file "random_N2000.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "random-N2000.tsv"
+        touch "random_N2000.tsv"
         """
 }
 
@@ -113,19 +113,19 @@ process METHOD_RANDOM_N5000 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("random-N5000"), path("random-N5000.tsv")
+        tuple val(dataset), val("random_N5000"), path("random_N5000.tsv")
 
     script:
         """
         method-random.py \\
             --n-features 5000 \\
-            --out-file "random-N5000.tsv" \\
+            --out-file "random_N5000.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "random-N5000.tsv"
+        touch "random_N5000.tsv"
         """
 }
 
