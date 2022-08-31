@@ -130,6 +130,36 @@ process METRIC_RAREACCURACY {
 }
 
 /*
+------------------------------
+    Other processes
+------------------------------
+*/
+
+process COMBINE_METRICS {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/", mode: "copy"
+
+    input:
+        path(metrics)
+
+    output:
+        path("all-metrics.tsv")
+
+    script:
+        """
+        combine-metrics.py \\
+            --out-file "all-metrics.tsv" \\
+            ${metrics}
+        """
+
+    stub:
+        """
+        touch "all-metrics.tsv"
+        """
+}
+
+/*
 ========================================================================================
     WORKFLOW
 ========================================================================================
@@ -150,6 +180,17 @@ workflow METRICS {
         // Classifcation metrics
         METRIC_ACCURACY(query_ch)
         METRIC_RAREACCURACY(query_ch)
+
+        metrics_ch = METRIC_BATCHPURITY.out
+            .mix(
+                METRIC_MIXING.out,
+                METRIC_ACCURACY.out,
+                METRIC_RAREACCURACY.out
+            )
+            .map {it -> file(it[3])}
+            .toList()
+
+        COMBINE_METRICS(metrics_ch)
 }
 
 /*
