@@ -24,6 +24,7 @@ dependencies:
   - python=3.9.13
   - r-base=4.1.3
   - r-docopt=0.7.1
+  - r-here=1.0.1
   - r-reticulate=1.25
   - scanpy=1.9.1
   - scikit-learn=1.1.2

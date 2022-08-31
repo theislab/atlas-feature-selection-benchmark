@@ -5,6 +5,7 @@ An R script template
 
 Usage:
     template.R --out-file=<path> [options] <file>
+
 Options:
     -h --help             Show this screen.
     --out-file=<path>     Path to output file.
@@ -13,6 +14,12 @@ Options:
 # Load libraries
 suppressPackageStartupMessages({
 
+})
+
+# Source functions
+suppressMessages({
+    here::i_am("bin/template.R")
+    source(here::here("bin", "_functions.R"))
 })
 
 #' A function that performs analysis

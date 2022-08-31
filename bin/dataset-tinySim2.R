@@ -15,6 +15,12 @@ suppressPackageStartupMessages({
     library(SingleCellExperiment)
 })
 
+# Source functions
+suppressMessages({
+    here::i_am("bin/dataset-tinySim2.R")
+    source(here::here("bin", "_functions.R"))
+})
+
 #' Simulate a tiny dataset
 #'
 #' @returns SingleCellExperiment with simulated data
@@ -37,28 +43,6 @@ simulate_dataset <- function() {
     return(sim)
 }
 
-#' Write a SingleCellExperiment to a H5AD file
-#'
-#' @param sce The SingleCellExperiment object to write
-#' @param file The file to write to
-#'
-#' @return `file` invisibly
-write_h5ad <- function(sce, file) {
-    anndata <- reticulate::import("anndata")
-
-    message("Converting to AnnData...")
-    adata <- zellkonverter::SCE2AnnData(
-        sce,
-        X_name  = "counts",
-        verbose = TRUE
-    )
-
-    message("Writing AnnData to '", file, "'...")
-    adata$write_h5ad(file)
-
-    invisible(file)
-}
-
 #' The main script function
 main <- function() {
     args <- docopt::docopt(doc)
@@ -67,7 +51,7 @@ main <- function() {
 
     output <- simulate_dataset()
     print(output)
-    write_h5ad(output, out_file)
+    write_h5ad(output, out_file, X_name = "counts")
     message("Done!")
 }
 
