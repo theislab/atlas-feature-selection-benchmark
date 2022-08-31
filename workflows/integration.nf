@@ -125,7 +125,7 @@ process PREDICT_LABELS {
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
-        pattern: "-labels.tsv"
+        pattern: "*-labels.tsv"
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
