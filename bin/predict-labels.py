@@ -104,7 +104,7 @@ def predict_labels(reference, query):
 
 
 def optimise_lightgbm(
-    X_train, Y_train, n_labels, init_round=15, opt_round=25, n_folds=2, seed=1
+    X_train, Y_train, n_labels, init_round=15, opt_round=25, n_folds=10, seed=1
 ):
     """
     Optimise parameters for a LightGBM model using Bayesian Optimization
