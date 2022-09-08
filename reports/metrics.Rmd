@@ -1,0 +1,133 @@
+---
+title: "Metrics report"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: paper
+    toc: true
+    toc_float: true
+    number_sections: true
+params:
+  functions_file: functions.R
+  metrics_file: all-metrics.tsv
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(
+    autodep        = TRUE,
+    cache          = FALSE,
+    cache.comments = FALSE,
+    echo           = FALSE,
+    error          = FALSE,
+    message        = FALSE,
+    warning        = FALSE,
+    # dev            = "ragg_png",
+    fig.align      = "center",
+    # fig.width      = 960 / 72,
+    fig.width      = 10,
+    fig.asp        = 0.8,
+    fig.retina     = 2,
+    out.width      = "100%",
+    crop           = TRUE,
+    pngquant       = "--speed=1 --quality=0-50"
+)
+```
+
+```{r libraries}
+library(ggplot2)
+library(readr)
+library(dplyr)
+```
+
+```{r source}
+source(params$functions_file)
+```
+
+```{r load_metrics}
+metrics <- read_tsv(
+    params$metrics_file,
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+) |>
+    group_by(Dataset, Metric) |>
+    mutate(ScaledValue = scales::rescale(Value)) |>
+    ungroup()
+```
+
+# Summary
+
+```{r metrics-summary}
+tibble::tribble(
+        ~ Item, ~ Number,
+    "Datasets", length(unique(metrics$Dataset)),
+     "Methods", length(unique(metrics$Method)),
+     "Metrics", length(unique(metrics$Metric)),
+      "Scores", nrow(metrics)
+) |>
+    knitr::kable()
+```
+
+# Integration metrics {.tabset}
+
+```{r integration-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r integration-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Integration', value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r integration-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Integration',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+# Classification metrics {.tabset}
+
+```{r classification-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r classification-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Classification',",
+        "value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r classification-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Classification',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`

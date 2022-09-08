@@ -3,3 +3,5 @@ _nf-trace/
 work/
 output/
 bin/__pycache__
+.Rproj.user
+*.Rproj

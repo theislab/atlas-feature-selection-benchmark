@@ -159,6 +159,34 @@ process COMBINE_METRICS {
         """
 }
 
+process METRICS_REPORT {
+    conda "envs/tidyverse.yml"
+
+    publishDir "$params.outdir/metrics/", mode: "copy"
+
+    stageInMode "copy"
+
+    input:
+        tuple path(all_metrics), path(rmd), path(functions)
+
+    output:
+        path("metrics.html")
+
+    script:
+        """
+        render-rmarkdown.R \\
+            --params "metrics_file=${all_metrics},functions_file=${functions}" \\
+            --out-file "metrics.html" \\
+            ${rmd}
+        """
+
+    stub:
+        """
+        touch "metrics.html"
+        """
+
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -191,6 +219,16 @@ workflow METRICS {
             .toList()
 
         COMBINE_METRICS(metrics_ch)
+
+        report_ch = COMBINE_METRICS.out
+            .map {it ->
+                tuple(
+                    it,
+                    file(params.reportsdir + "/metrics.Rmd"),
+                    file(params.reportsdir + "/functions.R")
+                )
+            }
+        METRICS_REPORT(report_ch)
 }
 
 /*
