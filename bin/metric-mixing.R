@@ -21,8 +21,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    here::i_am("bin/metric-mixing.R")
-    source(here::here("bin", "_functions.R"))
+    source("_functions.R")
 })
 
 #' Calculate the Seurat mixing metric for an integrated dataset

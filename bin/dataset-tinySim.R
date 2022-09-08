@@ -17,8 +17,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    here::i_am("bin/dataset-tinySim.R")
-    source(here::here("bin", "_functions.R"))
+    source("_functions.R")
 })
 
 #' Simulate a tiny dataset

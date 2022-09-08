@@ -24,7 +24,6 @@ dependencies:
   - python=3.9.13
   - r-base=4.1.3
   - r-docopt=0.7.1
-  - r-here=1.0.1
   - r-locfit=1.5_9.6
   - r-nlme=3.1_159
   - r-reticulate=1.25

@@ -18,8 +18,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    here::i_am("bin/template.R")
-    source(here::here("bin", "_functions.R"))
+    source("_functions.R")
 })
 
 #' A function that performs analysis

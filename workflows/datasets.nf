@@ -11,6 +11,9 @@ process DATASET_TINYSIM {
 
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
 
+    input:
+        path(functions)
+
     output:
         tuple val("tinySim"), path("tinySim.h5ad")
 
@@ -29,6 +32,9 @@ process DATASET_TINYSIM2 {
     conda "envs/splatter.yml"
 
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    input:
+        path(functions)
 
     output:
         tuple val("tinySim2"), path("tinySim2.h5ad")
@@ -85,8 +91,12 @@ workflow DATASETS {
 
         dataset_names = params.datasets.collect{dataset -> dataset.name}
 
-        tinySim_ch  = dataset_names.contains("tinySim")  ? DATASET_TINYSIM()  : Channel.empty()
-        tinySim2_ch = dataset_names.contains("tinySim2") ? DATASET_TINYSIM2() : Channel.empty()
+        tinySim_ch  = dataset_names.contains("tinySim")  ?
+            DATASET_TINYSIM(file(params.bindir + "/_functions.R"))  :
+            Channel.empty()
+        tinySim2_ch = dataset_names.contains("tinySim2") ?
+            DATASET_TINYSIM2(file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(tinySim2_ch)

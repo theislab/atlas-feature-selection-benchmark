@@ -19,6 +19,7 @@ process METRIC_BATCHPURITY {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchPurity.tsv")
@@ -47,6 +48,7 @@ process METRIC_MIXING {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-mixing.tsv")
@@ -81,6 +83,7 @@ process METRIC_ACCURACY {
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-accuracy.tsv")
@@ -109,6 +112,7 @@ process METRIC_RAREACCURACY {
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-rareAccuracy.tsv")
@@ -202,12 +206,12 @@ workflow METRICS {
     main:
 
         // Integration metrics
-        METRIC_BATCHPURITY(reference_ch)
-        METRIC_MIXING(reference_ch)
+        METRIC_BATCHPURITY(reference_ch, file(params.bindir + "/_functions.py"))
+        METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R"))
 
         // Classifcation metrics
-        METRIC_ACCURACY(query_ch)
-        METRIC_RAREACCURACY(query_ch)
+        METRIC_ACCURACY(query_ch, file(params.bindir + "/_functions.py"))
+        METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R"))
 
         metrics_ch = METRIC_BATCHPURITY.out
             .mix(
