@@ -205,19 +205,29 @@ workflow METRICS {
 
     main:
 
+        metric_names = params.metrics.collect{metric -> metric.name}
+
         // Integration metrics
-        METRIC_BATCHPURITY(reference_ch, file(params.bindir + "/_functions.py"))
-        METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R"))
+        batchPurity_ch = metric_names.contains("batchPurity") ?
+            METRIC_BATCHPURITY(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        mixing_ch = metric_names.contains("mixing") ?
+            METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
-        // Classifcation metrics
-        METRIC_ACCURACY(query_ch, file(params.bindir + "/_functions.py"))
-        METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R"))
+        // Classification metrics
+        accuracy_ch = metric_names.contains("accuracy") ?
+            METRIC_ACCURACY(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
+            METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
-        metrics_ch = METRIC_BATCHPURITY.out
+        metrics_ch = batchPurity_ch
             .mix(
-                METRIC_MIXING.out,
-                METRIC_ACCURACY.out,
-                METRIC_RAREACCURACY.out
+                mixing_ch,
+                accuracy_ch,
+                rareAccuracy_ch
             )
             .map {it -> file(it[3])}
             .toList()

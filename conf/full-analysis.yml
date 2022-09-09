@@ -17,3 +17,12 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+metrics:
+  - name: batchPurity
+    type: Integration
+  - name: mixing
+    type: Integration
+  - name: accuracy
+    type: Classification
+  - name: rareAccuracy
+    type: Classification
