@@ -16,8 +16,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    here::i_am("bin/metric-rareAccuracy.R")
-    source(here::here("bin", "_functions.R"))
+    source("_functions.R")
 })
 
 #' Calculate classification accuracy for the rarest cell label
