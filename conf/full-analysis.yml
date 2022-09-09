@@ -1,0 +1,19 @@
+datasets:
+  - name: tinySim
+    batch_col: Batch
+    label_col: Group
+    query_batches: Batch4
+  - name: tinySim2
+    batch_col: Batch
+    label_col: Group
+    query_batches: Batch4
+  - name: scIBPancreas
+    batch_col: tech
+    label_col: celltype
+    query_batches: inDrop3
+methods:
+  - name: all
+  - name: random-N500
+  - name: random-N1000
+  - name: random-N2000
+  - name: random-N5000
