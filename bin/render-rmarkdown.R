@@ -20,7 +20,6 @@ Options:
 #'
 #' @returns out_file, invisibly
 render_rmarkdown <- function(document, out_file, params_list) {
-
     message(
         "Rendering '", document,
         "'' to '", out_file,
@@ -44,7 +43,6 @@ render_rmarkdown <- function(document, out_file, params_list) {
 #'
 #' @returns parameters list
 make_params_list <- function(params_str) {
-
     if (params_str == "") {
         return(list())
     }
@@ -64,9 +62,9 @@ make_params_list <- function(params_str) {
 main <- function() {
     args <- docopt::docopt(doc)
 
-    file       <- args[["<file>"]]
+    file <- args[["<file>"]]
     params_str <- args[["--params"]]
-    out_file   <- args[["--out-file"]]
+    out_file <- args[["--out-file"]]
 
     params_list <- make_params_list(params_str)
     render_rmarkdown(file, out_file, params_list)

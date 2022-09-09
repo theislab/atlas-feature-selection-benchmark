@@ -49,10 +49,6 @@ def run_scANVI(scvi_model):
     return model
 
 
-
-
-
-
 def main():
     """The main script function"""
     from docopt import docopt

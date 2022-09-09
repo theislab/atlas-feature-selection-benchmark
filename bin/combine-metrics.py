@@ -33,8 +33,7 @@ def combine_metrics(files):
     print("Combining metrics...")
     metrics = concat(metrics_list, ignore_index=True)
     metrics.sort_values(
-        ["Dataset", "Method", "Integration", "Type", "Metric"],
-        inplace=True
+        ["Dataset", "Method", "Integration", "Type", "Metric"], inplace=True
     )
 
     return metrics

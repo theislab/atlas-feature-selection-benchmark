@@ -25,7 +25,6 @@ suppressMessages({
 #'
 #' @returns Accuracy for the rarest cell type
 calculate_rare_accuracy <- function(labels) {
-
     message("Identify rare label...")
     label_freqs <- table(labels$Label)
     rare_label <- names(label_freqs)[which.min(label_freqs)]
@@ -33,9 +32,9 @@ calculate_rare_accuracy <- function(labels) {
     message(
         "Calculating classification accuracy for '", rare_label, "' label..."
     )
-    is_rare   <- labels$Label == rare_label
+    is_rare <- labels$Label == rare_label
     n_correct <- sum(labels$PredLabel[is_rare] == rare_label)
-    score     <- n_correct / sum(is_rare)
+    score <- n_correct / sum(is_rare)
 
     return(score)
 }

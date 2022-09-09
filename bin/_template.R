@@ -27,8 +27,7 @@ suppressMessages({
 #'
 #' @returns The function output
 run_analysis <- function(input) {
-
-    output = input
+    output <- input
 
     return(input)
 }
@@ -37,8 +36,8 @@ run_analysis <- function(input) {
 main <- function() {
     args <- docopt::docopt(doc)
 
-    file      <- args[["<file>"]]
-    out_file  <- args[["--out-file"]]
+    file <- args[["<file>"]]
+    out_file <- args[["--out-file"]]
 
     message("Reading data from '", file, "'...")
     # input <- read_data(file)
