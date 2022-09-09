@@ -50,6 +50,25 @@ process DATASET_TINYSIM2 {
         """
 }
 
+process DATASET_SCIBPANCREAS {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    output:
+        tuple val("scIBPancreas"), path("scIBPancreas.h5ad")
+
+    script:
+        """
+        dataset-scIBPancreas.py --out-file "scIBPancreas.h5ad"
+        """
+
+    stub:
+        """
+        touch scIBPancreas.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -97,9 +116,15 @@ workflow DATASETS {
         tinySim2_ch = dataset_names.contains("tinySim2") ?
             DATASET_TINYSIM2(file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
+            DATASET_SCIBPANCREAS() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
-            .mix(tinySim2_ch)
+            .mix(
+                tinySim2_ch,
+                scIBPancreas_ch
+            )
 
         datasets_ch = Channel
             .fromList(params.datasets)
