@@ -12,6 +12,8 @@ process INTEGRATE_SCVI {
         mode: "copy",
         pattern: "scVI-reference"
 
+    label "process_medium"
+
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features)
         path(functions)
