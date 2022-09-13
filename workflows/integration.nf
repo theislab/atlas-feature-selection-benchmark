@@ -75,6 +75,7 @@ process MAP_SCVI {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path(reference), path("scVI-mapped")
@@ -104,6 +105,7 @@ process MAP_SCANVI {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
+        path(functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path(reference), path("scANVI-mapped")
@@ -167,8 +169,8 @@ workflow INTEGRATION {
         INTEGRATE_SCVI(datasets_features_ch, file(params.bindir + "/_functions.py"))
         INTEGRATE_SCANVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
 
-        MAP_SCVI(INTEGRATE_SCVI.out)
-        MAP_SCANVI(INTEGRATE_SCANVI.out)
+        MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
+        MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/_functions.py"))
 
         mapped_ch = MAP_SCVI.out.mix(MAP_SCANVI.out)
 
