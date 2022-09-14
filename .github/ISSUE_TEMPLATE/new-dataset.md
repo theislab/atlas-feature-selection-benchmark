@@ -13,7 +13,7 @@ _Please briefly describe the suggested dataset: What is in the dataset (tissue, 
 
 **Links**
 
-- **Paper:** _Link for a paper related to the paper_
+- **Paper:** _Link for a paper related to the dataset_
 - **Source:** _Link for a source for downloading the dataset (GEO, FigShare etc.)_
 
 **Anything else?**
