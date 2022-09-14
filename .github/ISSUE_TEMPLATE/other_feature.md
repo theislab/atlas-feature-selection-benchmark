@@ -1,8 +1,10 @@
 ---
 name: Other feature
-description: Suggest some other new feature for the project
-title: "New feature: [FEATURE]"
-labels: ["enhancement"]
+about: Suggest another feature for the project
+title: 'New feature: [FEATURE]'
+labels: enhancement
+assignees: ''
+
 ---
 
 Thanks for taking the time to suggest a new feature!

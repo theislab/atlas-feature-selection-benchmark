@@ -1,8 +1,10 @@
 ---
 name: New method
-description: Suggest a new feature selection method
-title: "New method: [METHOD]"
-labels: ["method", "enhancement"]
+about: Suggest a new method for the project
+title: 'New method: [METHOD]'
+labels: enhancement, method
+assignees: ''
+
 ---
 
 Thanks for taking the time to suggest a new dataset!

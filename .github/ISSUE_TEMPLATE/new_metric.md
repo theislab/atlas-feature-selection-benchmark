@@ -1,8 +1,10 @@
 ---
 name: New metric
-description: Suggest a new evaluation metric
-title: "New metric: [METRIC]"
-labels: ["metric", "enhancement"]
+about: Suggest a new metric for the project
+title: 'New metric: [METRIC]'
+labels: enhancement, metric
+assignees: ''
+
 ---
 
 Thanks for taking the time to suggest a new metric!

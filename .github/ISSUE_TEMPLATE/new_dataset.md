@@ -1,8 +1,10 @@
 ---
 name: New dataset
-description: Suggest a new dataset
-title: "New dataset: [DATASET]"
-labels: ["dataset", "enhancement"]
+about: Suggest a new dataset for the project
+title: 'New dataset: [DATASET]'
+labels: dataset, enhancement
+assignees: ''
+
 ---
 
 Thanks for taking the time to suggest a new dataset!
