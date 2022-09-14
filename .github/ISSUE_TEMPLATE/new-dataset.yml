@@ -1,0 +1,41 @@
+name: New dataset
+description: Suggest a new dataset
+title: "New dataset: [DATASET]"
+labels: ["dataset", "enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to suggest a new dataset!
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: Please briefly describe the dataset
+      placeholder: What is in the dataset (tissue, technology, number of cells etc.)? What kind of batches does it have? What kind of cell annotations does it have? Why would it be a good fit for the project?
+    validations:
+      required: true
+  - type: input
+    id: paper
+    attributes:
+      label: Paper
+      description: Link for a paper related to the paper
+      placeholder: ex. https://doi.org/DOI
+    validations:
+      required: false
+  - type: input
+    id: source
+    attributes:
+      label: Source
+      description: Link for a source for downloading the dataset (GEO, FigShare etc.)
+      placeholder: ex. https://www.ncbi.nlm.nih.gov/geo/query/acc.cgi?acc=ACCESSION
+    validations:
+      required: false
+  - type: textarea
+    id: extra-info
+    attributes:
+      label: Extra information
+      description: Anything else you think is important about the dataset
+      placeholder: Anything else you want to add
+    validations:
+      required: false
