@@ -5,11 +5,15 @@ title: "New method: [METHOD]"
 labels: ["method", "enhancement"]
 ---
 
-Thanks for taking the time to suggest a new dataset!
+Thanks for taking the time to suggest a new method!
 
 **Description**
 
 _Please briefly describe the suggested method: What is it? How does it work? Why would it be a good fit for the project?_
+
+**Variants**
+
+_Please describe any variants of the method (different parameters, number of selected features etc.), if any_
 
 **Links**
 
