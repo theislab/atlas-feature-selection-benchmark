@@ -10,23 +10,23 @@ Please use [Markdown formatting](https://docs.github.com/en/get-started/writing-
 
 ## What happened?
 
-_Briefly describe the issue_
+> _Briefly describe the issue_
 
 ## What were you doing?
 
-_Briefly describe what led to the issue. A reproducible example or other code snippets are great_
+> _Briefly describe what led to the issue. A reproducible example or other code snippets are great_
 
 ## What did you see?
 
-_Include any error messages, log output or other output that could help diagnose the problem_
+> _Include any error messages, log output or other output that could help diagnose the problem_
 
 ## Proposed solution
 
-_If you have a suggestion for how to solve the issue we would love to hear it!_
+> _If you have a suggestion for how to solve the issue we would love to hear it!_
 
 ## Your environment
 
-_Please include the information relevant to your issue_
+> _Please include the information relevant to your issue_
 
 - **Operating system:**
 - **Nextflow version:**
@@ -36,4 +36,4 @@ _Please include the information relevant to your issue_
 
 ## Anything else?
 
-_Anything else you want to tell us about the issue_
+> _Anything else you want to tell us about the issue_
