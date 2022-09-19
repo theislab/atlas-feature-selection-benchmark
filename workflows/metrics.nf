@@ -263,7 +263,7 @@ workflow METRICS {
                 mixing_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-				mcc_ch
+                mcc_ch
             )
             .map {it -> file(it[4])}
             .toList()
