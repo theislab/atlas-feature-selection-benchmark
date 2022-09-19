@@ -5,3 +5,4 @@ output/
 bin/__pycache__
 .Rproj.user
 *.Rproj
+data/

@@ -1,0 +1,72 @@
+#!/usr/bin/env python
+
+"""
+Select features using scanpy
+
+Usage:
+    method-scanpy.py --out-file=<path> [options] <file>
+
+Options:
+    -h --help            Show this screen.
+    --out-file=<path>    Path to output file.
+    --n-features=<int>   Number of features to select [default: 1000].
+    --flavor=<seurat,cell_ranger,seurat_v3>             
+    --batch=<key in adata.obs>
+"""
+
+def select_features_scanpy(adata, n, flavor, batch):
+    """
+    Select features using scanpy.pp.highly_variable_genes
+
+    Parameters
+    ----------
+    adata
+        AnnData object
+    n
+    	Number of features to select
+    flavor
+    	Method flavor ('seurat', 'cell_ranger', 'seurat_v3')
+    batch
+    	batch_key
+
+    Returns
+    ----------
+    DataFrame containing the selected features
+    """
+
+    import scanpy as sc
+    
+    sc.pp.normalize_total(adata, target_sum=1e4)
+    sc.pp.log1p(adata)
+    sc.pp.highly_variable_genes(adata, flavor=flavor, batch_key=batch)
+    
+    selected_features = adata.var
+    
+    return selected_features
+
+
+def main():
+    """The main script function"""
+    from docopt import docopt
+    from scanpy import read_h5ad
+
+    args = docopt(__doc__)
+
+    file = args["<file>"]
+    n_features = int(args["--n-features"])
+    flavor = args["--flavor"]
+    batch = args["--batch"]
+    out_file = args["--out-file"]
+
+    print(f"Reading data from '{file}'...")
+    input = read_h5ad(file)
+    print("Read data:")
+    print(input)
+    output = select_features_scanpy(input, n_features, flavor, batch)
+    print(f"Writing output to '{out_file}'...")
+    output.to_csv(out_file, sep="\t", index=False)
+    print("Done!")
+
+
+if __name__ == "__main__":
+    main()
