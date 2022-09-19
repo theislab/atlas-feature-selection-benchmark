@@ -1,4 +1,4 @@
-**Linked issue:** #[ISSUE_NUMBER]
+**Linked issue:** resolves #[ISSUE_NUMBER]
 
 **Type of pull request**
 
