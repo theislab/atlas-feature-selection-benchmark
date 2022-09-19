@@ -133,6 +133,38 @@ process METRIC_RAREACCURACY {
         """
 }
 
+
+process METRIC_MCC {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "MCC.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-MCC.tsv")
+
+    script:
+        """
+        metric-MCC.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-MCC.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-MCC.tsv"
+        """
+}
+
+
+
 /*
 ------------------------------
     Other processes
