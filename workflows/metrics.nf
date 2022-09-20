@@ -133,18 +133,18 @@ process METRIC_RAREACCURACY {
         """
 }
 
-process METRIC_JACCARDINDEX {
+process METRIC_JACCARDINDEX_MICRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "JaccardIndex.tsv" }
+        saveAs: { filename -> "JaccardIndexMicro.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndex.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMicro.tsv")
 
     script:
         """
@@ -152,13 +152,44 @@ process METRIC_JACCARDINDEX {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-JaccardIndex.tsv" \\
+			--average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv" \\
             ${labels}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-JaccardIndex.tsv"
+        touch "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv"
+        """
+}
+
+process METRIC_JACCARDINDEX_MACRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexMacro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMacro.tsv")
+
+    script:
+        """
+        metric-JaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+			--average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv"
         """
 }
 
@@ -251,7 +282,10 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        JaccardIndex_ch = metric_names.contains("JaccardIndex") ?
+        JaccardIndex_micro_ch = metric_names.contains("JaccardIndexMicro") ?
+            METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+		JaccardIndex_macro_ch = metric_names.contains("JaccardIndexMacro") ?
             METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 			
@@ -260,7 +294,8 @@ workflow METRICS {
                 mixing_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-				JaccardIndex_ch
+				JaccardIndex_micro_ch,
+				JaccardIndex_macro_ch
             )
             .map {it -> file(it[3])}
             .toList()
