@@ -259,7 +259,8 @@ workflow METRICS {
             .mix(
                 mixing_ch,
                 accuracy_ch,
-                rareAccuracy_ch
+                rareAccuracy_ch,
+                labelASW_ch
             )
             .map {it -> file(it[3])}
             .toList()
