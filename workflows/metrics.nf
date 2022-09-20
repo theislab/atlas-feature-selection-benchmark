@@ -69,6 +69,35 @@ process METRIC_MIXING {
         """
 }
 
+process METRIC_LABELASW {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "labelASW.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-labelASW.tsv")
+
+    script:
+        """
+        metric-labelASW.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-labelASW.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-labelASW.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -246,6 +275,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        labelASW_ch = metric_names.contains("labelASW") ?
+            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -261,6 +293,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+                labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
                 mcc_ch
