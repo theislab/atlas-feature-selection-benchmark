@@ -133,6 +133,35 @@ process METRIC_RAREACCURACY {
         """
 }
 
+process METRIC_F1SCORE {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1score.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1score.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-F1score.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1score.tsv"
+        """
+}
+
 /*
 ------------------------------
     Other processes
@@ -222,12 +251,16 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+		f1score_ch = metric_names.contains("f1score") ?
+            METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
                 accuracy_ch,
-                rareAccuracy_ch
+                rareAccuracy_ch,
+				f1score_ch
             )
             .map {it -> file(it[3])}
             .toList()
