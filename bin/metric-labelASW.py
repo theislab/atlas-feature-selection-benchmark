@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Adjusted Silhouette Width (ASW)
+Evaluate integration using label Adjusted Silhouette Width (ASW)
 
 Usage:
     metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
@@ -29,7 +29,7 @@ def calculate_asw(adata):
     The [0, 1] score non-cluster to compact cluster structure.
     """
     from scib.metrics import silhouette
-    
+
     print("Calculating final score...")
     score = silhouette(adata, group_key="Label", embed="X_emb")
     print(f"Final score: {score}")
