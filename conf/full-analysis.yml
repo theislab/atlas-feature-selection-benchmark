@@ -22,6 +22,8 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: labelASW
+    type: Integration
   - name: accuracy
     type: Classification
   - name: rareAccuracy
