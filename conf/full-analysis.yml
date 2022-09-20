@@ -17,6 +17,8 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+  - name: scanpy-default
+  - name: triku
   - name: hotspot
 metrics:
   - name: batchPurity
