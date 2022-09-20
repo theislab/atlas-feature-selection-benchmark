@@ -254,7 +254,7 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-		mcc_ch = metric_names.contains("MCC") ?
+        mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 			
@@ -265,7 +265,7 @@ workflow METRICS {
                 rareAccuracy_ch,
                 mcc_ch
             )
-            .map {it -> file(it[4])}
+            .map {it -> file(it[3])}
             .toList()
 
         COMBINE_METRICS(metrics_ch)
