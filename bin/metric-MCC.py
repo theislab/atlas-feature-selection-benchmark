@@ -29,7 +29,8 @@ def calculate_mcc(labels):
     from sklearn.metrics import matthews_corrcoef
 
     score = matthews_corrcoef(labels["Label"], labels["PredLabel"])
-
+    score = (score+1)/2
+    
     return score
 
 
