@@ -136,14 +136,14 @@ process METRIC_F1SCORE_MICRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "F1score.tsv" }
+        saveAs: { filename -> "F1Micro.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1score.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Micro.tsv")
 
     script:
         """
@@ -151,14 +151,14 @@ process METRIC_F1SCORE_MICRO {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-			--average "micro" \\
-            --out-file "${dataset}-${method}-${integration}-F1score.tsv" \\
+	    --average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Micro.tsv" \\
             ${labels}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-F1score.tsv"
+        touch "${dataset}-${method}-${integration}-F1Micro.tsv"
         """
 }
 
@@ -166,14 +166,14 @@ process METRIC_F1SCORE_MACRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "F1score.tsv" }
+        saveAs: { filename -> "F1Macro.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1score.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Macro.tsv")
 
     script:
         """
@@ -181,14 +181,14 @@ process METRIC_F1SCORE_MACRO {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-			--average "macro" \\
-            --out-file "${dataset}-${method}-${integration}-F1score.tsv" \\
+	    --average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Macro.tsv" \\
             ${labels}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-F1score.tsv"
+        touch "${dataset}-${method}-${integration}-F1Macro.tsv"
         """
 }
 
@@ -281,20 +281,21 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-		f1score_micro_ch = metric_names.contains("f1score") ?
+	f1score_micro_ch = metric_names.contains("f1micro") ?
             METRIC_F1SCORE_MICRO(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        f1score_macro_ch = metric_names.contains("f1score") ?
+        f1score_macro_ch = metric_names.contains("f1macro") ?
             METRIC_F1SCORE_MACRO(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 			
+
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-				f1score_micro_ch,
-				f1score_macro_ch
+		f1score_micro_ch,
+		f1score_macro_ch
             )
             .map {it -> file(it[3])}
             .toList()
