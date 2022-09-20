@@ -17,6 +17,7 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+  - name: hotspot-N500
 metrics:
   - name: batchPurity
     type: Integration

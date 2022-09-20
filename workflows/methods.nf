@@ -129,6 +129,31 @@ process METHOD_RANDOM_N5000 {
         """
 }
 
+process METHOD_HOTSPOT_N500 {
+    conda "envs/hotspot.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("hotspot_N500"), path("hotspot_N500.tsv")
+
+    script:
+        """
+        method-hotspot.py \\
+            --n-features 500 \\
+            --out-file "hotspot_N500.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "hotspot_N500.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
