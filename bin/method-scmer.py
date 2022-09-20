@@ -8,15 +8,13 @@ Usage:
 
 Options:
     -h --help            Show this screen.
-    --out-file=<path>    Path to output file.
-    --n-features=<int>   Number of features to select [default: 1000].
-    --flavor=<str>       Flavor of feature selection method.
-    One of: seurat, cell_ranger, seurat_v3 [default: seurat].    
-    --batch=<bool>        Whether to apply to each batch.
-    Requires Batch in .obs [default: False].
+    -o --out-file=<path>    Path to output file.
+    -l --lasso              Lasso strength [default: 0]
+    -n --n-features=<int>   Number of features to select [default: 1000].
+    -b --batch              Apply to each batch. Requires column 'Batch' in .obs.
 """
 
-def select_features_scanpy(adata, n, flavor, batch):
+def select_features_scanpy(adata, lasso, n, batch):
     """
     Select features using scanpy.pp.highly_variable_genes
 
@@ -24,17 +22,20 @@ def select_features_scanpy(adata, n, flavor, batch):
     ----------
     adata
         AnnData object
+    lasso
+        Strength of L1 regularization in elastic net
     n
     	Number of features to select
-    flavor
-    	Method flavor ('seurat', 'cell_ranger', 'seurat_v3')
     batch
-    	Boolean whether to use 'Batch' as batch_key
+    	Flag whether to use 'Batch' as batch_key
 
     Returns
     ----------
     DataFrame containing the selected features
     """
+
+    import scanpy as sc
+    from scmer import UmapL1
 
     if adata.n_vars < n:
         import warnings
@@ -43,20 +44,24 @@ def select_features_scanpy(adata, n, flavor, batch):
             "Number of features to select is greater than the number present, setting n to adata.n_vars"
         )
         n = adata.n_vars
-
-    import scanpy as sc
     
     if batch:
-        batch_key='Batch'
+        batches=adata.obs["Batch"].values
     else:
-        batch_key=None
+        batches=None
     
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
-    sc.pp.highly_variable_genes(adata, n_top_genes=n, flavor=flavor, batch_key=batch_key)
+
+    model = UmapL1(lasso=lasso).fit(X=adata.X, batches=batches)
+    adata = model.transform(adata)
     
+    model = UmapL1().tune(X=adata.X, target_n_features=n)
+    adata = model.transform(adata)
+    adata.var.shape
+
     adata.var["Feature"] = adata.var.index
-    selected_features = adata.var[adata.var["highly_variable"] == True]
+    selected_features = adata.var
     
     return selected_features
 
@@ -69,8 +74,8 @@ def main():
     args = docopt(__doc__)
 
     file = args["<file>"]
+    lasso = int(args["--lasso"])
     n_features = int(args["--n-features"])
-    flavor = args["--flavor"]
     batch = args["--batch"]
     out_file = args["--out-file"]
 
@@ -78,7 +83,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    output = select_features_scanpy(input, n_features, flavor, batch)
+    output = select_features_scanpy(input, lasso, n_features, batch)
     print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
