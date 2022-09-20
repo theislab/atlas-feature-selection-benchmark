@@ -84,7 +84,7 @@ process METRIC_LABELASW {
 
     script:
         """
-        metric-labelASW.R \\
+        metric-labelASW.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
