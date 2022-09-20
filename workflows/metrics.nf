@@ -1,4 +1,3 @@
-
 /*
 ========================================================================================
     PROCESSES
@@ -69,35 +68,6 @@ process METRIC_MIXING {
         """
 }
 
-process METRIC_LABELASW {
-    conda "envs/scib.yml"
-
-    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "labelASW.tsv" }
-
-    input:
-        tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
-
-    output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-labelASW.tsv")
-
-    script:
-        """
-        metric-labelASW.py \\
-            --dataset "${dataset}" \\
-            --method "${method}" \\
-            --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-labelASW.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "${dataset}-${method}-${integration}-labelASW.tsv"
-        """
-}
-
 /*
 ------------------------------
     Classification metrics
@@ -162,61 +132,63 @@ process METRIC_RAREACCURACY {
         """
 }
 
-process METRIC_JACCARDINDEX {
+process METRIC_F1SCORE_MICRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "JaccardIndex.tsv" }
+        saveAs: { filename -> "F1score.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndex.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1score.tsv")
 
     script:
         """
-        metric-JaccardIndex.py \\
+        metric-f1score.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-JaccardIndex.tsv" \\
+			--average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-F1score.tsv" \\
             ${labels}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-JaccardIndex.tsv"
+        touch "${dataset}-${method}-${integration}-F1score.tsv"
         """
 }
 
-process METRIC_MCC {
+process METRIC_F1SCORE_MACRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "MCC.tsv" }
+        saveAs: { filename -> "F1score.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-MCC.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1score.tsv")
 
     script:
         """
-        metric-MCC.py \\
+        metric-f1score.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-MCC.tsv" \\
+			--average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-F1score.tsv" \\
             ${labels}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-MCC.tsv"
+        touch "${dataset}-${method}-${integration}-F1score.tsv"
         """
 }
 
@@ -301,9 +273,6 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        labelASW_ch = metric_names.contains("labelASW") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
-            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -312,21 +281,20 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        JaccardIndex_ch = metric_names.contains("JaccardIndex") ?
-            METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
-			Channel.empty()
-        mcc_ch = metric_names.contains("MCC") ?
-            METRIC_MCC(query_ch, file(params.bindir + "/_functions.R")) :
+		f1score_micro_ch = metric_names.contains("f1score") ?
+            METRIC_F1SCORE_MICRO(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        f1score_macro_ch = metric_names.contains("f1score") ?
+            METRIC_F1SCORE_MACRO(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 			
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
-                labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-				JaccardIndex_ch,
-                mcc_ch
+				f1score_micro_ch,
+				f1score_macro_ch
             )
             .map {it -> file(it[3])}
             .toList()
