@@ -133,6 +133,35 @@ process METRIC_RAREACCURACY {
         """
 }
 
+process METRIC_JACCARDINDEX {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndex.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndex.tsv")
+
+    script:
+        """
+        metric-JaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndex.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndex.tsv"
+        """
+}
+
 /*
 ------------------------------
     Other processes
@@ -222,12 +251,16 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-
+        JaccardIndex_ch = metric_names.contains("JaccardIndex") ?
+            METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+			
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
                 accuracy_ch,
-                rareAccuracy_ch
+                rareAccuracy_ch,
+				JaccardIndex_ch
             )
             .map {it -> file(it[3])}
             .toList()
