@@ -129,7 +129,7 @@ process METHOD_RANDOM_N5000 {
         """
 }
 
-process METHOD_HOTSPOT_N500 {
+process METHOD_HOTSPOT {
     conda "envs/hotspot.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
@@ -138,19 +138,19 @@ process METHOD_HOTSPOT_N500 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("hotspot_N500"), path("hotspot_N500.tsv")
+        tuple val(dataset), val("hotspot"), path("hotspot.tsv")
 
     script:
         """
         method-hotspot.py \\
             --n-features 500 \\
-            --out-file "hotspot_N500.tsv" \\
+            --out-file "hotspot.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "hotspot_N500.tsv"
+        touch "hotspot.tsv"
         """
 }
 
@@ -174,13 +174,15 @@ workflow METHODS {
         random_n1000_ch = method_names.contains("random-N1000") ? METHOD_RANDOM_N1000(prepared_datasets_ch) : Channel.empty()
         random_n2000_ch = method_names.contains("random-N2000") ? METHOD_RANDOM_N2000(prepared_datasets_ch) : Channel.empty()
         random_n5000_ch = method_names.contains("random-N5000") ? METHOD_RANDOM_N5000(prepared_datasets_ch) : Channel.empty()
+        hotspot_ch      = method_names.contains("hotspot")      ? METHOD_HOTSPOT(prepared_datasets_ch)      : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
                 random_n500_ch,
                 random_n1000_ch,
                 random_n2000_ch,
-                random_n5000_ch
+                random_n5000_ch,
+                hotspot_ch
             )
 
     emit:
