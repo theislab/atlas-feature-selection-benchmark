@@ -129,6 +129,31 @@ process METHOD_RANDOM_N5000 {
         """
 }
 
+process METHOD_SCMER_N1000 {
+    conda "envs/scmer.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("scmer_N1000"), path("scmer_N1000.tsv")
+
+    script:
+        """
+        method-random.py \\
+            --n-features 1000 \\
+            --out-file "scmer_N1000.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "scmer_N1000.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -149,13 +174,15 @@ workflow METHODS {
         random_n1000_ch = method_names.contains("random-N1000") ? METHOD_RANDOM_N1000(prepared_datasets_ch) : Channel.empty()
         random_n2000_ch = method_names.contains("random-N2000") ? METHOD_RANDOM_N2000(prepared_datasets_ch) : Channel.empty()
         random_n5000_ch = method_names.contains("random-N5000") ? METHOD_RANDOM_N5000(prepared_datasets_ch) : Channel.empty()
+        scmer_n1000_ch = method_names.contains("scmer-N1000") ? METHOD_SCMER_N1000(prepared_datasets_ch) : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
                 random_n500_ch,
                 random_n1000_ch,
                 random_n2000_ch,
-                random_n5000_ch
+                random_n5000_ch,
+                scmer_n1000_ch
             )
 
     emit:
