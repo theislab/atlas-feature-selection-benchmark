@@ -15,7 +15,7 @@ Options:
 
 def select_hotspot_features(adata, n):
     """
-    Select random in a dataset
+    Select HotSpot features
 
     Parameters
     ----------
