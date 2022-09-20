@@ -69,6 +69,35 @@ process METRIC_MIXING {
         """
 }
 
+process METRIC_LABELILISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "labelILISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-labelILISI.tsv")
+
+    script:
+        """
+        metric-labelILISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-labelILISI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-labelILISI.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -214,6 +243,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        labelILISI_ch = metric_names.contains("labelILISI") ?
+            METRIC_LABELILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -226,6 +258,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+				labelILISI_ch,
                 accuracy_ch,
                 rareAccuracy_ch
             )
