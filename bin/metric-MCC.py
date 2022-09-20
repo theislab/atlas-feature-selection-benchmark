@@ -2,8 +2,10 @@
 
 """
 Evaluate cell label classification using the MCC metric
+
 Usage:
     metric-MCC.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+
 Options:
     -h --help            Show this screen.
     --dataset=<str>      Name of the dataset to calculate the metric for.
