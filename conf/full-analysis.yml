@@ -26,3 +26,5 @@ metrics:
     type: Classification
   - name: rareAccuracy
     type: Classification
+  - name: MCC
+    type: Classification
