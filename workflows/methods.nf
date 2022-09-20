@@ -142,8 +142,8 @@ process METHOD_TRIKU {
 
     script:
         """
-        method-random.py \\
-            --out-file "random_N500.tsv" \\
+        method-triku.py \\
+            --out-file "triku.tsv" \\
             ${reference}
         """
 
@@ -173,7 +173,7 @@ workflow METHODS {
         random_n1000_ch = method_names.contains("random-N1000") ? METHOD_RANDOM_N1000(prepared_datasets_ch) : Channel.empty()
         random_n2000_ch = method_names.contains("random-N2000") ? METHOD_RANDOM_N2000(prepared_datasets_ch) : Channel.empty()
         random_n5000_ch = method_names.contains("random-N5000") ? METHOD_RANDOM_N5000(prepared_datasets_ch) : Channel.empty()
-        triku_ch = method_names.contains("triku") ? METHOD_TRIKU(prepared_datasets_ch) : Channel.empty()
+        triku_ch        = method_names.contains("triku")        ? METHOD_TRIKU(prepared_datasets_ch)        : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(

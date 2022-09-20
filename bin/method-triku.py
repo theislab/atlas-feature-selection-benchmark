@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Triko feature selection
+Select features using the Triku method
 
 Usage:
     method-triku.py --out-file=<path> <file>
@@ -14,7 +14,7 @@ Options:
 
 def select_triku_features(adata):
     """
-    Select random in a dataset
+    Select features in a dataset using Triku
 
     Parameters
     ----------
