@@ -15,7 +15,7 @@ Options:
 """
 
 
-def calculate_asw(adata):
+def calculate_label_asw(adata):
     """
     Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
 
@@ -26,7 +26,7 @@ def calculate_asw(adata):
 
     Returns
     -------
-    The [0, 1] score non-cluster to compact cluster structure.
+    The [0, 1] score interpreted as non-cluster to compact cluster structure.
     """
     from scib.metrics import silhouette
 
@@ -55,7 +55,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_asw(input)
+    score = calculate_label_asw(input)
     output = format_metric_results(
         dataset, method, integration, "Integration", "labelASW", score
     )
