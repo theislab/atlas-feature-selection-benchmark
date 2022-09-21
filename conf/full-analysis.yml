@@ -18,6 +18,7 @@ methods:
   - name: random-N2000
   - name: random-N5000
   - name: select_scsegindex_features
+  - name: nbumi
 metrics:
   - name: batchPurity
     type: Integration

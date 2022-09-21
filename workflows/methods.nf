@@ -153,6 +153,30 @@ process METHOD_SCSEGINDEX {
         """
 }
 
+process METHOD_NBUMI {
+    conda "envs/nbumi.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("scsegindex"), path("scsegindex.tsv")
+
+    script:
+        """
+        method-NBumix.R \\
+            --out-file "nbumi.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "nbumi.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
