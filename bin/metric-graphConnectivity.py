@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Graph Connectivity
+Evaluate integration using graph connectivity
 
 Usage:
     metric-graphConnectivity.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
@@ -17,7 +17,7 @@ Options:
 
 def calculate_graphConnectivity(adata):
     """
-    Calculate the Graph Connectivity score for an integrated dataset.
+    Calculate the graph connectivity score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,10 +26,10 @@ def calculate_graphConnectivity(adata):
 
     Returns
     -------
-    The [0, 1] score non-cluster to compact cluster structure.
+    Graph connectivity score
     """
     from scib.metrics import graph_connectivity
-    
+
     print("Calculating final score...")
     score = graph_connectivity(adata, "Label")
     print("Final score: {score}")
@@ -57,7 +57,7 @@ def main():
     print(input)
     score = calculate_graphConnectivity(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphILISI", score
+        dataset, method, integration, "Integration", "GraphConnectivity", score
     )
     print(output)
     print("Writing output to '{out_file}'...")
