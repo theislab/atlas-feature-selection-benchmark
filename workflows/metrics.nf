@@ -380,7 +380,7 @@ process METRIC_JACCARDINDEX_MICRO {
 
     script:
         """
-        metric-JaccardIndex.py \\
+        metric-jaccardIndex.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
@@ -410,7 +410,7 @@ process METRIC_JACCARDINDEX_MACRO {
 
     script:
         """
-        metric-JaccardIndex.py \\
+        metric-jaccardIndex.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
