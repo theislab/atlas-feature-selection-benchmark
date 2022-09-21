@@ -250,6 +250,31 @@ process METHOD_HOTSPOT {
         """
 }
 
+process METHOD_SCSEGINDEX {
+    conda "envs/scmerge.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("scsegindex"), path("scsegindex.tsv")
+
+    script:
+        """
+        method-scSEGIndex.R \\
+            --out-file "scsegindex.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "scsegindex.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW

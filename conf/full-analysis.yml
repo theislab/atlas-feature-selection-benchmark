@@ -27,7 +27,13 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
   - name: labelASW
+    type: Integration
+  - name: ari
     type: Integration
   - name: accuracy
     type: Classification
