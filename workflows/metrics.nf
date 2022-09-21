@@ -127,6 +127,35 @@ process METRIC_LABELASW {
         """
 }
 
+process METRIC_ISOLATEDLABELS {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "isolatedLabels.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabels.tsv")
+
+    script:
+        """
+        metric-isolatedLabels.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-isolatedLabels.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-isolatedLabels.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -310,6 +339,9 @@ workflow METRICS {
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        isolatedLabels_ch = metric_names.contains("isolatedLabels") ?
+            METRIC_ISOLATEDLABELS(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -329,7 +361,8 @@ workflow METRICS {
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-                mcc_ch
+                mcc_ch,
+				isolatedLabels_ch
             )
             .map {it -> file(it[3])}
             .toList()
