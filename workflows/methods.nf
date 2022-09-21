@@ -130,7 +130,7 @@ process METHOD_RANDOM_N5000 {
 }
 
 process METHOD_SCSEGINDEX {
-    conda "envs/scsegindex.yml"
+    conda "envs/scmerge.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
