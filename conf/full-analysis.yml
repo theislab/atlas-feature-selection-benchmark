@@ -17,14 +17,22 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+  - name: scanpy-default
+  - name: triku
+  - name: hotspot
+  - name: scsegindex
 metrics:
   - name: batchPurity
     type: Integration
   - name: mixing
     type: Integration
   - name: cLISI
-    type: Integration  
+    type: Integration
+  - name: labelASW
+    type: Integration
   - name: accuracy
     type: Classification
   - name: rareAccuracy
+    type: Classification
+  - name: MCC
     type: Classification

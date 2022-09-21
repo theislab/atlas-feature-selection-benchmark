@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate cell label classification using the MCC metric
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-MCC.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,32 +15,29 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_mcc(labels):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
-
+    Calculate classification MCC for a set of cell labels
     Parameters
     ----------
-    adata
-        AnnData object containing the integrated dataset
-
+    labels
+        DataFrame containing real and predicted cell labels
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    The MCC score
     """
-    from scib.metrics import silhouette
+    from sklearn.metrics import matthews_corrcoef
 
-    print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
-    print(f"Final score: {score}")
-
+    score = matthews_corrcoef(labels["Label"], labels["PredLabel"])
+    score = (score+1)/2
+    
     return score
 
 
 def main():
     """The main script function"""
     from docopt import docopt
-    from scanpy import read_h5ad
+    from pandas import read_csv
     from _functions import format_metric_results
 
     args = docopt(__doc__)
@@ -52,12 +49,12 @@ def main():
     out_file = args["--out-file"]
 
     print(f"Reading data from '{file}'...")
-    input = read_h5ad(file)
+    input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_mcc(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Classification", "MCC", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
