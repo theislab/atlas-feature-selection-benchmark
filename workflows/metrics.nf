@@ -214,6 +214,35 @@ process METRIC_ILISI {
         """
 }
 
+process METRIC_BATCHPCR {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "batchPCR.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchPCR.tsv")
+
+    script:
+        """
+        metric-batchPCR.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-batchPCR.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-batchPCR.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -392,7 +421,7 @@ workflow METRICS {
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
-            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         ari_ch = metric_names.contains("ari") ?
             METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
@@ -401,7 +430,10 @@ workflow METRICS {
             METRIC_NMI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        batchPCR_ch = metric_names.contains("batchPCR") ?
+            METRIC_BATCHPCR(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		iLISI_ch = metric_names.contains("iLISI") ?
             METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
@@ -415,7 +447,7 @@ workflow METRICS {
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
-            METRIC_MCC(query_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         metrics_ch = batchPurity_ch
@@ -427,6 +459,7 @@ workflow METRICS {
                 accuracy_ch,
                 rareAccuracy_ch,
                 mcc_ch,
+				batchPCR_ch,
 				iLISI_ch
             )
             .map {it -> file(it[3])}
