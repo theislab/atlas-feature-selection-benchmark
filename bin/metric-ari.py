@@ -5,7 +5,7 @@ Evaluate the cluster structure of the integrated data using the Adjusted Rand In
 This is a similarity metrix between "ground truth" clusters and found clusters after integration.
 
 Usage:
-    metric-accuracy.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-ari.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_accuracy(adata):
+def calculate_ari(adata):
     """
     Calculate the Adjusted Rand Index (ARI) score for a integrated dataset.
 
@@ -59,7 +59,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_accuracy(input)
+    score = calculate_ari(input)
     output = format_metric_results(
         dataset, method, integration, "Integration", "ARI", score
     )
