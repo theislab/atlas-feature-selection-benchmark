@@ -31,10 +31,10 @@ select_nbumi_features <- function(input) {
 
     message("Selecting NBumi features...")
 
-    count_mat <- NBumiConvertData(input@assays@data$X, is.counts=TRUE)
+    count_mat <- NBumiConvertData(SingleCellExperiment::counts(input), is.counts=TRUE)
     DANB_fit <- NBumiFitModel(count_mat)
     result <- NBumiFeatureSelectionCombinedDrop(DANB_fit, method="fdr", qval.thres=0.01, suppress.plot=TRUE)
-    result$Feature = rownames(result)
+    result$Feature <- rownames(result)
 
     return(result)
 }
@@ -48,7 +48,7 @@ main <- function() {
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
             file,
-            X_name = NULL,
+            X_name = "counts",
             uns    = FALSE,
             varm   = FALSE,
             obsm   = "X_emb",
