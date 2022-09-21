@@ -29,7 +29,7 @@ def calculate_iLISI(adata):
     The [0, 1] score non-cluster to compact cluster structure.
     """
     from scib.metrics import ilisi_graph
-    
+
     print("Calculating final score...")
     score = ilisi_graph(adata, "Batch", k0=90, type_=None, subsample=None, scale=True, n_cores=1, verbose=True)
     print("Final score: {score}")
@@ -57,7 +57,7 @@ def main():
     print(input)
     score = calculate_iLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphILISI", score
+        dataset, method, integration, "Integration", "iLISI", score
     )
     print(output)
     print("Writing output to '{out_file}'...")
