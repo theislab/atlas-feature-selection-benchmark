@@ -1,3 +1,16 @@
+#!/usr/bin/env python
+
+"""
+Download the neurips2021 open problem cite-seq dataset (RNA)
+
+Usage:
+    dataset-neurips.py --out-file=<path> [options]
+
+Options:
+    -h --help            Show this screen.
+    --out-file=<path>    Path to output file.
+"""
+
 def get_neurips():
     """
     Get the neurips2021 open problem cite-seq dataset (RNA)
