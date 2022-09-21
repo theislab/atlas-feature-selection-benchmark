@@ -243,6 +243,35 @@ process METRIC_BATCHPCR {
         """
 }
 
+process METRIC_GRAPHCONNECTIVITY {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "graphConnectivity.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-graphConnectivity.tsv")
+
+    script:
+        """
+        metric-graphConnectivity.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-graphConnectivity.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-graphConnectivity.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -438,6 +467,9 @@ workflow METRICS {
 		iLISI_ch = metric_names.contains("iLISI") ?
             METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
+            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -459,6 +491,7 @@ workflow METRICS {
                 accuracy_ch,
                 rareAccuracy_ch,
                 mcc_ch,
+				graphConnectivity_ch,
 				batchPCR_ch,
 				iLISI_ch
             )
