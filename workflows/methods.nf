@@ -154,7 +154,7 @@ process METHOD_SCSEGINDEX {
 }
 
 process METHOD_NBUMI {
-    conda "envs/nbumi.yml"
+    conda "envs/m3drop.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
@@ -162,7 +162,7 @@ process METHOD_NBUMI {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("scsegindex"), path("scsegindex.tsv")
+        tuple val(dataset), val("nbumi"), path("nbumi.tsv")
 
     script:
         """
