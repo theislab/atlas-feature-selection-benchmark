@@ -69,32 +69,32 @@ process METRIC_MIXING {
         """
 }
 
-process METRIC_NMI {
+process METRIC_ARI {
     conda "envs/scib.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "nmi.tsv" }
+        saveAs: { filename -> "ari.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-nmi.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-ari.tsv")
 
     script:
         """
-        metric-nmi.py \\
+        metric-ari.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-nmi.tsv" \\
+            --out-file "${dataset}-${method}-${integration}-ari.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-nmi.tsv"
+        touch "${dataset}-${method}-${integration}-ari.tsv"
         """
 }
 
@@ -304,8 +304,8 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        nmi_ch = metric_names.contains("nmi") ?
-            METRIC_NMI(reference_ch, file(params.bindir + "/_functions.py")) :
+        ari_ch = metric_names.contains("ari") ?
+            METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
@@ -325,7 +325,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
-                nmi_ch,
+                ari_ch,
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
