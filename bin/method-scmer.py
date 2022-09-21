@@ -43,25 +43,24 @@ def select_features_scmer(adata, n, batch, lasso=0):
             "Number of features to select is greater than the number present, setting n to adata.n_vars"
         )
         n = adata.n_vars
-    
+
     if batch:
         batches=adata.obs["Batch"].values
     else:
         batches=None
-    
+
     sc.pp.normalize_total(adata, target_sum=1e4)
     sc.pp.log1p(adata)
 
     model = UmapL1(lasso=lasso).fit(X=adata.X, batches=batches)
     adata = model.transform(adata)
-    
+
     model = UmapL1().tune(X=adata.X, target_n_features=n)
     adata = model.transform(adata)
-    adata.var.shape
 
     adata.var["Feature"] = adata.var.index
     selected_features = adata.var
-    
+
     return selected_features
 
 
