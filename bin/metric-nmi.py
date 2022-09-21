@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate the cluster structure of the integrated data using the Normalized Mutual Information (NMI).
+This is a similarity metrix between "ground truth" clusters and found clusters after integration.
+This score is not adjusted for chance.
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-nmi.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +17,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_nmi(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate the Normalized Mutual Information (NMI) score for a integrated dataset.
 
     Parameters
     ----------
@@ -26,12 +28,15 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    The NMI score [0, 1] where 0 is no mutual information, and 1 a perfect correlation.
     """
-    from scib.metrics import silhouette
+    from scib.metrics import nmi
+    from scib.metrics import opt_louvain
 
-    print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    print("Optimising clusters...")
+    opt_louvain(adata, label_key="Label", cluster_key="Cluster", function=nmi)
+    print("Calculating score...")
+    score = nmi(adata, group1="Label", group2="Cluster")
     print(f"Final score: {score}")
 
     return score
@@ -55,9 +60,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_nmi(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "NMI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

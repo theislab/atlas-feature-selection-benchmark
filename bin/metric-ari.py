@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate the cluster structure of the integrated data using the Adjusted Rand Index (ARI).
+This is a similarity metrix between "ground truth" clusters and found clusters after integration.
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-ari.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +16,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_ari(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate the Adjusted Rand Index (ARI) score for a integrated dataset.
 
     Parameters
     ----------
@@ -26,12 +27,15 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    The ARI score [0, 1] where 0 is no match between the pair of labels, and 1 a perfect match.
     """
-    from scib.metrics import silhouette
+    from scib.metrics import ari
+    from scib.metrics import opt_louvain
 
-    print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    print("Optimising clusters...")
+    opt_louvain(adata, label_key="Label", cluster_key="Cluster", function=ari)
+    print("Calculating score...")
+    score = ari(adata, group1="Label", group2="Cluster")
     print(f"Final score: {score}")
 
     return score
@@ -55,9 +59,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_ari(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "ARI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

@@ -24,12 +24,19 @@ methods:
   - name: scanpy-default
   - name: triku
   - name: hotspot
+  - name: scsegindex
 metrics:
   - name: batchPurity
     type: Integration
   - name: mixing
     type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
   - name: labelASW
+    type: Integration
+  - name: ari
     type: Integration
   - name: accuracy
     type: Classification
