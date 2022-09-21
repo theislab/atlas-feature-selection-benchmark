@@ -282,11 +282,11 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        JaccardIndex_micro_ch = metric_names.contains("JaccardIndexMicro") ?
-            METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
+		JaccardIndex_micro_ch = metric_names.contains("JaccardIndexMicro") ?
+            METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-		JaccardIndex_macro_ch = metric_names.contains("JaccardIndexMacro") ?
-            METRIC_JACCARDINDEX(query_ch, file(params.bindir + "/_functions.R")) :
+        JaccardIndex_macro_ch = metric_names.contains("JaccardIndexMacro") ?
+            METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 			
         metrics_ch = batchPurity_ch
@@ -294,8 +294,8 @@ workflow METRICS {
                 mixing_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-				JaccardIndex_micro_ch,
-				JaccardIndex_macro_ch
+                JaccardIndex_micro_ch,
+                JaccardIndex_macro_ch
             )
             .map {it -> file(it[3])}
             .toList()

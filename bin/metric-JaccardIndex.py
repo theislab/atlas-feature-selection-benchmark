@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Evaluate cell label classification using the f1 score metric
+Evaluate cell label classification using the jaccard index metric
 
 Usage:
     metric-JaccardIndex.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
@@ -11,23 +11,23 @@ Options:
     --dataset=<str>      Name of the dataset to calculate the metric for.
     --method=<str>       Name of the method to calculate the metric for.
     --integration=<str>  Name of the integration to calculate the metric for.
-	--average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'samples', otherwise is "binary" [default: "None"].
+    --average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'samples', otherwise is "binary" [default: "None"].
     --out-file=<path>    Path to output file.
 """
 
 
 def calculate_JaccardIndex(labels,average="None"):
     """
-    Calculate classification accuracy for a set of cell labels
+    Calculate jaccard index for a set of cell labels
     Parameters
     ----------
     labels
         DataFrame containing real and predicted cell labels
 	average
-		the parameters required for multiclass targets
+        the parameters required for multiclass targets
     Returns
     -------
-    The F1 score
+    The jaccard index
     """
     from sklearn.metrics import jaccard_score
 	
