@@ -21,6 +21,7 @@ methods:
   - name: triku
   - name: hotspot
   - name: scsegindex
+  - name: nbumi
 metrics:
   - name: batchPurity
     type: Integration
@@ -33,6 +34,8 @@ metrics:
   - name: labelASW
     type: Integration
   - name: batchPCR
+    type: Integration
+  - name: iLISI
     type: Integration
   - name: ari
     type: Integration
