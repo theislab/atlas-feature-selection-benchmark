@@ -152,7 +152,7 @@ process METRIC_JACCARDINDEX_MICRO {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-			--average "micro" \\
+            --average "micro" \\
             --out-file "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv" \\
             ${labels}
         """
@@ -182,7 +182,7 @@ process METRIC_JACCARDINDEX_MACRO {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-			--average "macro" \\
+            --average "macro" \\
             --out-file "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv" \\
             ${labels}
         """

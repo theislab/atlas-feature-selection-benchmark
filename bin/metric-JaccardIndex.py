@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_JaccardIndex(labels,average="None"):
+def calculate_JaccardIndex(labels,average=None):
     """
     Calculate jaccard index for a set of cell labels
     Parameters
