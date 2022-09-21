@@ -149,7 +149,7 @@ process METHOD_SCSEGINDEX {
 
     stub:
         """
-        touch "scsegindex.tsv.tsv"
+        touch "scsegindex.tsv"
         """
 }
 
