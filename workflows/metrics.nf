@@ -535,10 +535,10 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-		jaccard_micro_ch = metric_names.contains("JaccardIndexMicro") ?
+		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
-        jaccard_macro_ch = metric_names.contains("JaccardIndexMacro") ?
+        jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
             METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
