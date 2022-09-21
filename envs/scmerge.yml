@@ -1,4 +1,4 @@
-name: atlas-feature-selection-scsegindex
+name: atlas-feature-selection-scmerge
 channels:
   - conda-forge
   - bioconda

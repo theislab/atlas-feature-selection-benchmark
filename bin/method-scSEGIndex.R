@@ -24,7 +24,7 @@ suppressMessages({
 
 #' Select features using the scSEGIndex method
 #'
-#' @param seurat Seurat object containing the integrated dataset
+#' @param input SingleCellExperiment object containing the integrated dataset
 #'
 #' @returns DataFrame containing the selected features
 select_scsegindex_features <- function(input) {

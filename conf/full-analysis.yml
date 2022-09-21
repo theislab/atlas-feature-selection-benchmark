@@ -17,11 +17,11 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
-  - name: scsegindex
-  - name: nbumi
   - name: scanpy-default
   - name: triku
   - name: hotspot
+  - name: scsegindex
+  - name: nbumi
 metrics:
   - name: batchPurity
     type: Integration
