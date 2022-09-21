@@ -21,14 +21,25 @@ methods:
   - name: triku
   - name: hotspot
   - name: scsegindex
+  - name: nbumi
 metrics:
   - name: batchPurity
     type: Integration
   - name: mixing
     type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
   - name: labelASW
     type: Integration
   - name: graphConnectivity
+    type: Integration
+  - name: batchPCR
+    type: Integration
+  - name: iLISI
+    type: Integration
+  - name: ari
     type: Integration
   - name: accuracy
     type: Classification
