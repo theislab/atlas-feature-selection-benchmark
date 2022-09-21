@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_f1score(labels,average="None"):
+def calculate_f1score(labels,average=None):
     """
     Calculate classification accuracy for a set of cell labels
     Parameters
