@@ -69,6 +69,64 @@ process METRIC_MIXING {
         """
 }
 
+process METRIC_ARI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "ari.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-ari.tsv")
+
+    script:
+        """
+        metric-ari.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-ari.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-ari.tsv"
+        """
+}
+
+process METRIC_NMI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "nmi.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-nmi.tsv")
+
+    script:
+        """
+        metric-nmi.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-nmi.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-nmi.tsv"
+        """
+}
+
 process METRIC_LABELASW {
     conda "envs/scib.yml"
 
@@ -307,6 +365,12 @@ workflow METRICS {
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        ari_ch = metric_names.contains("ari") ?
+            METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        nmi_ch = metric_names.contains("nmi") ?
+            METRIC_NMI(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
@@ -326,6 +390,7 @@ workflow METRICS {
             .mix(
                 mixing_ch,
 				cLISI_ch,
+                ari_ch,
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
