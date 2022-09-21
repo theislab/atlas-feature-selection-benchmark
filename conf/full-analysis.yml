@@ -25,6 +25,8 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: kBET
+    type: Integration
   - name: labelASW
     type: Integration
   - name: accuracy
