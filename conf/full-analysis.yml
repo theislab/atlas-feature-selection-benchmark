@@ -33,6 +33,8 @@ metrics:
     type: Integration
   - name: labelASW
     type: Integration
+  - name: iLISI
+    type: Integration
   - name: ari
     type: Integration
   - name: accuracy
