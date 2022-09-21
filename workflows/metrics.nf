@@ -321,11 +321,11 @@ workflow METRICS {
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-			
+
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
-                nmi_ch
+                nmi_ch,
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
