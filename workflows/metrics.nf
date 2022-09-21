@@ -491,7 +491,7 @@ workflow METRICS {
                 accuracy_ch,
                 rareAccuracy_ch,
                 mcc_ch,
-				graphConnectivity_ch
+				graphConnectivity_ch,
 				batchPCR_ch,
 				iLISI_ch
             )
