@@ -11,7 +11,7 @@ Options:
     --dataset=<str>      Name of the dataset to calculate the metric for.
     --method=<str>       Name of the method to calculate the metric for.
     --integration=<str>  Name of the integration to calculate the metric for.
-	--average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'weighted', otherwise is "binary" [default: "None"].
+    --average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'weighted', otherwise is "binary" [default: "None"].
     --out-file=<path>    Path to output file.
 """
 
@@ -30,13 +30,6 @@ def calculate_f1score(labels,average="None"):
     The F1 score
     """
     from sklearn.metrics import f1_score
-	
-    if average == "None":
-        len_mark = len(set(list(labels["Label"])))
-        if len_mark == 2:
-            average = "binary"
-        else:
-            average = "weighted"
 			
     score = f1_score(list(labels["Label"]), list(labels["PredLabel"]),average=average)
 
@@ -56,7 +49,8 @@ def main():
     integration = args["--integration"]
     average = args["--average"]
     out_file = args["--out-file"]
-    average = str(average)
+    if average == "None":
+        average = None
 
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
