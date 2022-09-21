@@ -26,10 +26,10 @@ def calculate_cLISI(adata):
 
     Returns
     -------
-    The [0, 1] score non-cluster to compact cluster structure.
+    cLISI score
     """
     from scib.metrics import clisi_graph
-    
+
     print("Calculating final score...")
     score = clisi_graph(adata, "Batch", "Label", k0=90, type_=None, subsample=None, scale=True, n_cores=1, verbose=True)
     print(f"Final score: {score}")
@@ -57,7 +57,7 @@ def main():
     print(input)
     score = calculate_cLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphILISI", score
+        dataset, method, integration, "Integration", "cLISI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
