@@ -129,54 +129,6 @@ process METHOD_RANDOM_N5000 {
         """
 }
 
-process METHOD_SCSEGINDEX {
-    conda "envs/scmerge.yml"
-
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
-
-    input:
-        tuple val(dataset), path(reference), path(query)
-
-    output:
-        tuple val(dataset), val("scsegindex"), path("scsegindex.tsv")
-
-    script:
-        """
-        method-scSEGIndex.R \\
-            --out-file "scsegindex.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "scsegindex.tsv"
-        """
-}
-
-process METHOD_NBUMI {
-    conda "envs/m3drop.yml"
-
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
-
-    input:
-        tuple val(dataset), path(reference), path(query)
-
-    output:
-        tuple val(dataset), val("nbumi"), path("nbumi.tsv")
-
-    script:
-        """
-        method-NBumix.R \\
-            --out-file "nbumi.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "nbumi.tsv"
-        """
-}
-
 process METHOD_SCANPY_DEFAULT {
     conda "envs/scanpy.yml"
 
@@ -275,6 +227,31 @@ process METHOD_SCSEGINDEX {
         """
 }
 
+process METHOD_NBUMI {
+    conda "envs/m3drop.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("nbumi"), path("nbumi.tsv")
+
+    script:
+        """
+        method-NBumix.R \\
+            --out-file "nbumi.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "nbumi.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -298,8 +275,8 @@ workflow METHODS {
         scanpy_default_ch = method_names.contains("scanpy-default") ? METHOD_SCANPY_DEFAULT(prepared_datasets_ch) : Channel.empty()
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
-        nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch)          : Channel.empty()
-        scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch)     : Channel.empty()
+        scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
+        nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
