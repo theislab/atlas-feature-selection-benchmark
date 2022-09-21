@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Principal component regression
+Evaluate integration using principal component regression
 
 Usage:
     metric-batchPCR.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
@@ -17,7 +17,7 @@ Options:
 
 def calculate_batchPCR(adata):
     """
-    Calculate the Principal component regression score for an integrated dataset.
+    Calculate the principal component regression score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,10 +26,10 @@ def calculate_batchPCR(adata):
 
     Returns
     -------
-    The [0, 1] score non-cluster to compact cluster structure.
+    The PCR comparison score
     """
     from scib.metrics import pcr_comparison
-    
+
     print("Calculating final score...")
     score = pcr_comparison(adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True)
     print("Final score: {score}")
@@ -51,16 +51,16 @@ def main():
     integration = args["--integration"]
     out_file = args["--out-file"]
 
-    print("Reading data from '{file}'...")
+    print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
     print("Read data:")
     print(input)
     score = calculate_batchPCR(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphILISI", score
+        dataset, method, integration, "Integration", "BatchPCR", score
     )
     print(output)
-    print("Writing output to '{out_file}'...")
+    print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
 
