@@ -98,6 +98,35 @@ process METRIC_LABELASW {
         """
 }
 
+process METRIC_ILISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "iLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-iLISI.tsv")
+
+    script:
+        """
+        metric-iLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-iLISI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-iLISI.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -278,6 +307,9 @@ workflow METRICS {
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+		iLISI_ch = metric_names.contains("iLISI") ?
+            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -296,7 +328,8 @@ workflow METRICS {
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-                mcc_ch
+                mcc_ch,
+				iLISI_ch
             )
             .map {it -> file(it[3])}
             .toList()
