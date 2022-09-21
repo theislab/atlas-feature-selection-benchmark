@@ -156,6 +156,35 @@ process METRIC_LABELASW {
         """
 }
 
+process METRIC_CLISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "cLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cLISI.tsv")
+
+    script:
+        """
+        metric-cLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-cLISI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-cLISI.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -333,6 +362,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        cLISI_ch = metric_names.contains("cLISI") ?
+            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
         ari_ch = metric_names.contains("ari") ?
             METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -357,6 +389,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
                 accuracy_ch,
