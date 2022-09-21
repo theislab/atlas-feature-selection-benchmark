@@ -9,14 +9,13 @@ Usage:
 Options:
     -h --help            Show this screen.
     -o --out-file=<path>    Path to output file.
-    -l --lasso              Lasso strength [default: 0]
     -n --n-features=<int>   Number of features to select [default: 1000].
     -b --batch              Apply to each batch. Requires column 'Batch' in .obs.
 """
 
-def select_features_scanpy(adata, lasso, n, batch):
+def select_features_scmer(adata, n, batch, lasso=0):
     """
-    Select features using scanpy.pp.highly_variable_genes
+    Select features using scmer
 
     Parameters
     ----------
@@ -74,7 +73,6 @@ def main():
     args = docopt(__doc__)
 
     file = args["<file>"]
-    lasso = int(args["--lasso"])
     n_features = int(args["--n-features"])
     batch = args["--batch"]
     out_file = args["--out-file"]
@@ -83,7 +81,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    output = select_features_scanpy(input, lasso, n_features, batch)
+    output = select_features_scmer(input, n_features, batch)
     print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
