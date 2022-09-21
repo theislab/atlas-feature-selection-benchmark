@@ -17,7 +17,7 @@ Options:
 """
 
 
-def calculate_batch_asw(adata):
+def calculate_kBET(adata):
     """
     Calculate the k-Nearest Neighbour Batch effect Test (k-BET) score for an
     integrated dataset over batches per group(e. g., cell type).
@@ -58,7 +58,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_batch_asw(input)
+    score = calculate_kBET(input)
     output = format_metric_results(
         dataset, method, integration, "Integration", "kBET", score
     )
