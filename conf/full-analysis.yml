@@ -22,7 +22,7 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
-  - name: iLISI
+  - name: cLISI
     type: Integration  
   - name: accuracy
     type: Classification

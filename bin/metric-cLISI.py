@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Cell-type LISI (iLISI)
+Evaluate integration using Cell-type LISI (cLISI)
 
 Usage:
-    metric-iLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
+    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_iLISI(adata):
+def calculate_cLISI(adata):
     """
-    Calculate the Cell-type LISI (iLISI) score for an integrated dataset.
+    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
 
     Parameters
     ----------
@@ -55,7 +55,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_iLISI(input)
+    score = calculate_cLISI(input)
     output = format_metric_results(
         dataset, method, integration, "Integration", "GraphILISI", score
     )

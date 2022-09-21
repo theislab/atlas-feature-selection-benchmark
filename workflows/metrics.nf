@@ -69,32 +69,32 @@ process METRIC_MIXING {
         """
 }
 
-process METRIC_ILISI {
+process METRIC_CLISI {
     conda "envs/scib.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "iLISI.tsv" }
+        saveAs: { filename -> "cLISI.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-iLISI.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cLISI.tsv")
 
     script:
         """
-        metric-iLISI.py \\
+        metric-cLISI.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-iLISI.tsv" \\
+            --out-file "${dataset}-${method}-${integration}-cLISI.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-iLISI.tsv"
+        touch "${dataset}-${method}-${integration}-cLISI.tsv"
         """
 }
 
@@ -243,8 +243,8 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        iLISI_ch = metric_names.contains("iLISI") ?
-            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+        cLISI_ch = metric_names.contains("cLISI") ?
+            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         // Classification metrics
@@ -258,7 +258,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
-				iLISI_ch,
+				cLISI_ch,
                 accuracy_ch,
                 rareAccuracy_ch
             )
