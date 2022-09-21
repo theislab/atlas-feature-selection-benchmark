@@ -250,6 +250,32 @@ process METHOD_HOTSPOT {
         """
 }
 
+process METHOD_SEURAT {
+    conda "envs/seurat.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("seurat"), path("seurat.tsv")
+
+    script:
+        """
+        method-hotspot.py \\
+            --n-features 500 \\
+            --flavor vst \\
+            --out-file "seurat.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "seurat.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -275,6 +301,7 @@ workflow METHODS {
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch)          : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch)     : Channel.empty()
+        seurat_ch         = method_names.contains("seurat")         ? METHOD_SEURAT(prepared_datasets_ch)         : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
@@ -287,6 +314,7 @@ workflow METHODS {
                 hotspot_ch,
                 nbumi_ch,
                 scsegindex_ch,
+                seurat_ch
             )
 
     emit:
