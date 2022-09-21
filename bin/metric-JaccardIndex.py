@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_JaccardIndex(labels,average="None"):
+def calculate_JaccardIndex(labels,average=None):
     """
     Calculate jaccard index for a set of cell labels
     Parameters
@@ -31,13 +31,6 @@ def calculate_JaccardIndex(labels,average="None"):
     """
     from sklearn.metrics import jaccard_score
 	
-    if average == "None":
-        len_mark = len(set(list(labels["Label"])))
-        if len_mark == 2:
-            average = "binary"
-        else:
-            average = "micro"
-			
     score = jaccard_score(list(labels["Label"]), list(labels["PredLabel"]),average=average)
 
     return score
@@ -56,8 +49,9 @@ def main():
     integration = args["--integration"]
     average = args["--average"]
     out_file = args["--out-file"]
-    average = str(average)
-
+    if average == "None":
+        average = None
+    
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
     print("Read data:")
