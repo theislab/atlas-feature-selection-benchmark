@@ -25,6 +25,8 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: nmi
+    type: Integration
   - name: labelASW
     type: Integration
   - name: accuracy
