@@ -69,6 +69,25 @@ process DATASET_SCIBPANCREAS {
         """
 }
 
+process DATASET_HUMANENDODERM {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    output:
+        tuple val("HumanEndoderm"), path("HumanEndoderm.h5ad")
+
+    script:
+        """
+        dataset-HumanEndoderm.py --out-file "HumanEndoderm.h5ad"
+        """
+
+    stub:
+        """
+        touch HumanEndoderm.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -119,11 +138,15 @@ workflow DATASETS {
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
             Channel.empty()
+        HumanEndoderm_ch = dataset_names.contains("HumanEndoderm") ?
+            DATASET_HUMANENDODERM() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
                 tinySim2_ch,
                 scIBPancreas_ch
+                HumanEndoderm_ch
             )
 
         datasets_ch = Channel

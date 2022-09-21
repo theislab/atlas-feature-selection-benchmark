@@ -11,6 +11,10 @@ datasets:
     batch_col: tech
     label_col: celltype
     query_batches: inDrop3
+  - name: HumanEndoderm
+    batch_col: Sample
+    label_col: Cell_type
+    query_batches: Sample_HT-184_d85_Duodenum,Sample_HT-236_d132_Duodenum,Sample_HT-232_d100_Stomach-antrum,Sample_HT-232_d100_Stomach-corpus,Sample_HT-187_d103_Lung-airway,Sample_HT-187_d103_Lung-distal,Sample_HT-187_d103_Lung-tracheal-epi
 methods:
   - name: all
   - name: random-N500
