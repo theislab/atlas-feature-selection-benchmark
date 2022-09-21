@@ -1,4 +1,4 @@
-name: atlas-feature-selection-nbumi
+name: atlas-feature-selection-m3drop
 channels:
   - conda-forge
   - bioconda
