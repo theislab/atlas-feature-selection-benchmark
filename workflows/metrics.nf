@@ -69,6 +69,36 @@ process METRIC_MIXING {
         """
 }
 
+process METRIC_KBET {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "kBET.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-kBET.tsv")
+
+    script:
+        """
+        Rscript metric-kBET-install.R
+        metric-kBET.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-kBET.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-kBET.tsv"
+        """
+}
+
 process METRIC_LABELASW {
     conda "envs/scib.yml"
 
@@ -275,6 +305,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        kBET_ch = metric_names.contains("kBET") ?
+            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
@@ -293,6 +326,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+                kBET_ch,
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
