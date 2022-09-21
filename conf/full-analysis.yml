@@ -20,7 +20,7 @@ methods:
   - name: scanpy-default
   - name: triku
   - name: hotspot
-  - name: select_scsegindex_features
+  - name: scsegindex
 metrics:
   - name: batchPurity
     type: Integration
