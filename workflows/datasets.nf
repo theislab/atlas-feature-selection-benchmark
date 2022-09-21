@@ -69,6 +69,25 @@ process DATASET_SCIBPANCREAS {
         """
 }
 
+process DATASET_COVID19 {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    output:
+        tuple val("covid19"), path("covid19.h5ad")
+
+    script:
+        """
+        dataset-COVID19.py --out-file "covid19.h5ad"
+        """
+
+    stub:
+        """
+        touch covid19.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -119,11 +138,15 @@ workflow DATASETS {
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
             Channel.empty()
+		covid19_ch = dataset_names.contains("covid19") ?
+            DATASET_COVID19() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
                 tinySim2_ch,
-                scIBPancreas_ch
+                scIBPancreas_ch,
+				covid19_ch
             )
 
         datasets_ch = Channel

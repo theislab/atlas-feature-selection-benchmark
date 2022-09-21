@@ -11,6 +11,10 @@ datasets:
     batch_col: tech
     label_col: celltype
     query_batches: inDrop3
+  - name: COVID19
+    batch_col: sampleID
+    label_col: celltype
+    query_batches: S-S030,S-M024,S-S031,S-M018,S-M022,S-M023,S-S029,S-S028,S-M021,S-M019,S-M017,S-M020
 methods:
   - name: all
   - name: random-N500
