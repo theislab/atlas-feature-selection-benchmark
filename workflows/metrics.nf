@@ -336,7 +336,6 @@ process METRIC_RAREACCURACY {
         """
 }
 
-
 process METRIC_MCC {
     conda "envs/sklearn.yml"
 
@@ -366,7 +365,65 @@ process METRIC_MCC {
         """
 }
 
+process METRIC_JACCARDINDEX_MICRO {
+    conda "envs/sklearn.yml"
 
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexMicro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMicro.tsv")
+
+    script:
+        """
+        metric-jaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv"
+        """
+}
+
+process METRIC_JACCARDINDEX_MACRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexMacro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMacro.tsv")
+
+    script:
+        """
+        metric-jaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv"
+        """
+}
 
 /*
 ------------------------------
@@ -478,6 +535,12 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
+            METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
+            METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -490,6 +553,8 @@ workflow METRICS {
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
+                jaccard_micro_ch,
+                jaccard_macro_ch,
                 mcc_ch,
 				graphConnectivity_ch,
 				batchPCR_ch,

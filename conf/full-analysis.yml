@@ -47,3 +47,7 @@ metrics:
     type: Classification
   - name: MCC
     type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
+    type: Classification
