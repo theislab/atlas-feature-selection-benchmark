@@ -241,7 +241,7 @@ process METHOD_NBUMI {
 
     script:
         """
-        method-NBumix.R \\
+        method-NBumi.R \\
             --out-file "nbumi.tsv" \\
             ${reference}
         """
