@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate integration using a Modified Adjusted Silhouette Width (mASW).
+The silhouette score is calculated over batches per a group, e. g., cell type.
+This is to evaluate how well represented each batch is in a given group.
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-batchASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +17,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_batch_asw(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate a modified Adjusted Silhouette Width (mASW) score for an integrated dataset over batches per group(e. g., cell type).
 
     Parameters
     ----------
@@ -26,12 +28,12 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    The scaled mASW score [0, 1] where 1 indicates optimal batch mixing on average across groups (e. g., cell type).
     """
-    from scib.metrics import silhouette
+    from scib.metrics import silhouette_batch
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    score = silhouette_batch(adata, batch_key="Batch", group_key="Label", embed="X_emb")
     print(f"Final score: {score}")
 
     return score
@@ -55,9 +57,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_batch_asw(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "batchASW", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
