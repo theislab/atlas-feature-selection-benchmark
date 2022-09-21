@@ -17,6 +17,7 @@ methods:
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+  - name: select_scsegindex_features
 metrics:
   - name: batchPurity
     type: Integration

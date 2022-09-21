@@ -129,6 +129,30 @@ process METHOD_RANDOM_N5000 {
         """
 }
 
+process METHOD_SCSEGINDEX {
+    conda "envs/scsegindex.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("scsegindex"), path("scsegindex.tsv")
+
+    script:
+        """
+        method-scSEGIndex.R \\
+            --out-file "scsegindex.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "scsegindex.tsv.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
