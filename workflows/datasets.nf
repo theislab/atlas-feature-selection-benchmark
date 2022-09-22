@@ -69,6 +69,25 @@ process DATASET_SCIBPANCREAS {
         """
 }
 
+process DATASET_HLCA {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    output:
+        tuple val("HLCA"), path("HLCA.h5ad")
+
+    script:
+        """
+        dataset-HLCA.py --out-file "HLCA.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCA.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -119,11 +138,15 @@ workflow DATASETS {
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
             Channel.empty()
+        HLCA_ch = dataset_names.contains("HLCA") ?
+            DATASET_HLCA() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
                 tinySim2_ch,
-                scIBPancreas_ch
+                scIBPancreas_ch,
+				HLCA_ch
             )
 
         datasets_ch = Channel
