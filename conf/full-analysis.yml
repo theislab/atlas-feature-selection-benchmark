@@ -11,6 +11,10 @@ datasets:
     batch_col: tech
     label_col: celltype
     query_batches: inDrop3
+  - name: neurips
+    batch_col: batch
+    label_col: cell_type
+    query_batches: s4d1,s4d8,s4d9
 methods:
   - name: all
   - name: random-N500
