@@ -166,7 +166,7 @@ process METHOD_TRIKU {
 
     script:
         """
-        method-random.py \\
+        method-triku.py \\
             --out-file "triku.tsv" \\
             ${reference}
         """
