@@ -142,7 +142,7 @@ workflow DATASETS {
             DATASET_SCIBPANCREAS() :
             Channel.empty()
 		neurips_ch = dataset_names.contains("neurips") ?
-            DATASET_NEURIPS() :
+            DATASET_NEURIPS(file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
