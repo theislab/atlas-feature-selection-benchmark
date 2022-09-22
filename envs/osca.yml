@@ -7,6 +7,7 @@ dependencies:
   - anndata=0.8.0
   - bioconductor-scran=1.22.1
   - bioconductor-scater=1.22.0
+  - bioconductor-batchelor=1.10.0
   - bioconductor-basilisk=1.6.0
   - bioconductor-basilisk.utils=1.6.0
   - bioconductor-biobase=2.54.0

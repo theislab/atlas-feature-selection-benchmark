@@ -27,22 +27,22 @@ select_features_scran <- function(input, batch, n_features) {
   
   message("Selecting features using scran...")
   
-  sf <- scater::librarySizeFactors(input)
-  input <- scater::logNormCounts(input, sf)
-  
   if (batch) {
     block = input$Batch
+    input <- batchelor::multiBatchNorm(input, batch = block)
   } else {
     block = NULL
+    input$sizeFactor <- scater::librarySizeFactors(input)
+    input <- scater::logNormCounts(input, input$sizeFactor)
   }
+  
+  result <- scran::modelGeneVar(input, block = block)
   
   if (is.null(n_features)) {
     n <- NULL
   } else {
     n <- as.integer(n_features)
   }
-  
-  result <- scran::modelGeneVar(input, block = block)
   
   result <- scran::getTopHVGs(result, n = n)
   
