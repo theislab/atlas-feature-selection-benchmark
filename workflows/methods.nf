@@ -263,7 +263,7 @@ process METHOD_SEURAT {
 
     script:
         """
-        method-hotspot.py \\
+        method-seurat.py \\
             --n-features 500 \\
             --flavor vst \\
             --out-file "seurat.tsv" \\
@@ -324,8 +324,8 @@ workflow METHODS {
         scanpy_default_ch = method_names.contains("scanpy-default") ? METHOD_SCANPY_DEFAULT(prepared_datasets_ch) : Channel.empty()
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
-        nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch)          : Channel.empty()
-        scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch)     : Channel.empty()
+        scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
+        nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
         seurat_ch         = method_names.contains("seurat")         ? METHOD_SEURAT(prepared_datasets_ch)         : Channel.empty()
 
         selected_features_ch = all_ch
