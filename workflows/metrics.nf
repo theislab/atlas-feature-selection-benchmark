@@ -185,6 +185,93 @@ process METRIC_CLISI {
         """
 }
 
+process METRIC_ILISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "iLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-iLISI.tsv")
+
+    script:
+        """
+        metric-iLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-iLISI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-iLISI.tsv"
+        """
+}
+
+process METRIC_BATCHPCR {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "batchPCR.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchPCR.tsv")
+
+    script:
+        """
+        metric-batchPCR.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-batchPCR.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-batchPCR.tsv"
+        """
+}
+
+process METRIC_GRAPHCONNECTIVITY {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "graphConnectivity.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-graphConnectivity.tsv")
+
+    script:
+        """
+        metric-graphConnectivity.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-graphConnectivity.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-graphConnectivity.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -249,7 +336,6 @@ process METRIC_RAREACCURACY {
         """
 }
 
-
 process METRIC_MCC {
     conda "envs/sklearn.yml"
 
@@ -279,7 +365,65 @@ process METRIC_MCC {
         """
 }
 
+process METRIC_JACCARDINDEX_MICRO {
+    conda "envs/sklearn.yml"
 
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexMicro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMicro.tsv")
+
+    script:
+        """
+        metric-jaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexMicro.tsv"
+        """
+}
+
+process METRIC_JACCARDINDEX_MACRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexMacro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexMacro.tsv")
+
+    script:
+        """
+        metric-jaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv"
+        """
+}
 
 /*
 ------------------------------
@@ -363,7 +507,7 @@ workflow METRICS {
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
-            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         ari_ch = metric_names.contains("ari") ?
             METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
@@ -372,7 +516,16 @@ workflow METRICS {
             METRIC_NMI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        batchPCR_ch = metric_names.contains("batchPCR") ?
+            METRIC_BATCHPCR(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+		iLISI_ch = metric_names.contains("iLISI") ?
+            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
+            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         // Classification metrics
@@ -382,8 +535,14 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
+            METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
+            METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
-            METRIC_MCC(query_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         metrics_ch = batchPurity_ch
@@ -394,7 +553,12 @@ workflow METRICS {
                 labelASW_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-                mcc_ch
+                jaccard_micro_ch,
+                jaccard_macro_ch,
+                mcc_ch,
+				graphConnectivity_ch,
+				batchPCR_ch,
+				iLISI_ch
             )
             .map {it -> file(it[3])}
             .toList()

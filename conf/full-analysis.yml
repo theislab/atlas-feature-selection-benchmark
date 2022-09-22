@@ -34,6 +34,12 @@ metrics:
     type: Integration
   - name: labelASW
     type: Integration
+  - name: graphConnectivity
+    type: Integration
+  - name: batchPCR
+    type: Integration
+  - name: iLISI
+    type: Integration
   - name: ari
     type: Integration
   - name: accuracy
@@ -41,4 +47,8 @@ metrics:
   - name: rareAccuracy
     type: Classification
   - name: MCC
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
     type: Classification
