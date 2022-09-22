@@ -158,6 +158,8 @@ process METHOD_TRIKU {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
+    label "process_low"
+
     input:
         tuple val(dataset), path(reference), path(query)
 
