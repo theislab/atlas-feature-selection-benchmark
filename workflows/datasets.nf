@@ -70,7 +70,7 @@ process DATASET_SCIBPANCREAS {
 }
 
 process DATASET_NEURIPS {
-    conda "envs/splatter.yml"
+    conda "envs/scanpy.yml"
 
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
 

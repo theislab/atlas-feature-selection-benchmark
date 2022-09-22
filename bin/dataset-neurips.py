@@ -32,7 +32,7 @@ def get_neurips():
     print("Reading dataset from " + url + "...")
     os.system("cd " + temp_dir.name)
     os.system("wget " + url)
-    os.system("tar -xvf " + FNAME)
+    os.system("gunzip " + FNAME)
     adata = read("GSE194122_openproblems_neurips2021_cite_BMMC_processed.h5ad")
     
     print("Cleaning up temporary directory...")
