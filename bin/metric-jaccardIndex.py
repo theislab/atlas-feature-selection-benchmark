@@ -5,7 +5,7 @@ Evaluate cell label classification using the jaccard index metric
 
 Usage:
     metric-JaccardIndex.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
-	
+
 Options:
     -h --help            Show this screen.
     --dataset=<str>      Name of the dataset to calculate the metric for.
@@ -30,7 +30,7 @@ def calculate_JaccardIndex(labels,average=None):
     The jaccard index
     """
     from sklearn.metrics import jaccard_score
-	
+
     score = jaccard_score(list(labels["Label"]), list(labels["PredLabel"]),average=average)
 
     return score
@@ -51,14 +51,14 @@ def main():
     out_file = args["--out-file"]
     if average == "None":
         average = None
-    
+
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
     score = calculate_JaccardIndex(input,average=average)
     output = format_metric_results(
-        dataset, method, integration, "Classification", "Jaccard Index", score
+        dataset, method, integration, "Classification", f"JaccardIndex{average}", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
