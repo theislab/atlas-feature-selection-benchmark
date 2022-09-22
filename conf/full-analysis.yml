@@ -21,6 +21,7 @@ methods:
   - name: triku
   - name: hotspot
   - name: scsegindex
+  - name: dubstepr
 metrics:
   - name: batchPurity
     type: Integration
