@@ -276,6 +276,31 @@ process METHOD_SEURAT {
         """
 }
 
+process METHOD_NBUMI {
+    conda "envs/m3drop.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("nbumi"), path("nbumi.tsv")
+
+    script:
+        """
+        method-NBumi.R \\
+            --out-file "nbumi.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "nbumi.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
