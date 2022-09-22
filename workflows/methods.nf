@@ -252,6 +252,31 @@ process METHOD_NBUMI {
         """
 }
 
+process METHOD_OSCA_DEFAULT {
+    conda "envs/osca.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("osca_default"), path("osca_default.tsv")
+
+    script:
+        """
+        method-osca.R \\
+            --out-file "osca_default.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "osca_default.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -277,6 +302,7 @@ workflow METHODS {
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
+        osca_default_ch = method_names.contains("osca-default")     ? METHOD_OSCA_DEFAULT(prepared_datasets_ch, file(params.bindir + "/_functions.R")) : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
@@ -289,6 +315,7 @@ workflow METHODS {
                 hotspot_ch,
                 nbumi_ch,
                 scsegindex_ch,
+                osca_default_ch
             )
 
     emit:
