@@ -227,6 +227,31 @@ process METHOD_SCSEGINDEX {
         """
 }
 
+process METHOD_DUBSTEPR {
+    conda "envs/scmerge.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("dubstepr"), path("dubstepr.tsv")
+
+    script:
+        """
+        method-DUBStepR.R \\
+            --out-file "dubstepr.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "dubstepr.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -251,6 +276,7 @@ workflow METHODS {
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
+        dubstepr_ch     = method_names.contains("dubstepr")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
 
         selected_features_ch = all_ch
             .mix(
@@ -262,6 +288,7 @@ workflow METHODS {
                 triku_ch,
                 hotspot_ch,
                 scsegindex_ch,
+                dubstepr_ch,
             )
 
     emit:
