@@ -564,8 +564,6 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-<<<<<<< HEAD
-=======
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -587,7 +585,6 @@ workflow METRICS {
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
             METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
->>>>>>> main
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -596,15 +593,12 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-<<<<<<< HEAD
-	f1score_micro_ch = metric_names.contains("f1micro") ?
-            METRIC_F1SCORE_MICRO(query_ch, file(params.bindir + "/_functions.R")) :
+	    f1_micro_ch = metric_names.contains("f1Micro") ?
+            METRIC_F1SCORE_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
-        f1score_macro_ch = metric_names.contains("f1macro") ?
-            METRIC_F1SCORE_MACRO(query_ch, file(params.bindir + "/_functions.R")) :
+        f1_macro_ch = metric_names.contains("f1Macro") ?
+            METRIC_F1SCORE_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
-
-=======
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -614,17 +608,14 @@ workflow METRICS {
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
->>>>>>> main
 
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
-<<<<<<< HEAD
                 accuracy_ch,
                 rareAccuracy_ch,
-		f1score_micro_ch,
-		f1score_macro_ch
-=======
+		        f1_micro_ch,
+		        f1_macro_ch,
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
@@ -636,7 +627,6 @@ workflow METRICS {
 				graphConnectivity_ch,
 				batchPCR_ch,
 				iLISI_ch
->>>>>>> main
             )
             .map {it -> file(it[3])}
             .toList()

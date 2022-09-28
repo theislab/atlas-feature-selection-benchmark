@@ -4,32 +4,19 @@
 Evaluate cell label classification using the jaccard index metric
 
 Usage:
-<<<<<<<< HEAD:bin/metric-f1score.py
-    metric-f1score.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
-	
-========
     metric-JaccardIndex.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
 
->>>>>>>> main:bin/metric-jaccardIndex.py
 Options:
     -h --help            Show this screen.
     --dataset=<str>      Name of the dataset to calculate the metric for.
     --method=<str>       Name of the method to calculate the metric for.
     --integration=<str>  Name of the integration to calculate the metric for.
-<<<<<<<< HEAD:bin/metric-f1score.py
-    --average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'weighted', otherwise is "binary" [default: "None"].
-========
-    --average=<str>      The parameter is required for multiclass/multilabel targets, if its multiclass, default setting is 'samples', otherwise is "binary" [default: "None"].
->>>>>>>> main:bin/metric-jaccardIndex.py
+    --average=<str>      The type of averaging performed when there are multiple labels [default: "micro"]
     --out-file=<path>    Path to output file.
 """
 
 
-<<<<<<<< HEAD:bin/metric-f1score.py
-def calculate_f1score(labels,average=None):
-========
 def calculate_JaccardIndex(labels,average=None):
->>>>>>>> main:bin/metric-jaccardIndex.py
     """
     Calculate jaccard index for a set of cell labels
     Parameters
@@ -37,20 +24,14 @@ def calculate_JaccardIndex(labels,average=None):
     labels
         DataFrame containing real and predicted cell labels
 	average
-        the parameters required for multiclass targets
+        The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html.
     Returns
     -------
-    The jaccard index
+    The Jaccard index
     """
-<<<<<<<< HEAD:bin/metric-f1score.py
-    from sklearn.metrics import f1_score
-			
-    score = f1_score(list(labels["Label"]), list(labels["PredLabel"]),average=average)
-========
     from sklearn.metrics import jaccard_score
 
-    score = jaccard_score(list(labels["Label"]), list(labels["PredLabel"]),average=average)
->>>>>>>> main:bin/metric-jaccardIndex.py
+    score = jaccard_score(labels["Label"], labels["PredLabel"],average=average)
 
     return score
 
@@ -75,13 +56,9 @@ def main():
     input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
-    score = calculate_f1score(input,average=average)
+    score = calculate_JaccardIndex(input,average=average)
     output = format_metric_results(
-<<<<<<<< HEAD:bin/metric-f1score.py
-        dataset, method, integration, "Classification", "F1 Score", score
-========
         dataset, method, integration, "Classification", f"JaccardIndex{average}", score
->>>>>>>> main:bin/metric-jaccardIndex.py
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
