@@ -37,6 +37,10 @@ metrics:
     type: Integration
   - name: labelASW
     type: Integration
+  - name: isolatedLabelsF1
+    type: Integration
+  - name: isolatedLabelsASW
+    type: Integration
   - name: graphConnectivity
     type: Integration
   - name: batchPCR
