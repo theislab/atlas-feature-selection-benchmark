@@ -363,7 +363,7 @@ process METRIC_MCC {
         """
 }
 
-process METRIC_F1SCORE_MICRO {
+process METRIC_F1_MICRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
@@ -382,7 +382,7 @@ process METRIC_F1SCORE_MICRO {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            -average "micro" \\
+            --average "micro" \\
             --out-file "${dataset}-${method}-${integration}-F1Micro.tsv" \\
             ${labels}
         """
@@ -393,7 +393,7 @@ process METRIC_F1SCORE_MICRO {
         """
 }
 
-process METRIC_F1SCORE_MACRO {
+process METRIC_F1_MACRO {
     conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
@@ -593,11 +593,11 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-	    f1_micro_ch = metric_names.contains("f1Micro") ?
-            METRIC_F1SCORE_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+        f1_micro_ch = metric_names.contains("f1Micro") ?
+            METRIC_F1_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         f1_macro_ch = metric_names.contains("f1Macro") ?
-            METRIC_F1SCORE_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_F1_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
@@ -614,8 +614,8 @@ workflow METRICS {
                 mixing_ch,
                 accuracy_ch,
                 rareAccuracy_ch,
-		        f1_micro_ch,
-		        f1_macro_ch,
+                f1_micro_ch,
+                f1_macro_ch,
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
