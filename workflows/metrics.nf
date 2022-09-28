@@ -1,4 +1,3 @@
-
 /*
 ========================================================================================
     PROCESSES
@@ -356,12 +355,71 @@ process METRIC_MCC {
             --method "${method}" \\
             --integration "${integration}" \\
             --out-file "${dataset}-${method}-${integration}-MCC.tsv" \\
-            ${labels}
         """
 
     stub:
         """
         touch "${dataset}-${method}-${integration}-MCC.tsv"
+        """
+}
+
+process METRIC_F1_MICRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1Micro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Micro.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Micro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1Micro.tsv"
+        """
+}
+
+process METRIC_F1_MACRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1Macro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Macro.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Macro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1Macro.tsv"
         """
 }
 
@@ -535,6 +593,12 @@ workflow METRICS {
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        f1_micro_ch = metric_names.contains("f1Micro") ?
+            METRIC_F1_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        f1_macro_ch = metric_names.contains("f1Macro") ?
+            METRIC_F1_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -548,6 +612,10 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+                accuracy_ch,
+                rareAccuracy_ch,
+                f1_micro_ch,
+                f1_macro_ch,
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
