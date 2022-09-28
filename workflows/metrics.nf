@@ -262,7 +262,6 @@ process METRIC_ISOLATEDLABELSASW {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --cluster \\
             --out-file "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv" \\
             ${reference}
         """
@@ -685,8 +684,6 @@ workflow METRICS {
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
-                accuracy_ch,
-                rareAccuracy_ch,
                 mcc_ch,
 				isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,

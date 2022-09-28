@@ -59,7 +59,7 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_isolatedLabels(input)
+    score = calculate_isolatedLabels(input, cluster)
     if cluster:
         metric = "IsolatedLabelF1"
     else:
