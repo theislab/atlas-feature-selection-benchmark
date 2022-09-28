@@ -206,7 +206,7 @@ workflow METHODS {
 
         if (method_names.contains("random")) {
             random_params_ch = Channel
-                .fromList(params.methods[params.methods.indexOf("random")].settings)
+                .fromList(params.methods[method_names.indexOf("random")].settings)
                 .map { settings ->
                     tuple(
                         settings.n_features,
@@ -220,7 +220,7 @@ workflow METHODS {
 
         if (method_names.contains("scanpy")) {
             scanpy_params_ch = Channel
-                .fromList(params.methods[params.methods.indexOf("scanpy")].settings)
+                .fromList(params.methods[method_names.indexOf("scanpy")].settings)
                 .map { settings ->
                     tuple(
                         settings.flavor,
