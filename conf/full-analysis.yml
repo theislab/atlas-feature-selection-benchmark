@@ -27,7 +27,11 @@ methods:
         seed: 1
       - n_features: 5000
         seed: 1
-  - name: scanpy-default
+  - name: scanpy
+    settings:
+      - flavor: seurat
+      - n_features: 2000
+      - batch: "False"
   - name: triku
   - name: hotspot
   - name: scsegindex
