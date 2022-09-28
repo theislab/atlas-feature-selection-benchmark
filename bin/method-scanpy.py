@@ -7,11 +7,11 @@ Usage:
     method-scanpy.py --out-file=<path> [options] <file>
 
 Options:
-    -h --help            Show this screen.
+    -h --help               Show this screen.
     -o --out-file=<path>    Path to output file.
     -n --n-features=<int>   Number of features to select [default: 1000].
-    -f --flavor=<str>       Flavor of feature selection method. One of: seurat, cell_ranger, seurat_v3 [default: seurat].    
-    -b --batch              Apply to each batch. Requires column 'Batch' in .obs.
+    -f --flavor=<str>       Flavor of feature selection method. One of: seurat, cell_ranger, seurat_v3 [default: seurat].
+    -b --batch=<bool>       Apply to each batch. Requires column 'Batch' in .obs [default: False].
 """
 
 
@@ -74,7 +74,7 @@ def main():
     file = args["<file>"]
     n_features = int(args["--n-features"])
     flavor = args["--flavor"]
-    batch = args["--batch"]
+    batch = args["--batch"] == "True"
     out_file = args["--out-file"]
 
     print(f"Reading data from '{file}'...")
