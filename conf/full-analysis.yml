@@ -11,22 +11,47 @@ datasets:
     batch_col: tech
     label_col: celltype
     query_batches: inDrop3
+  - name: neurips
+    batch_col: batch
+    label_col: cell_type
+    query_batches: s4d1,s4d8,s4d9
 methods:
   - name: all
   - name: random-N500
   - name: random-N1000
   - name: random-N2000
   - name: random-N5000
+  - name: scanpy-default
+  - name: triku
+  - name: hotspot
+  - name: scsegindex
+  - name: nbumi
 metrics:
   - name: batchPurity
     type: Integration
   - name: mixing
     type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
   - name: labelASW
+    type: Integration
+  - name: graphConnectivity
+    type: Integration
+  - name: batchPCR
+    type: Integration
+  - name: iLISI
+    type: Integration
+  - name: ari
     type: Integration
   - name: accuracy
     type: Classification
   - name: rareAccuracy
     type: Classification
   - name: MCC
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
     type: Classification

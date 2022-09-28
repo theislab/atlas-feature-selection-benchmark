@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate integration using principal component regression
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-batchPCR.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_batchPCR(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate the principal component regression score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,13 +26,13 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    The PCR comparison score
     """
-    from scib.metrics import silhouette
+    from scib.metrics import pcr_comparison
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
-    print(f"Final score: {score}")
+    score = pcr_comparison(adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True)
+    print("Final score: {score}")
 
     return score
 
@@ -55,9 +55,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_batchPCR(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "BatchPCR", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

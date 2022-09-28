@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate integration using Cell-type LISI (cLISI)
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_cLISI(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,12 +26,12 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    cLISI score
     """
-    from scib.metrics import silhouette
+    from scib.metrics import clisi_graph
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    score = clisi_graph(adata, "Batch", "Label", k0=90, type_=None, subsample=None, scale=True, n_cores=1, verbose=True)
     print(f"Final score: {score}")
 
     return score
@@ -55,9 +55,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_cLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "cLISI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

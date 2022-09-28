@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using label Adjusted Silhouette Width (ASW)
+Evaluate integration using graph connectivity
 
 Usage:
-    metric-labelASW.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-graphConnectivity.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_label_asw(adata):
+def calculate_graphConnectivity(adata):
     """
-    Calculate the Adjusted Silhouette Width (ASW) score for an integrated dataset.
+    Calculate the graph connectivity score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,13 +26,13 @@ def calculate_label_asw(adata):
 
     Returns
     -------
-    The [0, 1] score interpreted as non-cluster to compact cluster structure.
+    Graph connectivity score
     """
-    from scib.metrics import silhouette
+    from scib.metrics import graph_connectivity
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
-    print(f"Final score: {score}")
+    score = graph_connectivity(adata, "Label")
+    print("Final score: {score}")
 
     return score
 
@@ -51,16 +51,16 @@ def main():
     integration = args["--integration"]
     out_file = args["--out-file"]
 
-    print(f"Reading data from '{file}'...")
+    print("Reading data from '{file}'...")
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_label_asw(input)
+    score = calculate_graphConnectivity(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "Integration", "GraphConnectivity", score
     )
     print(output)
-    print(f"Writing output to '{out_file}'...")
+    print("Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
 
