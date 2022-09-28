@@ -213,18 +213,18 @@ process METRIC_ILISI {
         """
 }
 
-process METRIC_ISOLATEDLABELS {
+process METRIC_ISOLATEDLABELSF1 {
     conda "envs/scib.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "isolatedLabels.tsv" }
+        saveAs: { filename -> "isolatedLabelsF1.tsv" }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabels.tsv")
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabelsF1.tsv")
 
     script:
         """
@@ -232,13 +232,44 @@ process METRIC_ISOLATEDLABELS {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-isolatedLabels.tsv" \\
+            --cluster \\
+            --out-file "${dataset}-${method}-${integration}-isolatedLabelsF1.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "${dataset}-${method}-${integration}-isolatedLabels.tsv"
+        touch "${dataset}-${method}-${integration}-isolatedLabelsF1.tsv"
+        """
+}
+
+process METRIC_ISOLATEDLABELSASW {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "isolatedLabelsASW.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabelsASW.tsv")
+
+    script:
+        """
+        metric-isolatedLabels.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --cluster \\
+            --out-file "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv"
         """
 }
 
@@ -571,7 +602,7 @@ process METRICS_REPORT {
 }
 
 /*
-========================================================================================
+===========================================================================
     WORKFLOW
 ========================================================================================
 */
@@ -609,13 +640,16 @@ workflow METRICS {
             METRIC_BATCHPCR(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		iLISI_ch = metric_names.contains("iLISI") ?
-            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
-            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
-        isolatedLabels_ch = metric_names.contains("isolatedLabels") ?
-            METRIC_ISOLATEDLABELS(reference_ch, file(params.bindir + "/_functions.R")) :
+        isolatedLabelsF1_ch = metric_names.contains("isolatedLabelsF1") ?
+            METRIC_ISOLATEDLABELSF1(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        isolatedLabelsASW_ch = metric_names.contains("isolatedLabelsASW") ?
+            METRIC_ISOLATEDLABELSASW(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         // Classification metrics
@@ -654,7 +688,8 @@ workflow METRICS {
                 accuracy_ch,
                 rareAccuracy_ch,
                 mcc_ch,
-				isolatedLabels_ch,
+				isolatedLabelsF1_ch,
+                isolatedLabelsASW_ch,
                 jaccard_micro_ch,
                 jaccard_macro_ch,
                 mcc_ch,
