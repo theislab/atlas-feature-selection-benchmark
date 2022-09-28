@@ -55,27 +55,30 @@ process METHOD_RANDOM {
         """
 }
 
-process METHOD_SCANPY_DEFAULT {
+process METHOD_SCANPY {
     conda "envs/scanpy.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(dataset), path(reference), path(query)
+        tuple val(dataset), path(reference), path(query), val(flavor), val(n_features), val(batch)
 
     output:
-        tuple val(dataset), val("scanpy_default"), path("scanpy_default.tsv")
+        tuple val(dataset), val("scanpy-${flavor}-N${n_features}-Batch${batch}"), path("scanpy_${flavor}_N${n_features}_Batch${batch}.tsv")
 
     script:
         """
         method-scanpy.py \\
-            --out-file "scanpy_default.tsv" \\
+            --flavor ${flavor} \\
+            --n-features ${n_features} \\
+            --batch ${batch} \\
+            --out-file "scanpy_${flavor}_N${n_features}_Batch${batch}.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "scanpy_default.tsv"
+        touch "scanpy_${flavor}_N${n_features}_Batch${batch}.tsv"
         """
 }
 
@@ -196,7 +199,6 @@ workflow METHODS {
         method_names = params.methods.collect{method -> method.name}
 
         all_ch            = method_names.contains("all")            ? METHOD_ALL(prepared_datasets_ch)            : Channel.empty()
-        scanpy_default_ch = method_names.contains("scanpy-default") ? METHOD_SCANPY_DEFAULT(prepared_datasets_ch) : Channel.empty()
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
@@ -216,10 +218,25 @@ workflow METHODS {
             random_ch = Channel.empty()
         }
 
+        if (method_names.contains("scanpy")) {
+            scanpy_params_ch = Channel
+                .fromList(params.methods[params.methods.indexOf("scanpy")].settings)
+                .map { settings ->
+                    tuple(
+                        settings.flavor,
+                        settings.n_features,
+                        settings.batch
+                    )
+                }
+            scanpy_ch = METHOD_SCANPY(prepared_datasets_ch.combine(scanpy_params_ch))
+        } else {
+            random_ch = Channel.empty()
+        }
+
         selected_features_ch = all_ch
             .mix(
                 random_ch,
-                scanpy_default_ch,
+                scanpy_ch,
                 triku_ch,
                 hotspot_ch,
                 nbumi_ch,
