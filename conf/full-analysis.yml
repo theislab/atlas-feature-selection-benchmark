@@ -17,10 +17,16 @@ datasets:
     query_batches: s4d1,s4d8,s4d9
 methods:
   - name: all
-  - name: random-N500
-  - name: random-N1000
-  - name: random-N2000
-  - name: random-N5000
+  - name: random
+    settings:
+      - n_features: 500
+        seed: 1
+      - n_features: 1000
+        seed: 1
+      - n_features: 2000
+        seed: 1
+      - n_features: 5000
+        seed: 1
   - name: scanpy-default
   - name: triku
   - name: hotspot
