@@ -31,7 +31,17 @@ def calculate_cLISI(adata):
     from scib.metrics import clisi_graph
 
     print("Calculating final score...")
-    score = clisi_graph(adata, "Batch", "Label", k0=90, type_=None, subsample=None, scale=True, n_cores=1, verbose=True)
+    score = clisi_graph(
+        adata,
+        "Batch",
+        "Label",
+        k0=90,
+        type_=None,
+        subsample=None,
+        scale=True,
+        n_cores=1,
+        verbose=True,
+    )
     print(f"Final score: {score}")
 
     return score

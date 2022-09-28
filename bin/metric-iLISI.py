@@ -31,7 +31,16 @@ def calculate_iLISI(adata):
     from scib.metrics import ilisi_graph
 
     print("Calculating final score...")
-    score = ilisi_graph(adata, "Batch", k0=90, type_=None, subsample=None, scale=True, n_cores=1, verbose=True)
+    score = ilisi_graph(
+        adata,
+        "Batch",
+        k0=90,
+        type_=None,
+        subsample=None,
+        scale=True,
+        n_cores=1,
+        verbose=True,
+    )
     print("Final score: {score}")
 
     return score

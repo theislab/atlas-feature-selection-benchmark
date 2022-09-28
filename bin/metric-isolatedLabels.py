@@ -34,7 +34,9 @@ def calculate_isolatedLabels(adata, cluster):
     from scib.metrics import isolated_labels
 
     print(f"Calculating isolated labels score (cluster={cluster})...")
-    score = isolated_labels(adata, 'Label', 'Batch', 'X_emb', cluster=cluster, verbose=True)
+    score = isolated_labels(
+        adata, "Label", "Batch", "X_emb", cluster=cluster, verbose=True
+    )
     print("Final score: {score}")
 
     return score

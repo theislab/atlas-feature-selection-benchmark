@@ -32,13 +32,13 @@ def select_triku_features(adata):
 
     sc.pp.filter_genes(adata, min_cells=5)
     sc.pp.pca(adata)
-    sc.pp.neighbors(adata, metric='cosine', n_neighbors=int(0.5 * len(adata) ** 0.5))
-    
+    sc.pp.neighbors(adata, metric="cosine", n_neighbors=int(0.5 * len(adata) ** 0.5))
+
     tk.tl.triku(adata)
-    
-    adata.var['Feature'] = adata.var.index
+
+    adata.var["Feature"] = adata.var.index
     selected_features = adata.var
-    selected_features = selected_features[selected_features['highly_variable']==True]
+    selected_features = selected_features[selected_features["highly_variable"] == True]
 
     return selected_features
 

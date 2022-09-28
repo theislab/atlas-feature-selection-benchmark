@@ -31,7 +31,9 @@ def calculate_batchPCR(adata):
     from scib.metrics import pcr_comparison
 
     print("Calculating final score...")
-    score = pcr_comparison(adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True)
+    score = pcr_comparison(
+        adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True
+    )
     print("Final score: {score}")
 
     return score

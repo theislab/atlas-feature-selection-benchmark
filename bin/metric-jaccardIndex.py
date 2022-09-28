@@ -16,14 +16,14 @@ Options:
 """
 
 
-def calculate_JaccardIndex(labels,average=None):
+def calculate_JaccardIndex(labels, average=None):
     """
     Calculate jaccard index for a set of cell labels
     Parameters
     ----------
     labels
         DataFrame containing real and predicted cell labels
-	average
+        average
         The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html.
     Returns
     -------
@@ -31,7 +31,7 @@ def calculate_JaccardIndex(labels,average=None):
     """
     from sklearn.metrics import jaccard_score
 
-    score = jaccard_score(labels["Label"], labels["PredLabel"],average=average)
+    score = jaccard_score(labels["Label"], labels["PredLabel"], average=average)
 
     return score
 
@@ -56,7 +56,7 @@ def main():
     input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
-    score = calculate_JaccardIndex(input,average=average)
+    score = calculate_JaccardIndex(input, average=average)
     output = format_metric_results(
         dataset, method, integration, "Classification", f"JaccardIndex{average}", score
     )
