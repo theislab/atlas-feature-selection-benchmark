@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_f1score(labels,average=None):
+def calculate_f1score(labels, average=None):
     """
     Calculate F1 score for a set of cell labels
 
@@ -24,7 +24,7 @@ def calculate_f1score(labels,average=None):
     ----------
     labels
         DataFrame containing real and predicted cell labels
-	average
+        average
         The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html.
 
     Returns
@@ -33,7 +33,7 @@ def calculate_f1score(labels,average=None):
     """
     from sklearn.metrics import f1_score
 
-    score = f1_score(labels["Label"], labels["PredLabel"],average=average)
+    score = f1_score(labels["Label"], labels["PredLabel"], average=average)
 
     return score
 
@@ -56,7 +56,7 @@ def main():
     input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
-    score = calculate_f1score(input,average=average)
+    score = calculate_f1score(input, average=average)
     output = format_metric_results(
         dataset, method, integration, "Classification", f"F1{average}", score
     )
