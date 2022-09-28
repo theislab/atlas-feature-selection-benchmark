@@ -414,6 +414,7 @@ process METRIC_MCC {
             --method "${method}" \\
             --integration "${integration}" \\
             --out-file "${dataset}-${method}-${integration}-MCC.tsv" \\
+            ${labels}
         """
 
     stub:
