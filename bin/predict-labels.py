@@ -29,7 +29,7 @@ def predict_labels(reference, query):
     DataFrame containing predicted labels and probabilities for each label class
     """
 
-    from lightgbm import Dataset, train, early_stopping, log_evaluation
+    from lightgbm import Dataset, train, early_stopping, log_evaluation, reset_parameter
     from sklearn.preprocessing import normalize
     from pandas import DataFrame
     from numpy import argmax
@@ -47,7 +47,7 @@ def predict_labels(reference, query):
     for param, value in opt_params.items():
         print(f"{param:<25}: {value}")
 
-    print("Training classification model...")
+    print("Training final classification model...")
     dataset_params = {
         "max_bin": int(round(opt_params["max_bin"])),
     }
@@ -56,13 +56,14 @@ def predict_labels(reference, query):
         "metric": "multi_logloss",
         "num_class": n_labels,
         "bagging_freq": 10,
-        "learning_rate": max(min(opt_params["learning_rate"], 1), 0),
+        "learning_rate": max(min(opt_params["base_learning_rate"], 1), 0),
         "num_leaves": int(round(opt_params["num_leaves"])),
         "bagging_fraction": max(min(opt_params["bagging_fraction"], 1), 0),
         "max_depth": int(round(opt_params["max_depth"])),
         "max_bin": int(round(opt_params["max_bin"])),
-        "min_data_in_leaf": int(round(opt_params["min_data_in_leaf"])),
+        "min_data_in_leaf": int(round(opt_params["min_prop_data_in_leaf"] * X_train.shape[0])),
         "min_sum_hessian_in_leaf": opt_params["min_sum_hessian_in_leaf"],
+        "min_gain_to_split": 0.001,
         "verbose": -1,
     }
 
@@ -74,7 +75,8 @@ def predict_labels(reference, query):
         valid_sets=[train_data],
         callbacks=[
             early_stopping(stopping_rounds=10, verbose=True),
-            log_evaluation(period=10),
+            log_evaluation(period=100),
+            reset_parameter(learning_rate = generate_learning_rate_decay(max(min(opt_params["base_learning_rate"], 1), 0), max(min(opt_params["learning_rate_decay"], 1), 0)))
         ],
     )
 
@@ -133,18 +135,19 @@ def optimise_lightgbm(
     Dictionary with optimized parameters
     """
 
-    from lightgbm import Dataset, cv, early_stopping, log_evaluation
+    from lightgbm import Dataset, cv, early_stopping, log_evaluation, reset_parameter
     from bayes_opt import BayesianOptimization
     from numpy import mean
     from pandas import Series
 
     def crossvalidate_lightgbm(
-        learning_rate,
+        base_learning_rate,
+        learning_rate_decay,
         num_leaves,
         bagging_fraction,
         max_depth,
         max_bin,
-        min_data_in_leaf,
+        min_prop_data_in_leaf,
         min_sum_hessian_in_leaf,
     ):
 
@@ -161,13 +164,14 @@ def optimise_lightgbm(
             "metric": "multi_logloss",
             "num_class": n_labels,
             "bagging_freq": 10,
-            "learning_rate": max(min(learning_rate, 1), 0),
+            "learning_rate": max(min(base_learning_rate, 1), 0),
             "num_leaves": int(round(num_leaves)),
             "bagging_fraction": max(min(bagging_fraction, 1), 0),
             "max_depth": int(round(max_depth)),
             "max_bin": int(round(max_bin)),
-            "min_data_in_leaf": int(round(min_data_in_leaf)),
+            "min_data_in_leaf": int(round(min_prop_data_in_leaf * X_train.shape[0])),
             "min_sum_hessian_in_leaf": min_sum_hessian_in_leaf,
+            "min_gain_to_split": 0.001,
             "verbosity": -1,
         }
 
@@ -180,6 +184,7 @@ def optimise_lightgbm(
             callbacks=[
                 early_stopping(stopping_rounds=10, verbose=False),
                 log_evaluation(period=0),
+                reset_parameter(learning_rate = generate_learning_rate_decay(max(min(base_learning_rate, 1), 0), max(min(learning_rate_decay, 1), 0)))
             ],
             seed=seed,
         )
@@ -190,12 +195,13 @@ def optimise_lightgbm(
     bayes_optimizer = BayesianOptimization(
         crossvalidate_lightgbm,
         {
-            "learning_rate": (0.01, 1.0),
-            "num_leaves": (4, 100),
-            "bagging_fraction": (0.1, 1),
+            "base_learning_rate": (0.1, 0.6),
+            "learning_rate_decay": (0.001, 0.01),
+            "num_leaves": (4, 50),
+            "bagging_fraction": (0.5, 1),
             "max_depth": (5, 50),
-            "max_bin": (10, 500),
-            "min_data_in_leaf": (10, 100),
+            "max_bin": (10, 511),
+            "min_prop_data_in_leaf": (0.001, 0.05),
             "min_sum_hessian_in_leaf": (1e-10, 100),
         },
         random_state=1,
@@ -212,6 +218,32 @@ def optimise_lightgbm(
         bayes_optimizer.res[Series(model_auc).idxmax()]["target"],
         bayes_optimizer.res[Series(model_auc).idxmax()]["params"],
     )
+
+def generate_learning_rate_decay(base_rate, decay_rate):
+    """
+    Generate a learning rate decay function
+
+    Parameters
+    ----------
+    base_rate
+        The base learning rate
+    decay_rate
+        The rate that learning decays
+
+    Returns
+    -------
+    A function that returns the learning rate for each iteration
+    """
+
+    def decay_function(iteration):
+        from math import exp
+
+        learning_rate = base_rate * exp(-decay_rate * iteration)
+        learning_rate = max(1e-4, learning_rate)
+
+        return learning_rate
+
+    return decay_function
 
 
 def main():

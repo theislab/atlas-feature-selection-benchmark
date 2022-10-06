@@ -133,7 +133,7 @@ process PREDICT_LABELS {
         mode: "copy",
         pattern: "*-labels.tsv"
 
-    label "process_low"
+    label "process_medium"
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(query)
