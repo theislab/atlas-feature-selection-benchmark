@@ -30,8 +30,8 @@ methods:
   - name: scanpy
     settings:
       - flavor: seurat
-      - n_features: 2000
-      - batch: "False"
+        n_features: 2000
+        batch: "False"
   - name: triku
   - name: hotspot
   - name: scsegindex

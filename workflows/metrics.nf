@@ -414,6 +414,7 @@ process METRIC_MCC {
             --method "${method}" \\
             --integration "${integration}" \\
             --out-file "${dataset}-${method}-${integration}-MCC.tsv" \\
+            ${labels}
         """
 
     stub:
@@ -684,7 +685,6 @@ workflow METRICS {
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
-                mcc_ch,
 				isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,
                 jaccard_micro_ch,
