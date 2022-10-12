@@ -47,11 +47,15 @@ workflow REPORTS {
 
     main:
 
-        METRICS_REPORT(
-            combined_metrics_ch,
-            file(params.reportsdir + "/metrics.Rmd"),
-            file(params.reportsdir + "/functions.R")
-        )
+        report_names = params.reports.collect{report -> report.name}
+
+        metrics_report_ch = report_names.contains("metrics") ?
+            METRICS_REPORT(
+                combined_metrics_ch,
+                file(params.reportsdir + "/metrics.Rmd"),
+                file(params.reportsdir + "/functions.R")
+            ) :
+            Channel.empty()
 }
 
 /*

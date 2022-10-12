@@ -70,3 +70,5 @@ metrics:
     type: Classification
   - name: jaccardIndexMacro
     type: Classification
+metrics:
+  - name: metrics
