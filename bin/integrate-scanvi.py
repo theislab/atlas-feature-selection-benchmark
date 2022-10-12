@@ -9,13 +9,14 @@ Usage:
 Options:
     -h --help            Show this screen.
     --out-dir=<path>     Path to output directory.
+    --seed=<int>         Random seed to use [default: 0].
 """
 
 import scvi
 from _functions import add_integrated_embeddings, plot_embedding
 
 
-def run_scANVI(scvi_model):
+def run_scANVI(scvi_model, seed):
     """
     Integrate a dataset using scANVI
 
@@ -23,11 +24,16 @@ def run_scANVI(scvi_model):
     ----------
     scvi_model
         A trained scVI model
+    seed
+        Random seed to use
 
     Returns
     -------
     Integrated scANVI model
     """
+
+    print(f"Setting random seed to {seed}...")
+    scvi.settings.seed = seed
 
     print("Setting reference labels...")
     adata = scvi_model.adata
@@ -58,12 +64,13 @@ def main():
 
     dir = args["<dir>"]
     out_dir = args["--out-dir"]
+    seed = int(args["--seed"])
 
     print(f"Reading model from '{dir}'...")
     input = scvi.model.SCVI.load(dir)
     print("Read model:")
     print(input)
-    output = run_scANVI(input)
+    output = run_scANVI(input, seed)
     print("Storing scVI embeddings...")
     output.adata.obsm["X_scVI"] = output.adata.obsm["X_emb"].copy()
     output.adata.obsm["X_umap_scVI"] = output.adata.obsm["X_umap"].copy()

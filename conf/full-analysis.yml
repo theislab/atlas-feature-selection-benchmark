@@ -37,6 +37,9 @@ methods:
   - name: hotspot
   - name: scsegindex
   - name: nbumi
+integration:
+  seeds:
+    - 1
 metrics:
   - name: batchPurity
     type: Integration
