@@ -61,7 +61,9 @@ def predict_labels(reference, query):
         "bagging_fraction": max(min(opt_params["bagging_fraction"], 1), 0),
         "max_depth": int(round(opt_params["max_depth"])),
         "max_bin": int(round(opt_params["max_bin"])),
-        "min_data_in_leaf": int(round(opt_params["min_prop_data_in_leaf"] * X_train.shape[0])),
+        "min_data_in_leaf": int(
+            round(opt_params["min_prop_data_in_leaf"] * X_train.shape[0])
+        ),
         "min_sum_hessian_in_leaf": opt_params["min_sum_hessian_in_leaf"],
         "min_gain_to_split": 0.001,
         "verbose": -1,
@@ -76,7 +78,12 @@ def predict_labels(reference, query):
         callbacks=[
             early_stopping(stopping_rounds=10, verbose=True),
             log_evaluation(period=100),
-            reset_parameter(learning_rate = generate_learning_rate_decay(max(min(opt_params["base_learning_rate"], 1), 0), max(min(opt_params["learning_rate_decay"], 1), 0)))
+            reset_parameter(
+                learning_rate=generate_learning_rate_decay(
+                    max(min(opt_params["base_learning_rate"], 1), 0),
+                    max(min(opt_params["learning_rate_decay"], 1), 0),
+                )
+            ),
         ],
     )
 
@@ -184,7 +191,12 @@ def optimise_lightgbm(
             callbacks=[
                 early_stopping(stopping_rounds=10, verbose=False),
                 log_evaluation(period=0),
-                reset_parameter(learning_rate = generate_learning_rate_decay(max(min(base_learning_rate, 1), 0), max(min(learning_rate_decay, 1), 0)))
+                reset_parameter(
+                    learning_rate=generate_learning_rate_decay(
+                        max(min(base_learning_rate, 1), 0),
+                        max(min(learning_rate_decay, 1), 0),
+                    )
+                ),
             ],
             seed=seed,
         )
@@ -218,6 +230,7 @@ def optimise_lightgbm(
         bayes_optimizer.res[Series(model_auc).idxmax()]["target"],
         bayes_optimizer.res[Series(model_auc).idxmax()]["params"],
     )
+
 
 def generate_learning_rate_decay(base_rate, decay_rate):
     """

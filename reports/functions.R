@@ -28,10 +28,10 @@ plot_metrics_dotplot <- function(metrics, dataset,
     ggplot2::ggplot(
         metrics,
         ggplot2::aes(
-            x     = .data$Metric,
-            y     = .data[[value]],
-            fill  = .data$Method,
-            shape = .data$Integration
+            x      = .data$Metric,
+            y      = .data[[value]],
+            colour = .data$Method,
+            shape  = .data$Integration
         )
     ) +
         ggplot2::geom_jitter(
@@ -39,9 +39,9 @@ plot_metrics_dotplot <- function(metrics, dataset,
             width  = 0.3,
             height = 0,
         ) +
-        ggplot2::scale_shape_manual(
-            values = c("circle filled", "triangle filled")
-        ) +
+        # ggplot2::scale_shape_manual(
+        #     values = c("circle filled", "triangle filled")
+        # ) +
         ggplot2::scale_y_continuous(limits = c(0, 1)) +
         ggplot2::guides(
             fill = ggplot2::guide_legend(

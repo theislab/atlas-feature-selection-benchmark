@@ -230,7 +230,7 @@ workflow METHODS {
                 }
             scanpy_ch = METHOD_SCANPY(prepared_datasets_ch.combine(scanpy_params_ch))
         } else {
-            random_ch = Channel.empty()
+            scanpy_ch = Channel.empty()
         }
 
         selected_features_ch = all_ch

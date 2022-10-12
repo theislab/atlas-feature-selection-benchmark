@@ -1,3 +1,4 @@
+experiment: full-analysis
 datasets:
   - name: tinySim
     batch_col: Batch
@@ -36,6 +37,9 @@ methods:
   - name: hotspot
   - name: scsegindex
   - name: nbumi
+integration:
+  seeds:
+    - 1
 metrics:
   - name: batchPurity
     type: Integration
@@ -69,3 +73,5 @@ metrics:
     type: Classification
   - name: jaccardIndexMacro
     type: Classification
+metrics:
+  - name: metrics
