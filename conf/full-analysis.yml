@@ -1,3 +1,4 @@
+experiment: full-analysis
 datasets:
   - name: tinySim
     batch_col: Batch
