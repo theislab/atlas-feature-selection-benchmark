@@ -1,0 +1,27 @@
+experiment: test
+datasets:
+  - name: tinySim
+    batch_col: Batch
+    label_col: Group
+    query_batches: Batch4
+methods:
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 100
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 100
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 200
+        batch: "False"
+integration:
+  seeds:
+    - 1
+    - 2
+metrics:
+  - name: batchPurity
+    type: Integration
+  - name: accuracy
+    type: Classification

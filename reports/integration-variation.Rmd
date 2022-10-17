@@ -1,0 +1,134 @@
+---
+title: "Integration variation"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    theme: paper
+    toc: true
+    toc_float: true
+    number_sections: true
+params:
+  functions_file: functions.R
+  metrics_file: all-metrics.tsv
+---
+
+```{r setup, echo=FALSE}
+knitr::opts_chunk$set(
+    autodep        = TRUE,
+    cache          = FALSE,
+    cache.comments = FALSE,
+    echo           = FALSE,
+    error          = FALSE,
+    message        = FALSE,
+    warning        = FALSE,
+    # dev            = "ragg_png",
+    fig.align      = "center",
+    # fig.width      = 960 / 72,
+    fig.width      = 10,
+    fig.asp        = 0.8,
+    fig.retina     = 2,
+    out.width      = "100%",
+    crop           = TRUE,
+    pngquant       = "--speed=1 --quality=0-50"
+)
+```
+
+```{r libraries}
+library(ggplot2)
+library(readr)
+library(dplyr)
+```
+
+```{r source}
+source(params$functions_file)
+```
+
+```{r load_metrics}
+metrics <- read_tsv(
+    params$metrics_file,
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+)
+```
+
+# Integration metrics {.tabset .tabset-dropdown}
+
+```{r integration-plots, results = "hide"}
+metric_names <- metrics |>
+    filter(Type == "Integration") |>
+    pull(Metric) |>
+    unique()|>
+    sort()
+
+src_list <- lapply(sort(unique(metrics$Dataset)), function(.dataset) {
+    outer_src <- lapply(metric_names, function(.metric) {
+        inner_src <- c(
+            "### <<.metric>> {.unnumbered .tabset .tabset-pills .tabset-fade}",
+            "",
+            "#### Scores {.unnumbered}",
+            "```{r integration-<<.dataset>>-<<.metric>>-scores}",
+            "plot_methods_dotplot(metrics, '<<.dataset>>', '<<.metric>>')",
+            "```",
+            "",
+            "#### Variance {.unnumbered}",
+            "```{r integration-<<.dataset>>-<<.metric>>-variance}",
+            "plot_methods_variance(metrics, '<<.dataset>>', '<<.metric>>')",
+            "```",
+            ""
+        )
+        knitr::knit_expand(text = inner_src, delim = c("<<", ">>"))
+    })
+    outer_src <- c(
+        "## <<.dataset>> {.unnumbered .tabset}",
+        "",
+        unlist(outer_src)
+    )
+    knitr::knit_expand(text = outer_src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+# Classification metrics {.tabset .tabset-dropdown}
+
+```{r classification-plots, results = "hide"}
+metric_names <- metrics |>
+    filter(Type == "Classification") |>
+    pull(Metric) |>
+    unique()|>
+    sort()
+
+src_list <- lapply(sort(unique(metrics$Dataset)), function(.dataset) {
+    outer_src <- lapply(metric_names, function(.metric) {
+        inner_src <- c(
+            "### <<.metric>> {.unnumbered .tabset .tabset-pills .tabset-fade}",
+            "",
+            "#### Scores {.unnumbered}",
+            "```{r classification-<<.dataset>>-<<.metric>>-scores}",
+            "plot_methods_dotplot(metrics, '<<.dataset>>', '<<.metric>>')",
+            "```",
+            "",
+            "#### Variance {.unnumbered}",
+            "```{r classification-<<.dataset>>-<<.metric>>-variance}",
+            "plot_methods_variance(metrics, '<<.dataset>>', '<<.metric>>')",
+            "```",
+            ""
+        )
+        knitr::knit_expand(text = inner_src, delim = c("<<", ">>"))
+    })
+    outer_src <- c(
+        "## <<.dataset>> {.unnumbered .tabset}",
+        "",
+        unlist(outer_src)
+    )
+    knitr::knit_expand(text = outer_src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`

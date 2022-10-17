@@ -84,3 +84,4 @@ metrics:
     type: Classification
 reports:
   - name: metrics
+  - name: integration-variation
