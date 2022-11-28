@@ -127,7 +127,7 @@ process METRIC_NMI {
 }
 
 process METRIC_KBET {
-    conda "envs/scib.yml"
+    conda "envs/scib-kBET.yml"
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "kBET.tsv" }
@@ -627,7 +627,8 @@ workflow METRICS {
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_KBET(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
