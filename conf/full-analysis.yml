@@ -45,6 +45,8 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: kBET
+    type: Integration
   - name: cLISI
     type: Integration
   - name: nmi
