@@ -34,7 +34,9 @@ def calculate_kBET(adata):
     from scib.metrics import kBET
 
     print("Calculating score...")
-    score = kBET(adata, batch_key="Batch", label_key="Label", embed="X_emb", verbose=True)
+    score = kBET(
+        adata, batch_key="Batch", label_key="Label", embed="X_emb", verbose=True
+    )
     print(f"Final score: {score}")
 
     return score

@@ -12,15 +12,15 @@ Options:
 
 #' Install kBET from GitHub using remotes
 install_kBET <- function() {
-  if (!requireNamespace("kBET", quietly = TRUE)) {
-      message("Installing kBET...")
-      remotes::install_github(
-          "theislab/kBET@a10ffeaa31da83e4305dfe85cd0adfcebeee721e",
-          dependencies = FALSE
-      )
-  } else {
-      message("kBET already installed")
-  }
+    if (!requireNamespace("kBET", quietly = TRUE)) {
+        message("Installing kBET...")
+        remotes::install_github(
+            "theislab/kBET@a10ffeaa31da83e4305dfe85cd0adfcebeee721e",
+            dependencies = FALSE
+        )
+    } else {
+        message("kBET already installed")
+    }
 }
 
 #' The main script function
