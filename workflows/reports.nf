@@ -90,7 +90,7 @@ workflow REPORTS {
         integration_variation_report_ch = report_names.contains("integration-variation") ?
             INTEGRATION_VARIATION_REPORT(
                 combined_metrics_ch,
-                file(params.reportsdir + "/integration_variation.Rmd"),
+                file(params.reportsdir + "/integration-variation.Rmd"),
                 file(params.reportsdir + "/functions.R")
             ) :
             Channel.empty()
