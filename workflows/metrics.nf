@@ -141,7 +141,7 @@ process METRIC_KBET {
 
     script:
         """
-        Rscript metric-kBET-install.R
+        metric-kBET-install.R
         metric-kBET.py \\
             --dataset "${dataset}" \\
             --method "${method}" \\
@@ -627,7 +627,7 @@ workflow METRICS {
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_LABELASW(reference_ch, file(params.bindir + "/_functions.py")) :
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
