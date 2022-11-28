@@ -10,6 +10,7 @@ Options:
     -h --help            Show this screen.
     --features=<path>    Path to a file containing selected features.
     --out-dir=<path>     Path to output directory.
+    --seed=<int>         Random seed to use [default: 0].
 """
 
 import scvi
@@ -21,7 +22,7 @@ from _functions import (
 )
 
 
-def run_scVI(adata):
+def run_scVI(adata, seed):
     """
     Integrate a dataset using scVI
 
@@ -29,11 +30,16 @@ def run_scVI(adata):
     ----------
     adata
         AnnData object containing the dataset to integrate
+    seed
+        Random seed to use
 
     Returns
     -------
     Integrated scVI model
     """
+
+    print(f"Setting random seed to {seed}...")
+    scvi.settings.seed = seed
 
     print("Setting up AnnData for scVI...")
     scvi.model.SCVI.setup_anndata(adata, batch_key="Batch")
@@ -94,6 +100,7 @@ def main():
     file = args["<file>"]
     features_file = args["--features"]
     out_dir = args["--out-dir"]
+    seed = int(args["--seed"])
 
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
@@ -104,7 +111,7 @@ def main():
     print("Read features:")
     print(features)
     input = select_features(input, features)
-    output = run_scVI(input)
+    output = run_scVI(input, seed)
     print("Adding unintegrated UMAP...")
     add_umap(output.adata)
     suffix_embeddings(output.adata)

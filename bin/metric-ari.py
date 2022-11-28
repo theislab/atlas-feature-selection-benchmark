@@ -1,10 +1,11 @@
 #!/usr/bin/env python
 
 """
-Evaluate cell label classification using the MCC metric
+Evaluate the cluster structure of the integrated data using the Adjusted Rand Index (ARI).
+This is a similarity metrix between "ground truth" clusters and found clusters after integration.
 
 Usage:
-    metric-MCC.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-ari.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,21 +16,27 @@ Options:
 """
 
 
-def calculate_mcc(labels):
+def calculate_ari(adata):
     """
-    Calculate classification MCC for a set of cell labels
+    Calculate the Adjusted Rand Index (ARI) score for a integrated dataset.
+
     Parameters
     ----------
-    labels
-        DataFrame containing real and predicted cell labels
+    adata
+        AnnData object containing the integrated dataset
+
     Returns
     -------
-    The MCC score
+    The ARI score [0, 1] where 0 is no match between the pair of labels, and 1 a perfect match.
     """
-    from sklearn.metrics import matthews_corrcoef
+    from scib.metrics import ari
+    from scib.metrics import opt_louvain
 
-    score = matthews_corrcoef(labels["Label"], labels["PredLabel"])
-    score = (score + 1) / 2
+    print("Optimising clusters...")
+    opt_louvain(adata, label_key="Label", cluster_key="Cluster", function=ari)
+    print("Calculating score...")
+    score = ari(adata, group1="Label", group2="Cluster")
+    print(f"Final score: {score}")
 
     return score
 
@@ -37,7 +44,7 @@ def calculate_mcc(labels):
 def main():
     """The main script function"""
     from docopt import docopt
-    from pandas import read_csv
+    from scanpy import read_h5ad
     from _functions import format_metric_results
 
     args = docopt(__doc__)
@@ -49,12 +56,12 @@ def main():
     out_file = args["--out-file"]
 
     print(f"Reading data from '{file}'...")
-    input = read_csv(file, sep="\t")
+    input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_mcc(input)
+    score = calculate_ari(input)
     output = format_metric_results(
-        dataset, method, integration, "Classification", "MCC", score
+        dataset, method, integration, "Integration", "ARI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
