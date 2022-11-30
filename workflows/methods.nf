@@ -235,7 +235,7 @@ process METHOD_OSCA {
         """
 }
 
-process METHOD_SCMER_N1000 {
+process METHOD_SCMER {
     conda "envs/scmer.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
@@ -244,19 +244,19 @@ process METHOD_SCMER_N1000 {
         tuple val(dataset), path(reference), path(query)
 
     output:
-        tuple val(dataset), val("scmer_N1000"), path("scmer_N1000.tsv")
+        tuple val(dataset), val("scmer"), path("scmer.tsv")
 
     script:
         """
         method-scmer.py \\
-            --n-features 1000 \\
-            --out-file "scmer_N1000.tsv" \\
+            --n-features 2000 \\
+            --out-file "scmer.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "scmer_N1000.tsv"
+        touch "scmer.tsv"
         """
 }
 
@@ -278,7 +278,7 @@ workflow METHODS {
         all_ch            = method_names.contains("all")            ? METHOD_ALL(prepared_datasets_ch)            : Channel.empty()
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
-        scmer_n1000_ch    = method_names.contains("scmer-N1000")    ? METHOD_SCMER_N1000(prepared_datasets_ch)    : Channel.empty()
+        scmer_ch          = method_names.contains("scmer")          ? METHOD_SCMER(prepared_datasets_ch)          : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
         osca_ch           = method_names.contains("osca")           ? METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
@@ -335,7 +335,7 @@ workflow METHODS {
                 scanpy_ch,
                 triku_ch,
                 hotspot_ch,
-                scmer_n1000_ch
+                scmer_ch,
                 nbumi_ch,
                 scsegindex_ch,
                 osca_ch,

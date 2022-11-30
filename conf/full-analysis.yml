@@ -35,7 +35,7 @@ methods:
         batch: "False"
   - name: triku
   - name: hotspot
-  - name: scmer-N1000
+  - name: scmer
   - name: scsegindex
   - name: nbumi
   - name: osca

@@ -1,19 +1,19 @@
 #!/usr/bin/env python
 
 """
-Select features using scmer
+Select features using SCMER
 
 Usage:
     method-scmer.py --out-file=<path> [options] <file>
 
 Options:
-    -h --help            Show this screen.
+    -h --help               Show this screen.
     -o --out-file=<path>    Path to output file.
     -n --n-features=<int>   Number of features to select [default: 1000].
-    -b --batch              Apply to each batch. Requires column 'Batch' in .obs.
+    -b --batch              Apply to each batch. Requires column "Batch" in .obs.
 """
 
-def select_features_scmer(adata, n, batch, lasso=0):
+def select_features_scmer(adata, n_features, batch, lasso=0):
     """
     Select features using scmer
 
@@ -23,10 +23,10 @@ def select_features_scmer(adata, n, batch, lasso=0):
         AnnData object
     lasso
         Strength of L1 regularization in elastic net
-    n
+    n_features
     	Number of features to select
     batch
-    	Flag whether to use 'Batch' as batch_key
+    	Whether to use batches when selecting features
 
     Returns
     ----------
@@ -36,13 +36,13 @@ def select_features_scmer(adata, n, batch, lasso=0):
     import scanpy as sc
     from scmer import UmapL1
 
-    if adata.n_vars < n:
+    if adata.n_vars < n_features:
         import warnings
 
         warnings.warn(
-            "Number of features to select is greater than the number present, setting n to adata.n_vars"
+            "Number of features to select is greater than the number present, setting n_features to adata.n_vars"
         )
-        n = adata.n_vars
+        n_features = adata.n_vars
 
     if batch:
         batches=adata.obs["Batch"].values
@@ -55,7 +55,7 @@ def select_features_scmer(adata, n, batch, lasso=0):
     model = UmapL1(lasso=lasso).fit(X=adata.X, batches=batches)
     adata = model.transform(adata)
 
-    model = UmapL1().tune(X=adata.X, target_n_features=n)
+    model = UmapL1().tune(X=adata.X, target_n_features=n_features)
     adata = model.transform(adata)
 
     adata.var["Feature"] = adata.var.index
