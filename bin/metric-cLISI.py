@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate cell label classification using the MCC metric
+Evaluate integration using Cell-type LISI (cLISI)
 
 Usage:
-    metric-MCC.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,21 +15,34 @@ Options:
 """
 
 
-def calculate_mcc(labels):
+def calculate_cLISI(adata):
     """
-    Calculate classification MCC for a set of cell labels
+    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
+
     Parameters
     ----------
-    labels
-        DataFrame containing real and predicted cell labels
+    adata
+        AnnData object containing the integrated dataset
+
     Returns
     -------
-    The MCC score
+    cLISI score
     """
-    from sklearn.metrics import matthews_corrcoef
+    from scib.metrics import clisi_graph
 
-    score = matthews_corrcoef(labels["Label"], labels["PredLabel"])
-    score = (score + 1) / 2
+    print("Calculating final score...")
+    score = clisi_graph(
+        adata,
+        "Batch",
+        "Label",
+        k0=90,
+        type_=None,
+        subsample=None,
+        scale=True,
+        n_cores=1,
+        verbose=True,
+    )
+    print(f"Final score: {score}")
 
     return score
 
@@ -37,7 +50,7 @@ def calculate_mcc(labels):
 def main():
     """The main script function"""
     from docopt import docopt
-    from pandas import read_csv
+    from scanpy import read_h5ad
     from _functions import format_metric_results
 
     args = docopt(__doc__)
@@ -49,12 +62,12 @@ def main():
     out_file = args["--out-file"]
 
     print(f"Reading data from '{file}'...")
-    input = read_csv(file, sep="\t")
+    input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_mcc(input)
+    score = calculate_cLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Classification", "MCC", score
+        dataset, method, integration, "Integration", "cLISI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
