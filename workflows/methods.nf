@@ -235,6 +235,31 @@ process METHOD_OSCA {
         """
 }
 
+process METHOD_DUBSTEPR {
+    conda "envs/dubstepr.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("dubstepr"), path("dubstepr.tsv")
+
+    script:
+        """
+        method-DUBStepR.R \\
+            --out-file "dubstepr.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "dubstepr.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -254,6 +279,7 @@ workflow METHODS {
         triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
+        dubstepr_ch       = method_names.contains("dubstepr")       ? METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/_functions.R"))       : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
         osca_ch           = method_names.contains("osca")           ? METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
 
@@ -311,6 +337,7 @@ workflow METHODS {
                 hotspot_ch,
                 nbumi_ch,
                 scsegindex_ch,
+                dubstepr_ch,
                 osca_ch,
                 seurat_ch
             )
