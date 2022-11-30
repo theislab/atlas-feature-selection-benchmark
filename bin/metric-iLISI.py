@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Cell-type LISI (cLISI)
+Evaluate integration using Integration LISI (iLISI)
 
 Usage:
-    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
+    metric-iLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_cLISI(adata):
+def calculate_iLISI(adata):
     """
-    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
+    Calculate the Integration LISI (iLISI) score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,15 +26,14 @@ def calculate_cLISI(adata):
 
     Returns
     -------
-    cLISI score
+    The [0, 1] score non-cluster to compact cluster structure.
     """
-    from scib.metrics import clisi_graph
+    from scib.metrics import ilisi_graph
 
     print("Calculating final score...")
-    score = clisi_graph(
+    score = ilisi_graph(
         adata,
         "Batch",
-        "Label",
         k0=90,
         type_=None,
         subsample=None,
@@ -42,7 +41,7 @@ def calculate_cLISI(adata):
         n_cores=1,
         verbose=True,
     )
-    print(f"Final score: {score}")
+    print("Final score: {score}")
 
     return score
 
@@ -61,16 +60,16 @@ def main():
     integration = args["--integration"]
     out_file = args["--out-file"]
 
-    print(f"Reading data from '{file}'...")
+    print("Reading data from '{file}'...")
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_cLISI(input)
+    score = calculate_iLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "cLISI", score
+        dataset, method, integration, "Integration", "iLISI", score
     )
     print(output)
-    print(f"Writing output to '{out_file}'...")
+    print("Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
 

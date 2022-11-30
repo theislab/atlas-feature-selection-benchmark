@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Cell-type LISI (cLISI)
+Evaluate integration using principal component regression
 
 Usage:
-    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
+    metric-batchPCR.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +15,9 @@ Options:
 """
 
 
-def calculate_cLISI(adata):
+def calculate_batchPCR(adata):
     """
-    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
+    Calculate the principal component regression score for an integrated dataset.
 
     Parameters
     ----------
@@ -26,23 +26,15 @@ def calculate_cLISI(adata):
 
     Returns
     -------
-    cLISI score
+    The PCR comparison score
     """
-    from scib.metrics import clisi_graph
+    from scib.metrics import pcr_comparison
 
     print("Calculating final score...")
-    score = clisi_graph(
-        adata,
-        "Batch",
-        "Label",
-        k0=90,
-        type_=None,
-        subsample=None,
-        scale=True,
-        n_cores=1,
-        verbose=True,
+    score = pcr_comparison(
+        adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True
     )
-    print(f"Final score: {score}")
+    print("Final score: {score}")
 
     return score
 
@@ -65,9 +57,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_cLISI(input)
+    score = calculate_batchPCR(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "cLISI", score
+        dataset, method, integration, "Integration", "BatchPCR", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

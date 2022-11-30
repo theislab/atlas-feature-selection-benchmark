@@ -10,22 +10,24 @@ process INTEGRATE_SCVI {
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
-        pattern: "scVI-reference"
+        pattern: "scVI-reference",
+        saveAs: { pathname -> pathname + "-${seed}" }
 
     label "process_medium"
 
     input:
-        tuple val(dataset), path(reference), path(query), val(method), path(features)
+        tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val("scVI"), path("scVI-reference"), path(query)
+        tuple val(dataset), val(method), val("scVI"), val(seed), path("scVI-reference"), path(query)
 
     script:
         """
         integrate-scvi.py \\
             --features "${features}" \\
             --out-dir scVI-reference \\
+            --seed "${seed}" \\
             ${reference}
         """
 
@@ -42,19 +44,21 @@ process INTEGRATE_SCANVI {
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
-        pattern: "scANVI-reference"
+        pattern: "scANVI-reference",
+        saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(scVI), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(scVI), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val("scANVI"), path("scANVI-reference"), path(query)
+        tuple val(dataset), val(method), val("scANVI"), val(seed), path("scANVI-reference"), path(query)
 
     script:
         """
         integrate-scanvi.py \\
             --out-dir "scANVI-reference" \\
+            --seed "${seed}" \\
             ${scVI}
         """
 
@@ -71,14 +75,15 @@ process MAP_SCVI {
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
-        pattern: "scVI-mapped"
+        pattern: "scVI-mapped",
+        saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path(reference), path("scVI-mapped")
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path("scVI-mapped")
 
     script:
         """
@@ -101,14 +106,15 @@ process MAP_SCANVI {
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         mode: "copy",
-        pattern: "scANVI-mapped"
+        pattern: "scANVI-mapped",
+        saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), path(reference), path("scANVI-mapped")
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path("scANVI-mapped")
 
     script:
         """
@@ -133,11 +139,13 @@ process PREDICT_LABELS {
         mode: "copy",
         pattern: "*-labels.tsv"
 
+    label "process_medium"
+
     input:
-        tuple val(dataset), val(method), val(integration), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
 
     output:
-        tuple val(dataset), val(method), val(integration), path("${query}/adata.h5ad"), path("${integration}-labels.tsv")
+        tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query}/adata.h5ad"), path("${integration}-labels.tsv")
 
     script:
         """
@@ -166,7 +174,10 @@ workflow INTEGRATION {
 
     main:
 
-        INTEGRATE_SCVI(datasets_features_ch, file(params.bindir + "/_functions.py"))
+        scvi_ch = datasets_features_ch
+            .combine(Channel.fromList(params.integration.seeds))
+
+        INTEGRATE_SCVI(scvi_ch, file(params.bindir + "/_functions.py"))
         INTEGRATE_SCANVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
 
         MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
@@ -183,8 +194,8 @@ workflow INTEGRATION {
                 tuple(
                     it[0],                       // Dataset name
                     it[1],                       // Method name
-                    it[2],                       // Integration name
-                    file(it[3] + "/adata.h5ad"), // Path to reference H5AD
+                    it[2] + "-" + it[3],         // Integration name
+                    file(it[4] + "/adata.h5ad"), // Path to reference H5AD
                 )
             }
         query_ch = PREDICT_LABELS.out

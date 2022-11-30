@@ -20,6 +20,7 @@ include { DATASETS } from './workflows/datasets'
 include { METHODS } from './workflows/methods'
 include { INTEGRATION } from './workflows/integration'
 include { METRICS } from './workflows/metrics'
+include { REPORTS } from './workflows/reports'
 
 prepared_datasets_ch = Channel
     .fromList(params.datasets)
@@ -75,6 +76,8 @@ query_ch = reference_ch
         )
     }
 
+combined_metrics_ch = Channel.fromList([file(params.outdir + "/metrics/all-metrics.tsv")])
+
 //
 // WORKFLOW: Run main analysis pipeline, prints a message and ends
 //
@@ -90,6 +93,7 @@ workflow WF_MAIN {
     println '* WF_METHODS - Run feature selection methods'
     println '* WF_INTEGRATION - Run integration steps'
     println '* WF_METRICS - Run evaluation metrics'
+    println '* WF_REPORTS - Run reports'
     println '* WF_ALL - Run all analysis steps in order'
     println '\n'
     println 'Stopping.'
@@ -127,6 +131,13 @@ workflow WF_METRICS {
 }
 
 //
+// WORKFLOW: Run reports
+//
+workflow WF_REPORTS {
+    REPORTS(combined_metrics_ch)
+}
+
+//
 // WORKFLOW: Run all analysis steps in order
 //
 workflow WF_ALL {
@@ -134,6 +145,7 @@ workflow WF_ALL {
     METHODS(DATASETS.out.prepared_datasets_ch)
     INTEGRATION(METHODS.out.datasets_features_ch)
     METRICS(INTEGRATION.out.reference_ch, INTEGRATION.out.query_ch)
+    REPORTS(METRICS.out)
 }
 
 /*

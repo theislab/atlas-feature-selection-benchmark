@@ -1,13 +1,5 @@
-experiment: full-analysis
+experiment: integration-variation
 datasets:
-  - name: tinySim
-    batch_col: Batch
-    label_col: Group
-    query_batches: Batch4
-  - name: tinySim2
-    batch_col: Batch
-    label_col: Group
-    query_batches: Batch4
   - name: scIBPancreas
     batch_col: tech
     label_col: celltype
@@ -20,38 +12,47 @@ methods:
   - name: all
   - name: random
     settings:
-      - n_features: 500
-        seed: 1
-      - n_features: 1000
-        seed: 1
       - n_features: 2000
         seed: 1
-      - n_features: 5000
-        seed: 1
+      - n_features: 2000
+        seed: 2
+      - n_features: 2000
+        seed: 3
+      - n_features: 2000
+        seed: 4
+      - n_features: 2000
+        seed: 5
   - name: scanpy
     settings:
       - flavor: seurat
         n_features: 2000
         batch: "False"
-  - name: triku
-  - name: hotspot
-  - name: scsegindex
-  - name: dubstepr
-  - name: nbumi
-  - name: osca
-  - name: seurat
-    settings:
-      - method: vst
+      - flavor: seurat_v3
         n_features: 2000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "True"
 integration:
   seeds:
     - 1
+    - 2
+    - 3
+    - 4
+    - 5
 metrics:
   - name: batchPurity
     type: Integration
   - name: mixing
-    type: Integration
-  - name: kBET
     type: Integration
   - name: cLISI
     type: Integration

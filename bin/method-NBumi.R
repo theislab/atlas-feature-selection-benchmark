@@ -1,10 +1,10 @@
 #!/usr/bin/env Rscript
 
 "
-Select features using the scSEGIndex method from scMerge
+Select features using the NBumi method from M3Drop
 
 Usage:
-    method-scSEGIndex.R --out-file=<path> <file>
+    method-NBumi.R --out-file=<path> <file>
 
 Options:
     -h --help            Show this screen.
@@ -14,7 +14,7 @@ Options:
 
 # Load libraries
 suppressPackageStartupMessages({
-    library(scMerge)
+    library(M3Drop)
 })
 
 # Source functions
@@ -22,16 +22,17 @@ suppressMessages({
     source("_functions.R")
 })
 
-#' Select features using the scSEGIndex method
+#' Select features using the NBumi method
 #'
 #' @param input SingleCellExperiment object containing the integrated dataset
 #'
 #' @returns DataFrame containing the selected features
-select_scsegindex_features <- function(input) {
-    message("Selecting scSEGIndex features...")
+select_nbumi_features <- function(input) {
+    message("Selecting NBumi features...")
 
-    exprs_mat <- SummarizedExperiment::assay(input)
-    result <- scSEGIndex(exprs_mat = exprs_mat)
+    count_mat <- NBumiConvertData(SingleCellExperiment::counts(input), is.counts = TRUE)
+    DANB_fit <- NBumiFitModel(count_mat)
+    result <- NBumiFeatureSelectionCombinedDrop(DANB_fit, method = "fdr", qval.thres = 0.01, suppress.plot = TRUE)
     result$Feature <- rownames(result)
 
     return(result)
@@ -46,7 +47,7 @@ main <- function() {
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
         file,
-        X_name = NULL,
+        X_name = "counts",
         uns    = FALSE,
         varm   = FALSE,
         obsm   = "X_emb",
@@ -54,7 +55,7 @@ main <- function() {
         obsp   = FALSE
     )
     print(input)
-    score <- select_scsegindex_features(input)
+    score <- select_nbumi_features(input)
     message("Writing output to '", out_file, "'...")
     write.table(
         score,
