@@ -24,23 +24,22 @@ suppressMessages({
 #'
 #' @returns DataFrame containing the selected features
 select_features_osca <- function(input, n_features) {
+    message("Selecting features using the OSA method...")
 
-  message("Selecting features using the OSA method...")
+    message("Performing batch-aware normalisation...")
+    input <- batchelor::multiBatchNorm(input, batch = input$Batch)
 
-  message("Performing batch-aware normalisation...")
-  input <- batchelor::multiBatchNorm(input, batch = input$Batch)
+    message("Moodelling features variance in a batch-aware way...")
+    feature_stats <- scran::modelGeneVar(input, block = input$Batch)
 
-  message("Moodelling features variance in a batch-aware way...")
-  feature_stats <- scran::modelGeneVar(input, block = input$Batch)
+    message("Selecting top variance features...")
+    top_hvgs <- scran::getTopHVGs(feature_stats, n = n_features)
 
-  message("Selecting top variance features...")
-  top_hvgs <- scran::getTopHVGs(feature_stats, n = n_features)
+    result <- feature_stats[top_hvgs, ]
+    result$Feature <- top_hvgs
+    result$per.block <- NULL
 
-  result <- feature_stats[top_hvgs, ]
-  result$Feature <- top_hvgs
-  result$per.block <- NULL
-
-  return(result)
+    return(result)
 }
 
 #' The main script function
@@ -52,14 +51,14 @@ main <- function() {
 
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
-            file,
-            X_name = "counts",
-            uns    = FALSE,
-            varm   = FALSE,
-            obsm   = FALSE,
-            varp   = FALSE,
-            obsp   = FALSE
-        )
+        file,
+        X_name = "counts",
+        uns    = FALSE,
+        varm   = FALSE,
+        obsm   = FALSE,
+        varp   = FALSE,
+        obsp   = FALSE
+    )
     print(input)
     output <- select_features_osca(input, n_features)
     message("Writing output to '", out_file, "'...")
