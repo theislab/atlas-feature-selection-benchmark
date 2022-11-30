@@ -37,7 +37,7 @@ methods:
   - name: hotspot
   - name: scsegindex
   - name: nbumi
-  - name: osca-default
+  - name: osca
   - name: seurat
     settings:
       - method: vst

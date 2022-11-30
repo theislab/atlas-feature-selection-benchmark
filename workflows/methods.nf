@@ -210,7 +210,7 @@ process METHOD_NBUMI {
         """
 }
 
-process METHOD_OSCA_DEFAULT {
+process METHOD_OSCA {
     conda "envs/osca.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
@@ -220,18 +220,18 @@ process METHOD_OSCA_DEFAULT {
         path(functions)
 
     output:
-        tuple val(dataset), val("osca_default"), path("osca_default.tsv")
+        tuple val(dataset), val("osca"), path("osca.tsv")
 
     script:
         """
         method-osca.R \\
-            --out-file "osca_default.tsv" \\
+            --out-file "osca.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "osca_default.tsv"
+        touch "osca.tsv"
         """
 }
 
@@ -255,7 +255,7 @@ workflow METHODS {
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
-        osca_default_ch = method_names.contains("osca-default")     ? METHOD_OSCA_DEFAULT(prepared_datasets_ch, file(params.bindir + "/_functions.R")) : Channel.empty()
+        osca_ch           = method_names.contains("osca")           ? METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
 
         if (method_names.contains("random")) {
             random_params_ch = Channel
@@ -311,7 +311,7 @@ workflow METHODS {
                 hotspot_ch,
                 nbumi_ch,
                 scsegindex_ch,
-                osca_default_ch,
+                osca_ch,
                 seurat_ch
             )
 
