@@ -12,12 +12,17 @@ Options:
     --out-file=<path>    Path to output file.
 " -> doc
 
+# Load libraries
+suppressPackageStartupMessages({
+    library(Seurat)
+})
+
 # Source functions
 suppressMessages({
     source("_functions.R")
 })
 
-#' Select features using DUBStepR.
+#' Select features using DUBStepR
 #'
 #' @param input Seurat object
 #'
@@ -45,13 +50,14 @@ main <- function() {
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
         file,
-        X_name = NULL,
+        X_name = "counts",
         uns    = FALSE,
         varm   = FALSE,
         obsm   = FALSE,
         varp   = FALSE,
         obsp   = FALSE
     )
+
     message("Converting to Seurat object...")
     # Store dummy logcounts for Seurat's conversion function
     SingleCellExperiment::logcounts(input) <- SingleCellExperiment::counts(input)

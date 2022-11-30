@@ -236,7 +236,7 @@ process METHOD_OSCA {
 }
 
 process METHOD_DUBSTEPR {
-    conda "envs/scmerge.yml"
+    conda "envs/dubstepr.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
