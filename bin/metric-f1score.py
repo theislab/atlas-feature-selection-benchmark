@@ -1,37 +1,39 @@
 #!/usr/bin/env python
 
 """
-Evaluate cell label classification using the jaccard index metric
+Evaluate cell label classification using the F1 score
 
 Usage:
-    metric-JaccardIndex.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
+    metric-f1score.py --dataset=<str> --method=<str> --integration=<str> [--average=<str>] --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
     --dataset=<str>      Name of the dataset to calculate the metric for.
     --method=<str>       Name of the method to calculate the metric for.
     --integration=<str>  Name of the integration to calculate the metric for.
-    --average=<str>      The type of averaging performed when there are multiple labels [default: "micro"]
+    --average=<str>      The type of averaging performed when there are multiple labels [default: "micro"].
     --out-file=<path>    Path to output file.
 """
 
 
-def calculate_JaccardIndex(labels, average=None):
+def calculate_f1score(labels, average=None):
     """
-    Calculate jaccard index for a set of cell labels
+    Calculate F1 score for a set of cell labels
+
     Parameters
     ----------
     labels
         DataFrame containing real and predicted cell labels
         average
-        The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html.
+        The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.f1_score.html.
+
     Returns
     -------
-    The Jaccard index
+    The F1 score
     """
-    from sklearn.metrics import jaccard_score
+    from sklearn.metrics import f1_score
 
-    score = jaccard_score(labels["Label"], labels["PredLabel"], average=average)
+    score = f1_score(labels["Label"], labels["PredLabel"], average=average)
 
     return score
 
@@ -49,16 +51,14 @@ def main():
     integration = args["--integration"]
     average = args["--average"]
     out_file = args["--out-file"]
-    if average == "None":
-        average = None
 
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
     print("Read data:")
     print(input)
-    score = calculate_JaccardIndex(input, average=average)
+    score = calculate_f1score(input, average=average)
     output = format_metric_results(
-        dataset, method, integration, "Classification", f"JaccardIndex{average}", score
+        dataset, method, integration, "Classification", f"F1{average}", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

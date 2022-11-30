@@ -69,6 +69,28 @@ process DATASET_SCIBPANCREAS {
         """
 }
 
+process DATASET_NEURIPS {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    input:
+        path(functions)
+
+    output:
+        tuple val("neurips"), path("neurips.h5ad")
+
+    script:
+        """
+        dataset-neurips.py --out-file "neurips.h5ad"
+        """
+
+    stub:
+        """
+        touch neurips.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -119,11 +141,15 @@ workflow DATASETS {
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
             Channel.empty()
+		neurips_ch = dataset_names.contains("neurips") ?
+            DATASET_NEURIPS(file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
                 tinySim2_ch,
-                scIBPancreas_ch
+                scIBPancreas_ch,
+				neurips_ch
             )
 
         datasets_ch = Channel

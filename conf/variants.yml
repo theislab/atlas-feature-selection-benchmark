@@ -1,0 +1,222 @@
+experiment: variants
+datasets:
+  - name: scIBPancreas
+    batch_col: tech
+    label_col: celltype
+    query_batches: inDrop3
+  - name: neurips
+    batch_col: batch
+    label_col: cell_type
+    query_batches: s4d1,s4d8,s4d9
+methods:
+  - name: all
+  - name: random
+    settings:
+      - n_features: 200
+        seed: 1
+      - n_features: 500
+        seed: 1
+      - n_features: 1000
+        seed: 1
+      - n_features: 2000
+        seed: 1
+      - n_features: 5000
+        seed: 1
+      - n_features: 10000
+        seed: 1
+      - n_features: 200
+        seed: 2
+      - n_features: 500
+        seed: 2
+      - n_features: 1000
+        seed: 2
+      - n_features: 2000
+        seed: 2
+      - n_features: 5000
+        seed: 2
+      - n_features: 10000
+        seed: 2
+      - n_features: 200
+        seed: 3
+      - n_features: 500
+        seed: 3
+      - n_features: 1000
+        seed: 3
+      - n_features: 2000
+        seed: 3
+      - n_features: 5000
+        seed: 3
+      - n_features: 10000
+        seed: 3
+      - n_features: 200
+        seed: 4
+      - n_features: 500
+        seed: 4
+      - n_features: 1000
+        seed: 4
+      - n_features: 2000
+        seed: 4
+      - n_features: 5000
+        seed: 4
+      - n_features: 10000
+        seed: 4
+      - n_features: 200
+        seed: 5
+      - n_features: 500
+        seed: 5
+      - n_features: 1000
+        seed: 5
+      - n_features: 2000
+        seed: 5
+      - n_features: 5000
+        seed: 5
+      - n_features: 10000
+        seed: 5
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 200
+        batch: "False"
+      - flavor: seurat
+        n_features: 500
+        batch: "False"
+      - flavor: seurat
+        n_features: 1000
+        batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat
+        n_features: 5000
+        batch: "False"
+      - flavor: seurat
+        n_features: 10000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 200
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 500
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 1000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 5000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 10000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 200
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 500
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 1000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 5000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 10000
+        batch: "False"
+      - flavor: seurat
+        n_features: 200
+        batch: "True"
+      - flavor: seurat
+        n_features: 500
+        batch: "True"
+      - flavor: seurat
+        n_features: 1000
+        batch: "True"
+      - flavor: seurat
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat
+        n_features: 5000
+        batch: "True"
+      - flavor: seurat
+        n_features: 10000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 200
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 500
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 1000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 5000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 10000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 200
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 500
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 1000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 5000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 10000
+        batch: "True"
+integration:
+  seeds:
+    - 1
+metrics:
+  - name: batchPurity
+    type: Integration
+  - name: mixing
+    type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
+  - name: labelASW
+    type: Integration
+  - name: isolatedLabelsF1
+    type: Integration
+  - name: isolatedLabelsASW
+    type: Integration
+  - name: graphConnectivity
+    type: Integration
+  - name: batchPCR
+    type: Integration
+  - name: iLISI
+    type: Integration
+  - name: ari
+    type: Integration
+  - name: accuracy
+    type: Classification
+  - name: rareAccuracy
+    type: Classification
+  - name: MCC
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
+    type: Classification
+reports:
+  - name: metrics

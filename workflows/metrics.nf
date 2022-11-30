@@ -1,4 +1,3 @@
-
 /*
 ========================================================================================
     PROCESSES
@@ -127,6 +126,36 @@ process METRIC_NMI {
         """
 }
 
+process METRIC_KBET {
+    conda "envs/scib-kBET.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "kBET.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-kBET.tsv")
+
+    script:
+        """
+        metric-kBET-install.R
+        metric-kBET.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-kBET.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-kBET.tsv"
+        """
+}
+
 process METRIC_LABELASW {
     conda "envs/scib.yml"
 
@@ -211,6 +240,65 @@ process METRIC_ILISI {
     stub:
         """
         touch "${dataset}-${method}-${integration}-iLISI.tsv"
+        """
+}
+
+process METRIC_ISOLATEDLABELSF1 {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "isolatedLabelsF1.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabelsF1.tsv")
+
+    script:
+        """
+        metric-isolatedLabels.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --cluster \\
+            --out-file "${dataset}-${method}-${integration}-isolatedLabelsF1.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-isolatedLabelsF1.tsv"
+        """
+}
+
+process METRIC_ISOLATEDLABELSASW {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "isolatedLabelsASW.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-isolatedLabelsASW.tsv")
+
+    script:
+        """
+        metric-isolatedLabels.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv"
         """
 }
 
@@ -365,6 +453,66 @@ process METRIC_MCC {
         """
 }
 
+process METRIC_F1_MICRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1Micro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Micro.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "micro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Micro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1Micro.tsv"
+        """
+}
+
+process METRIC_F1_MACRO {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1Macro.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Macro.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "macro" \\
+            --out-file "${dataset}-${method}-${integration}-F1Macro.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1Macro.tsv"
+        """
+}
+
 process METRIC_JACCARDINDEX_MICRO {
     conda "envs/sklearn.yml"
 
@@ -455,34 +603,6 @@ process COMBINE_METRICS {
         """
 }
 
-process METRICS_REPORT {
-    conda "envs/tidyverse.yml"
-
-    publishDir "$params.outdir/metrics/", mode: "copy"
-
-    stageInMode "copy"
-
-    input:
-        tuple path(all_metrics), path(rmd), path(functions)
-
-    output:
-        path("metrics.html")
-
-    script:
-        """
-        render-rmarkdown.R \\
-            --params "metrics_file=${all_metrics},functions_file=${functions}" \\
-            --out-file "metrics.html" \\
-            ${rmd}
-        """
-
-    stub:
-        """
-        touch "metrics.html"
-        """
-
-}
-
 /*
 ========================================================================================
     WORKFLOW
@@ -506,6 +626,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        kBET_ch = metric_names.contains("kBET") ?
+            METRIC_KBET(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -522,10 +645,16 @@ workflow METRICS {
             METRIC_BATCHPCR(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		iLISI_ch = metric_names.contains("iLISI") ?
-            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_ILISI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
-            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        isolatedLabelsF1_ch = metric_names.contains("isolatedLabelsF1") ?
+            METRIC_ISOLATEDLABELSF1(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        isolatedLabelsASW_ch = metric_names.contains("isolatedLabelsASW") ?
+            METRIC_ISOLATEDLABELSASW(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         // Classification metrics
@@ -534,6 +663,12 @@ workflow METRICS {
             Channel.empty()
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        f1_micro_ch = metric_names.contains("f1Micro") ?
+            METRIC_F1_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        f1_macro_ch = metric_names.contains("f1Macro") ?
+            METRIC_F1_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
@@ -548,11 +683,16 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+                kBET_ch,
+                accuracy_ch,
+                rareAccuracy_ch,
+                f1_micro_ch,
+                f1_macro_ch,
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
-                accuracy_ch,
-                rareAccuracy_ch,
+				isolatedLabelsF1_ch,
+                isolatedLabelsASW_ch,
                 jaccard_micro_ch,
                 jaccard_macro_ch,
                 mcc_ch,
@@ -565,15 +705,8 @@ workflow METRICS {
 
         COMBINE_METRICS(metrics_ch)
 
-        report_ch = COMBINE_METRICS.out
-            .map {it ->
-                tuple(
-                    it,
-                    file(params.reportsdir + "/metrics.Rmd"),
-                    file(params.reportsdir + "/functions.R")
-                )
-            }
-        METRICS_REPORT(report_ch)
+    emit:
+        combined_metrics_ch = COMBINE_METRICS.out
 }
 
 /*
