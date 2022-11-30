@@ -5,25 +5,28 @@ channels:
   - defaults
 dependencies:
   - anndata=0.8.0
+  - anndata2ri=1.1
   - docopt=0.6.2
   - h5py=3.7.0
   - hdf5=1.12.2
+  - igraph=0.9.11
+  - leidenalg=0.8.10
+  - louvain=0.7.1
   - numba=0.55.2
   - numpy=1.22.4
   - pandas=1.4.3
   - pip=22.2.2
+  - pynndescent=0.5.7
   - python=3.9.13
-  - r-base=4.1.3
-  - r-reticulate=1.25
+  - r-base=4.2.2
+  - r-reticulate=1.26
   - scanpy=1.9.1
   - scikit-learn=1.1.2
+  - scikit-misc=0.1.4
   - scipy=1.9.0
   - pynndescent=0.5.7
   - r-rcpp=1.0.9
   - umap-learn=0.5.3
   - pip:
-    - anndata2ri==1.1
-    - leidenalg==0.8.10
-    - louvain==0.7.1
     - rpy2==3.5.4
     - git+https://github.com/theislab/scib.git@e578d84063adf4853ed087500bd3d67078e53337
