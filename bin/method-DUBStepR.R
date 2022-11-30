@@ -41,7 +41,6 @@ install_DUBStepR <- function() {
 #'
 #' @returns DataFrame containing the selected features.
 select_features_dubstepr <- function(seurat) {
-
     message("Selecting DUBStepR features...")
 
     message("Normalising data...")
