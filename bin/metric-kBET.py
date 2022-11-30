@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 
 """
-Evaluate integration using Cell-type LISI (cLISI)
+Evaluate integration using the k-Nearest Neighbour Batch effect Test (k-BET) score.
+The k-BET score measures the mixing (distribution) of batches and labels within the neighbourhood of a cell.
+This is to evaluate how well represented each batch is in a given label.
 
 Usage:
-    metric-cLISI.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> <file>
+    metric-kBET.py --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -15,9 +17,10 @@ Options:
 """
 
 
-def calculate_cLISI(adata):
+def calculate_kBET(adata):
     """
-    Calculate the Cell-type LISI (cLISI) score for an integrated dataset.
+    Calculate the k-Nearest Neighbour Batch effect Test (k-BET) score for an
+    integrated dataset over batches per group(e. g., cell type).
 
     Parameters
     ----------
@@ -26,21 +29,13 @@ def calculate_cLISI(adata):
 
     Returns
     -------
-    cLISI score
+    The scaled average of the rejection rates per label; 0 means optimal batch mixing and 1 means low batch mixing.
     """
-    from scib.metrics import clisi_graph
+    from scib.metrics import kBET
 
-    print("Calculating final score...")
-    score = clisi_graph(
-        adata,
-        "Batch",
-        "Label",
-        k0=90,
-        type_=None,
-        subsample=None,
-        scale=True,
-        n_cores=1,
-        verbose=True,
+    print("Calculating score...")
+    score = kBET(
+        adata, batch_key="Batch", label_key="Label", embed="X_emb", verbose=True
     )
     print(f"Final score: {score}")
 
@@ -65,9 +60,9 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    score = calculate_cLISI(input)
+    score = calculate_kBET(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "cLISI", score
+        dataset, method, integration, "Integration", "kBET", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
