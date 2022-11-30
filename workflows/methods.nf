@@ -133,6 +133,33 @@ process METHOD_HOTSPOT {
         """
 }
 
+process METHOD_SEURAT {
+    conda "envs/seurat.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query), val(method), val(n_features)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("seurat-${method}-N${n_features}"), path("seurat_${method}_N${n_features}.tsv")
+
+    script:
+        """
+        method-seurat.R \\
+            --method ${method} \\
+            --n-features ${n_features} \\
+            --out-file "seurat_${method}_N${n_features}.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "seurat_${method}_N${n_features}.tsv"
+        """
+}
+
 process METHOD_SCSEGINDEX {
     conda "envs/scmerge.yml"
 
@@ -233,6 +260,23 @@ workflow METHODS {
             scanpy_ch = Channel.empty()
         }
 
+        if (method_names.contains("seurat")) {
+            seurat_params_ch = Channel
+                .fromList(params.methods[method_names.indexOf("seurat")].settings)
+                .map { settings ->
+                    tuple(
+                        settings.method,
+                        settings.n_features
+                    )
+                }
+            seurat_ch = METHOD_SEURAT(
+                prepared_datasets_ch.combine(seurat_params_ch),
+                file(params.bindir + "/_functions.R")
+            )
+        } else {
+            seurat_ch = Channel.empty()
+        }
+
         selected_features_ch = all_ch
             .mix(
                 random_ch,
@@ -241,6 +285,7 @@ workflow METHODS {
                 hotspot_ch,
                 nbumi_ch,
                 scsegindex_ch,
+                seurat_ch
             )
 
     emit:

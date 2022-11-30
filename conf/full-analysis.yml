@@ -37,6 +37,10 @@ methods:
   - name: hotspot
   - name: scsegindex
   - name: nbumi
+  - name: seurat
+    settings:
+      - method: vst
+        n_features: 2000
 integration:
   seeds:
     - 1
