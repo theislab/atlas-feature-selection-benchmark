@@ -31,7 +31,7 @@ select_features_osca <- function(input, n_features) {
   input <- batchelor::multiBatchNorm(input, batch = input$Batch)
 
   message("Moodelling features variance in a batch-aware way...")
-  feature_stats <- scran::modelGeneVar(input, block = block)
+  feature_stats <- scran::modelGeneVar(input, block = input$Batch)
 
   message("Selecting top variance features...")
   top_hvgs <- scran::getTopHVGs(feature_stats, n = n_features)
