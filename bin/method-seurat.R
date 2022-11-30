@@ -83,7 +83,7 @@ main <- function() {
         X_name = "counts",
         uns    = FALSE,
         varm   = FALSE,
-        obsm   = "X_emb",
+        obsm   = FALSE,
         varp   = FALSE,
         obsp   = FALSE
     )
@@ -94,10 +94,10 @@ main <- function() {
     seurat <- SeuratObject::as.Seurat(input)
     message("Read data:")
     print(seurat)
-    score <- select_seurat_features(seurat, n_features, method)
+    output <- select_seurat_features(seurat, n_features, method)
     message("Writing output to '", out_file, "'...")
     write.table(
-        score,
+        output,
         file      = out_file,
         quote     = FALSE,
         sep       = "\t",
