@@ -10,7 +10,7 @@ Options:
     -h --help               Show this screen.
     -o --out-file=<path>    Path to output file.
     -n --n-features=<int>   Number of features to select [default: 2000].
-    -m --method=<str>       Feature selection method to use. One of: vst, mvp, disp [default: 'vst'].
+    -m --method=<str>       Feature selection method to use. One of: vst, mvp, disp, sct [default: 'vst'].
 " -> doc
 
 
@@ -32,14 +32,15 @@ suppressMessages({
 #'
 #' @returns DataFrame containing the selected features
 select_seurat_features <- function(seurat, n_features,
-                                   method = c("vst", "mvp", "disp")) {
+                                   method = c("vst", "mvp", "disp", "sct")) {
 
     method <- match.arg(method)
 
     method <- switch (method,
         vst  = "vst",
         mvp  = "mean.var.plot",
-        disp = "dispersion"
+        disp = "dispersion",
+        sct  = "sctransform"
     )
 
     message(
@@ -48,13 +49,17 @@ select_seurat_features <- function(seurat, n_features,
         method, "' method..."
     )
 
-    seurat <- NormalizeData(seurat)
+    if (method == "sctransform") {
+        seurat <- SCTransfrom(seurat, variable.features.n = n_features)
+    } else {
+        seurat <- NormalizeData(seurat)
+        result <- FindVariableFeatures(
+            seurat,
+            selection.method = method,
+            nfeatures = n_features
+        )
+    }
 
-    result <- FindVariableFeatures(
-        seurat,
-        selection.method = method,
-        nfeatures = n_features
-    )
     selected_features <- data.frame(Feature = VariableFeatures(result))
 
     return(selected_features)
