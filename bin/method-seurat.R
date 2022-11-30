@@ -32,11 +32,11 @@ suppressMessages({
 #'
 #' @returns DataFrame containing the selected features
 select_seurat_features <- function(seurat, n_features,
-                                   method = c("vst", "mvp", "disp", "sct")) {
+    method = c("vst", "mvp", "disp", "sct")) {
 
     method <- match.arg(method)
 
-    method <- switch (method,
+    method <- switch(method,
         vst  = "vst",
         mvp  = "mean.var.plot",
         disp = "dispersion",
@@ -71,23 +71,22 @@ select_seurat_features <- function(seurat, n_features,
 
 #' The main script function
 main <- function() {
-
     args <- docopt::docopt(doc)
     file <- args[["<file>"]]
     out_file <- args[["--out-file"]]
     n_features <- args[["--n-features"]]
-    method <- args[['--method']]
+    method <- args[["--method"]]
 
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
-            file,
-            X_name = 'counts',
-            uns    = FALSE,
-            varm   = FALSE,
-            obsm   = "X_emb",
-            varp   = FALSE,
-            obsp   = FALSE
-        )
+        file,
+        X_name = "counts",
+        uns    = FALSE,
+        varm   = FALSE,
+        obsm   = "X_emb",
+        varp   = FALSE,
+        obsp   = FALSE
+    )
 
     message("Converting to Seurat object...")
     # Store dummy logcounts for Seurat's conversion function
