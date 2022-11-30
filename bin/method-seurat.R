@@ -35,12 +35,14 @@ select_seurat_features <- function(seurat, n_features, method) {
 
     message("Selecting Seurat features...")
 
+    seurat <- NormalizeData(seurat)
+
     result <- FindVariableFeatures(
         seurat,
         selection.method = method,
         nfeatures = n_features
     )
-    selected_features <- data.frame(Feature= VariableFeatures(result))
+    selected_features <- data.frame(Feature = VariableFeatures(result))
 
     return(selected_features)
 }
