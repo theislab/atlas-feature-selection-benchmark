@@ -50,17 +50,21 @@ select_seurat_features <- function(seurat, n_features,
     )
 
     if (method == "sctransform") {
-        seurat <- SCTransform(seurat, variable.features.n = n_features)
+        seurat <- SCTransform(
+            seurat,
+            assay = DefaultAssay(seurat),
+            variable.features.n = n_features
+        )
     } else {
         seurat <- NormalizeData(seurat)
-        result <- FindVariableFeatures(
+        seurat <- FindVariableFeatures(
             seurat,
             selection.method = method,
             nfeatures = n_features
         )
     }
 
-    selected_features <- data.frame(Feature = VariableFeatures(result))
+    selected_features <- data.frame(Feature = VariableFeatures(seurat))
 
     return(selected_features)
 }
