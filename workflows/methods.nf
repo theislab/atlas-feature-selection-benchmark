@@ -140,6 +140,7 @@ process METHOD_SEURAT {
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), val(n_features)
+        path(functions)
 
     output:
         tuple val(dataset), val("seurat-${method}-N${n_features}"), path("seurat_${method}_N${n_features}.tsv")
@@ -268,7 +269,10 @@ workflow METHODS {
                         settings.n_features
                     )
                 }
-            seurat_ch = METHOD_SEURAT(prepared_datasets_ch.combine(seurat_params_ch))
+            seurat_ch = METHOD_SEURAT(
+                prepared_datasets_ch.combine(seurat_params_ch),
+                file(params.bindir + "/_functions.R")
+            )
         } else {
             seurat_ch = Channel.empty()
         }
