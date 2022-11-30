@@ -9,8 +9,8 @@ Usage:
 Options:
     -h --help               Show this screen.
     -o --out-file=<path>    Path to output file.
-    -n --n-features=<int>   Number of features to select [default: 1000].
-    -m --method=<str>       Feature selection method to use. One of: vst, mean.var.plot, dispersion [default: 'vst'].
+    -n --n-features=<int>   Number of features to select [default: 2000].
+    -m --method=<str>       Feature selection method to use. One of: vst, mvp, disp [default: 'vst'].
 " -> doc
 
 
@@ -31,9 +31,22 @@ suppressMessages({
 #' @param method The feature selection method to use
 #'
 #' @returns DataFrame containing the selected features
-select_seurat_features <- function(seurat, n_features, method) {
+select_seurat_features <- function(seurat, n_features,
+                                   method = c("vst", "mvp", "disp")) {
 
-    message("Selecting Seurat features...")
+    method <- match.arg(method)
+
+    method <- switch (method,
+        vst  = "vst",
+        mvp  = "mean.var.plot",
+        disp = "dispersion"
+    )
+
+    message(
+        "Selecting ", n_features,
+        " features using the Seurat '",
+        method, "' method..."
+    )
 
     seurat <- NormalizeData(seurat)
 

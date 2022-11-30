@@ -139,24 +139,23 @@ process METHOD_SEURAT {
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     input:
-        tuple val(dataset), path(reference), path(query)
-        path(functions)
+        tuple val(dataset), path(reference), path(query), val(method), val(n_features)
 
     output:
-        tuple val(dataset), val("seurat"), path("seurat.tsv")
+        tuple val(dataset), val("seurat-${method}-N${n_features}"), path("seurat_${method}_N${n_features}.tsv")
 
     script:
         """
         method-seurat.R \\
-            --n-features 500 \\
-            --flavor vst \\
-            --out-file "seurat.tsv" \\
+            --method ${method} \\
+            --n-features ${n_features} \\
+            --out-file "seurat_${method}_N${n_features}.tsv" \\
             ${reference}
         """
 
     stub:
         """
-        touch "seurat.tsv"
+        touch "seurat_${method}_N${n_features}.tsv"
         """
 }
 
@@ -230,7 +229,6 @@ workflow METHODS {
         hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
         scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
-        seurat_ch         = method_names.contains("seurat")         ? METHOD_SEURAT(prepared_datasets_ch, file(params.bindir + "/_functions.R"))         : Channel.empty()
 
         if (method_names.contains("random")) {
             random_params_ch = Channel
@@ -259,6 +257,20 @@ workflow METHODS {
             scanpy_ch = METHOD_SCANPY(prepared_datasets_ch.combine(scanpy_params_ch))
         } else {
             scanpy_ch = Channel.empty()
+        }
+
+        if (method_names.contains("seurat")) {
+            seurat_params_ch = Channel
+                .fromList(params.methods[method_names.indexOf("seurat")].settings)
+                .map { settings ->
+                    tuple(
+                        settings.method,
+                        settings.n_features
+                    )
+                }
+            seurat_ch = METHOD_SEURAT(prepared_datasets_ch.combine(seurat_params_ch))
+        } else {
+            seurat_ch = Channel.empty()
         }
 
         selected_features_ch = all_ch
