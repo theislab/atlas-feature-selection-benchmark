@@ -24,7 +24,6 @@ suppressMessages({
 #'
 #' @returns The function output
 select_features_scry <- function(sce, n_features) {
-
     message("Selecting features...")
     sce <- scry::devianceFeatureSelection(sce, nkeep = n_features)
     output <- SummarizedExperiment::rowData(sce)
