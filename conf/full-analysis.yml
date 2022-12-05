@@ -36,6 +36,7 @@ methods:
   - name: triku
   - name: hotspot
   - name: scsegindex
+  - name: dubstepr
   - name: nbumi
   - name: osca
   - name: seurat
