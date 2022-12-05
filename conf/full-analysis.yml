@@ -42,6 +42,7 @@ methods:
     settings:
       - method: vst
         n_features: 2000
+  - name: scry
 integration:
   seeds:
     - 1
