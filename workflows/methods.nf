@@ -260,6 +260,30 @@ process METHOD_DUBSTEPR {
         """
 }
 
+process METHOD_SCRY {
+    conda "envs/scry.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("scry"), path("scry.tsv")
+
+    script:
+        """
+        method-scry.R \\
+            --out-file "scry.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "scry.tsv"
+        """
+}
 /*
 ========================================================================================
     WORKFLOW
@@ -282,6 +306,7 @@ workflow METHODS {
         dubstepr_ch       = method_names.contains("dubstepr")       ? METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/_functions.R"))       : Channel.empty()
         nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
         osca_ch           = method_names.contains("osca")           ? METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
+        scry_ch           = method_names.contains("scry")           ? METHOD_SCRY(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
 
         if (method_names.contains("random")) {
             random_params_ch = Channel
@@ -339,7 +364,8 @@ workflow METHODS {
                 scsegindex_ch,
                 dubstepr_ch,
                 osca_ch,
-                seurat_ch
+                seurat_ch,
+                scry_ch
             )
 
     emit:
