@@ -12,6 +12,11 @@ Options:
     -n --n-features=<int>   Number of features to select [default: 2000].
 " -> doc
 
+# Load libraries
+suppressPackageStartupMessages({
+    library(Seurat)
+})
+
 # Source functions
 suppressMessages({
     source("_functions.R")
