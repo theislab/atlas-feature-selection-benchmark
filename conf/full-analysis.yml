@@ -46,6 +46,7 @@ methods:
   - name: scry
   - name: singleCellHaystack
   - name: Brennecke
+  - name: wilcoxon
 integration:
   seeds:
     - 1
