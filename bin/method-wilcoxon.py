@@ -42,7 +42,9 @@ def select_features_wilcoxon(adata, n_features):
     rank_genes_groups(adata, groupby="Label", method="wilcoxon", tie_correct=True)
 
     print("Filtering marker genes...")
-    filter_rank_genes_groups(adata, min_in_group_fraction=0.1, max_out_group_fraction=0.8)
+    filter_rank_genes_groups(
+        adata, min_in_group_fraction=0.1, max_out_group_fraction=0.8
+    )
 
     selected_features = []
     for label in adata.obs["Label"].cat.categories:
@@ -50,20 +52,20 @@ def select_features_wilcoxon(adata, n_features):
         filtered_results = rank_genes_groups_df(
             adata, group=str(label), key="rank_genes_groups_filtered"
         )
-        filtered_results = filtered_results[
-            filtered_results["names"].notnull()
-        ]
+        filtered_results = filtered_results[filtered_results["names"].notnull()]
 
         filtered_results = filtered_results[filtered_results["pvals_adj"] <= 0.01]
 
-        filtered_results = filtered_results.sort_values(by="logfoldchanges", ascending=False)
+        filtered_results = filtered_results.sort_values(
+            by="logfoldchanges", ascending=False
+        )
         filtered_results = filtered_results.head(n=n_features)
 
         selected_features = selected_features + list(filtered_results["names"])
 
     selected_features = list(set(selected_features))
     print(f"Selected {len(selected_features)} features...")
-    output = DataFrame(selected_features, columns = ["Feature"])
+    output = DataFrame(selected_features, columns=["Feature"])
 
     return output
 
