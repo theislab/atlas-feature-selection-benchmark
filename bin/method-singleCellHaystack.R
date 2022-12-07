@@ -44,7 +44,6 @@ install_singleCellHaystack <- function() {
 #'
 #' @returns data.frame containing the selected features
 select_singleCellHaystack_features <- function(seurat, n_features) {
-
     message("Normalising data...")
     seurat <- Seurat::NormalizeData(seurat)
 
