@@ -284,6 +284,32 @@ process METHOD_SCRY {
         touch "scry.tsv"
         """
 }
+
+process METHOD_SINGLECELLHAYSTACK {
+    conda "envs/singleCellHaystack.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("singleCellHaystack"), path("singleCellHaystack.tsv")
+
+    script:
+        """
+        method-singleCellHaystack.R \\
+            --out-file "singleCellHaystack.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "singleCellHaystack.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -299,14 +325,33 @@ workflow METHODS {
 
         method_names = params.methods.collect{method -> method.name}
 
-        all_ch            = method_names.contains("all")            ? METHOD_ALL(prepared_datasets_ch)            : Channel.empty()
-        triku_ch          = method_names.contains("triku")          ? METHOD_TRIKU(prepared_datasets_ch)          : Channel.empty()
-        hotspot_ch        = method_names.contains("hotspot")        ? METHOD_HOTSPOT(prepared_datasets_ch)        : Channel.empty()
-        scsegindex_ch     = method_names.contains("scsegindex")     ? METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R"))     : Channel.empty()
-        dubstepr_ch       = method_names.contains("dubstepr")       ? METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/_functions.R"))       : Channel.empty()
-        nbumi_ch          = method_names.contains("nbumi")          ? METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R"))          : Channel.empty()
-        osca_ch           = method_names.contains("osca")           ? METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
-        scry_ch           = method_names.contains("scry")           ? METHOD_SCRY(prepared_datasets_ch, file(params.bindir + "/_functions.R"))           : Channel.empty()
+        all_ch = method_names.contains("all") ?
+            METHOD_ALL(prepared_datasets_ch) :
+            Channel.empty()
+        triku_ch = method_names.contains("triku") ?
+            METHOD_TRIKU(prepared_datasets_ch) :
+            Channel.empty()
+        hotspot_ch = method_names.contains("hotspot") ?
+            METHOD_HOTSPOT(prepared_datasets_ch) :
+            Channel.empty()
+        scsegindex_ch = method_names.contains("scsegindex") ?
+            METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        dubstepr_ch = method_names.contains("dubstepr") ?
+            METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        nbumi_ch = method_names.contains("nbumi") ?
+            METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        osca_ch = method_names.contains("osca") ?
+            METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        scry_ch = method_names.contains("scry") ?
+            METHOD_SCRY(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        singleCellHaystack_ch = method_names.contains("singleCellHaystack") ?
+            METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
 
         if (method_names.contains("random")) {
             random_params_ch = Channel
@@ -365,7 +410,8 @@ workflow METHODS {
                 dubstepr_ch,
                 osca_ch,
                 seurat_ch,
-                scry_ch
+                scry_ch,
+                singleCellHaystack_ch
             )
 
     emit:
