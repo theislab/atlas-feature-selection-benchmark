@@ -310,6 +310,31 @@ process METHOD_SINGLECELLHAYSTACK {
         """
 }
 
+process METHOD_BRENNECKE {
+    conda "envs/osca.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("Brennecke"), path("Brennecke.tsv")
+
+    script:
+        """
+        method-Brennecke.R \\
+            --out-file "Brennecke.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "Brennecke.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -351,6 +376,9 @@ workflow METHODS {
             Channel.empty()
         singleCellHaystack_ch = method_names.contains("singleCellHaystack") ?
             METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        brennecke_ch = method_names.contains("Brennecke") ?
+            METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         if (method_names.contains("random")) {
@@ -411,7 +439,8 @@ workflow METHODS {
                 osca_ch,
                 seurat_ch,
                 scry_ch,
-                singleCellHaystack_ch
+                singleCellHaystack_ch,
+                brennecke_ch
             )
 
     emit:
