@@ -45,6 +45,7 @@ methods:
         n_features: 2000
   - name: scry
   - name: singleCellHaystack
+  - name: Brennecke
 integration:
   seeds:
     - 1
