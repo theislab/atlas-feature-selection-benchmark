@@ -335,6 +335,30 @@ process METHOD_BRENNECKE {
         """
 }
 
+process METHOD_WILCOXON {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("wilcoxon"), path("wilcoxon.tsv")
+
+    script:
+        """
+        method-wilcoxon.py \\
+            --out-file "wilcoxon.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "wilcoxon.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -379,6 +403,9 @@ workflow METHODS {
             Channel.empty()
         brennecke_ch = method_names.contains("Brennecke") ?
             METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        wilcoxon_ch = method_names.contains("wilcoxon") ?
+            METHOD_BRENNECKE(prepared_datasets_ch) :
             Channel.empty()
 
         if (method_names.contains("random")) {
@@ -440,7 +467,8 @@ workflow METHODS {
                 seurat_ch,
                 scry_ch,
                 singleCellHaystack_ch,
-                brennecke_ch
+                brennecke_ch,
+                wilcoxon_ch
             )
 
     emit:
