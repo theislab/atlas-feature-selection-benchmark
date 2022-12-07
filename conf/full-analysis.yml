@@ -44,6 +44,7 @@ methods:
       - method: vst
         n_features: 2000
   - name: scry
+  - name: singleCellHaystack
 integration:
   seeds:
     - 1
