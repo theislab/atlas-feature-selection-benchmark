@@ -359,6 +359,32 @@ process METHOD_WILCOXON {
         """
 }
 
+process METHOD_STATISTIC {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query), val(statistic), val(n_features)
+
+    output:
+        tuple val(dataset), val("statistic-${statistic}-N${n_features}"), path("statistic_${statistic}_N${n_features}.tsv")
+
+    script:
+        """
+        method-statistic.py \\
+            --statistic ${statistic} \\
+            --n-features ${n_features} \\
+            --out-file "statistic_${statistic}_N${n_features}.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "statistic_${statistic}_N${n_features}.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -454,6 +480,20 @@ workflow METHODS {
             seurat_ch = Channel.empty()
         }
 
+        if (method_names.contains("statistic")) {
+            statistic_params_ch = Channel
+                .fromList(params.methods[method_names.indexOf("statistic")].settings)
+                .map { settings ->
+                    tuple(
+                        settings.statistic,
+                        settings.n_features
+                    )
+                }
+            statistic_ch = METHOD_STATISTIC(prepared_datasets_ch.combine(statistic_params_ch))
+        } else {
+            statistic_ch = Channel.empty()
+        }
+
         selected_features_ch = all_ch
             .mix(
                 random_ch,
@@ -468,7 +508,8 @@ workflow METHODS {
                 scry_ch,
                 singleCellHaystack_ch,
                 brennecke_ch,
-                wilcoxon_ch
+                wilcoxon_ch,
+                statistic_ch
             )
 
     emit:

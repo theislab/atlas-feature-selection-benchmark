@@ -47,6 +47,10 @@ methods:
   - name: singleCellHaystack
   - name: Brennecke
   - name: wilcoxon
+  - name: statistic
+    settings:
+      - statistic: mean
+        n_features: 2000
 integration:
   seeds:
     - 1
