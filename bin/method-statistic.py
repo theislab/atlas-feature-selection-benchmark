@@ -50,11 +50,11 @@ def select_features_statistic(adata, n_features, statistic):
         from scanpy.preprocessing import calculate_qc_metrics
 
         print("Calculating feature means...")
-        _, feature_stats = calculate_qc_metrics(adata, expr_type="logcounts", percent_top=None)
-        feature_stats["Feature"] = adata.var_names
-        feature_stats = feature_stats.sort_values(
-            by="mean_logcounts", ascending=False
+        _, feature_stats = calculate_qc_metrics(
+            adata, expr_type="logcounts", percent_top=None, log1p=False
         )
+        feature_stats["Feature"] = adata.var_names
+        feature_stats = feature_stats.sort_values(by="mean_logcounts", ascending=False)
 
     if statistic == "variance":
         from numpy import var
@@ -64,9 +64,7 @@ def select_features_statistic(adata, n_features, statistic):
         variances = var(adata.X, axis=0)
         feature_stats = DataFrame(adata.var_names, columns=["Feature"])
         feature_stats["Variance"] = variances
-        feature_stats = feature_stats.sort_values(
-            by="Variance", ascending=False
-        )
+        feature_stats = feature_stats.sort_values(by="Variance", ascending=False)
 
     print(f"Selecting top {n_features} features...")
     selected_features = feature_stats.head(n=n_features)
