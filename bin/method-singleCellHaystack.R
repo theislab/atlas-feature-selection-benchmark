@@ -58,9 +58,9 @@ select_singleCellHaystack_features <- function(seurat, n_features) {
     seurat <- Seurat::RunPCA(seurat, features = Seurat::VariableFeatures(seurat))
 
     message("Selecting ", n_features, " singleCellHaystack features...")
-    results <- singleCellHaystack::haystack(seurat, coord = "pca")
+    results <- singleCellHaystack::haystack(seurat, assay = "originalexp", coord = "pca")
     top_results <- singleCellHaystack::show_result_haystack(results, n = n_features)
-    top_results$Features <- rownames(top_results)
+    top_results$Feature <- rownames(top_results)
 
     return(top_results)
 }
@@ -70,7 +70,7 @@ main <- function() {
     args <- docopt::docopt(doc)
     file <- args[["<file>"]]
     out_file <- args[["--out-file"]]
-    n_features <- args[["--n-features"]]
+    n_features <- as.numeric(args[["--n-features"]])
 
     install_singleCellHaystack()
 
@@ -86,9 +86,7 @@ main <- function() {
     )
 
     message("Converting to Seurat object...")
-    # Store dummy logcounts for Seurat's conversion function
-    SingleCellExperiment::logcounts(input) <- SingleCellExperiment::counts(input)
-    seurat <- SeuratObject::as.Seurat(input)
+    seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     score <- select_singleCellHaystack_features(seurat, n_features)
