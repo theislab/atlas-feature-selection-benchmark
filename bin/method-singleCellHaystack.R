@@ -26,8 +26,10 @@ suppressMessages({
 install_singleCellHaystack <- function() {
     if (!requireNamespace("singleCellHaystack", quietly = TRUE)) {
         message("Installing singleCellHaystack...")
-        remotes::install_cran(
-            "singleCellHaystack@0.3.4",
+        remotes::install_version(
+            "singleCellHaystack",
+            version = "0.3.4",
+            repos = "https://cloud.r-project.org",
             dependencies = FALSE
         )
     } else {
