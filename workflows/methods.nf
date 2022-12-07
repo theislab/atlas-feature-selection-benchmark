@@ -405,7 +405,7 @@ workflow METHODS {
             METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         wilcoxon_ch = method_names.contains("wilcoxon") ?
-            METHOD_BRENNECKE(prepared_datasets_ch) :
+            METHOD_WILCOXON(prepared_datasets_ch) :
             Channel.empty()
 
         if (method_names.contains("random")) {
