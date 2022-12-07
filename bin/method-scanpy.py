@@ -10,7 +10,7 @@ Options:
     -h --help               Show this screen.
     -o --out-file=<path>    Path to output file.
     -n --n-features=<int>   Number of features to select [default: 1000].
-    -f --flavor=<str>       Flavor of feature selection method. One of: seurat, cell_ranger, seurat_v3 [default: seurat].
+    -f --flavor=<str>       Flavor of feature selection method. One of: seurat, cell_ranger, seurat_v3, pearson [default: seurat].
     -b --batch=<bool>       Apply to each batch. Requires column 'Batch' in .obs [default: False].
 """
 
@@ -26,7 +26,7 @@ def select_features_scanpy(adata, n, flavor, batch):
     n
         Number of features to select
     flavor
-        Method flavor ('seurat', 'cell_ranger', 'seurat_v3')
+        Method flavor ('seurat', 'cell_ranger', 'seurat_v3', 'pearson')
     batch
         Flag whether to use 'Batch' as batch_key
 
@@ -51,12 +51,19 @@ def select_features_scanpy(adata, n, flavor, batch):
         batch_key = None
 
     if flavor in ["seurat", "cell_ranger"]:
+        print("Normalising expression...")
         sc.pp.normalize_total(adata, target_sum=1e4)
         sc.pp.log1p(adata)
 
-    sc.pp.highly_variable_genes(
-        adata, n_top_genes=n, flavor=flavor, batch_key=batch_key
-    )
+    print(f"Selecting {n} features using the scanpy '{flavor}' flavor...")
+    if flavor == "pearson":
+        sc.experimental.pp.highly_variable_genes(
+            adata, n_top_genes=n, flavor="pearson_residuals", batch_key=batch_key
+        )
+    else:
+        sc.pp.highly_variable_genes(
+            adata, n_top_genes=n, flavor=flavor, batch_key=batch_key
+        )
 
     adata.var["Feature"] = adata.var.index
     selected_features = adata.var[adata.var["highly_variable"] == True]
