@@ -377,8 +377,8 @@ workflow METHODS {
         singleCellHaystack_ch = method_names.contains("singleCellHaystack") ?
             METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
-        brennecke_ch = method_names.contains("singleCellHaystack") ?
-            METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+        brennecke_ch = method_names.contains("Brennecke") ?
+            METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         if (method_names.contains("random")) {

@@ -27,7 +27,7 @@ select_features_Brennecke <- function(input, n_features) {
     message("Selecting features using the OSA method...")
 
     message("Normalising expression...")
-    input <- scran::logNormCounts(input)
+    input <- scuttle::logNormCounts(input)
 
     message("Modelling CV...")
     feature_stats <- scran::modelGeneCV2(input)
