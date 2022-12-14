@@ -57,11 +57,22 @@ def select_features_statistic(adata, n_features, statistic):
         feature_stats = feature_stats.sort_values(by="mean_logcounts", ascending=False)
 
     if statistic == "variance":
-        from numpy import var
+        from scipy.sparse import issparse
         from pandas import DataFrame
 
-        print("Calculate feature variances...")
-        variances = var(adata.X, axis=0)
+        print("Calculating feature variances...")
+        if issparse(adata.X):
+            from numpy import square
+
+            X_squared = adata.X.copy()
+            X_squared.data **= 2
+            variances = X_squared.mean(0) - square(adata.X.mean(0))
+            variances = variances.transpose()
+        else:
+            from numpy import var
+
+            variances = var(adata.X, axis=0)
+
         feature_stats = DataFrame(adata.var_names, columns=["Feature"])
         feature_stats["Variance"] = variances
         feature_stats = feature_stats.sort_values(by="Variance", ascending=False)
