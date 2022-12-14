@@ -65,6 +65,8 @@ metrics:
     type: Integration
   - name: nmi
     type: Integration
+  - name: batchASW
+    type: Integration
   - name: labelASW
     type: Integration
   - name: isolatedLabelsF1
@@ -88,6 +90,10 @@ metrics:
   - name: jaccardIndexMicro
     type: Classification
   - name: jaccardIndexMacro
+    type: Classification
+  - name: f1Micro
+    type: Classification
+  - name: f1Macro
     type: Classification
 reports:
   - name: metrics
