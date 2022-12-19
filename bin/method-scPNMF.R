@@ -55,7 +55,7 @@ select_scPNMF <- function(sce, n_features) {
 
     message("Fitting PNMF model...")
     pnmf <- scPNMF::PNMFfun(
-        SingleCellExeriment::logcounts(sce),
+        SingleCellExperiment::logcounts(sce),
         K        = 20, # Recommended by vignette
         method   = "EucDist",
         tol      = 1e-4,
