@@ -87,7 +87,8 @@ process METHOD_TRIKU {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_low"
+    label "process_high"
+    label "error_ignore"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -264,6 +265,8 @@ process METHOD_SCRY {
     conda "envs/scry.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    label "process_low"
 
     input:
         tuple val(dataset), path(reference), path(query)

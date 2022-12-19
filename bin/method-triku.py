@@ -26,15 +26,17 @@ def select_triku_features(adata):
     DataFrame containing the selected features
     """
 
-    from pandas import DataFrame
     import triku as tk
     import scanpy as sc
 
     sc.pp.filter_genes(adata, min_cells=5)
+
+    print("Building neighbourhood graph...")
     sc.pp.pca(adata)
     sc.pp.neighbors(adata, metric="cosine", n_neighbors=int(0.5 * len(adata) ** 0.5))
 
-    tk.tl.triku(adata)
+    print("Selecting triku features...")
+    tk.tl.triku(adata, verbose="info")
 
     adata.var["Feature"] = adata.var.index
     selected_features = adata.var

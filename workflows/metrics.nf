@@ -132,6 +132,8 @@ process METRIC_KBET {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "kBET.tsv" }
 
+    label "process_low"
+
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
         path(functions)
