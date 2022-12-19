@@ -388,6 +388,31 @@ process METHOD_STATISTIC {
         """
 }
 
+process METHOD_SCPNMF {
+    conda "envs/scPNMF.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val("scPNMF"), path("scPNMF.tsv")
+
+    script:
+        """
+        method-scPNMF.R \\
+            --out-file "scPNMF.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "scPNMF.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -435,6 +460,9 @@ workflow METHODS {
             Channel.empty()
         wilcoxon_ch = method_names.contains("wilcoxon") ?
             METHOD_WILCOXON(prepared_datasets_ch) :
+            Channel.empty()
+        scpnmf_ch = method_names.contains("scPNMF") ?
+            METHOD_SCPNMF(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
 
         if (method_names.contains("random")) {
@@ -512,7 +540,8 @@ workflow METHODS {
                 singleCellHaystack_ch,
                 brennecke_ch,
                 wilcoxon_ch,
-                statistic_ch
+                statistic_ch,
+                scpnmf_ch
             )
 
     emit:
