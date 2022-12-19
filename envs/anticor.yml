@@ -17,9 +17,11 @@ dependencies:
   - numpy=1.22.4
   - pandas=1.4.3
   - pip=22.2.2
+  - psutil=5.9.4
   - pynndescent=0.5.7
   - python=3.9.13
   - python-igraph=0.9.11
+  - ray-default=2.1.0
   - scanpy=1.9.1
   - scikit-learn=1.1.2
   - scikit-misc=0.1.4
