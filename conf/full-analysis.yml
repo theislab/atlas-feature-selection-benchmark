@@ -52,6 +52,7 @@ methods:
       - statistic: mean
         n_features: 2000
   - name: scPNMF
+  - name: anticor
 integration:
   seeds:
     - 1

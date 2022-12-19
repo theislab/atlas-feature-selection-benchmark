@@ -413,6 +413,30 @@ process METHOD_SCPNMF {
         """
 }
 
+process METHOD_ANTICOR {
+    conda "envs/anticor.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+
+    output:
+        tuple val(dataset), val("anticor"), path("anticor.tsv")
+
+    script:
+        """
+        method-anticor.py \\
+            --out-file "anticor.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "anticor.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -463,6 +487,9 @@ workflow METHODS {
             Channel.empty()
         scpnmf_ch = method_names.contains("scPNMF") ?
             METHOD_SCPNMF(prepared_datasets_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
+        anticor_ch = method_names.contains("anticor") ?
+            METHOD_ANTICOR(prepared_datasets_ch) :
             Channel.empty()
 
         if (method_names.contains("random")) {
@@ -541,7 +568,8 @@ workflow METHODS {
                 brennecke_ch,
                 wilcoxon_ch,
                 statistic_ch,
-                scpnmf_ch
+                scpnmf_ch,
+                anticor_ch
             )
 
     emit:
