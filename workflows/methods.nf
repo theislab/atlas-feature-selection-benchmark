@@ -88,6 +88,7 @@ process METHOD_TRIKU {
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
     label "process_high"
+    label "error_ignore"
 
     input:
         tuple val(dataset), path(reference), path(query)
