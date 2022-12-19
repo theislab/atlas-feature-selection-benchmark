@@ -42,12 +42,12 @@ def select_anticor_features(input, temp_dir):
     anticor = get_anti_cor_genes(
         input.X.T,
         input.var.index.tolist(),
-        pre_remove_pathways=[],    # Turn off pathway filtering
-        scratch_dir=temp_dir       # Set temporary directory
+        pre_remove_pathways=[],  # Turn off pathway filtering
+        scratch_dir=temp_dir,    # Set temporary directory
     )
 
     print("Selecting top features...")
-    selected = anticor[anticor["selected"]==True].sort_values(by="FDR").copy()
+    selected = anticor[anticor["selected"] == True].sort_values(by="FDR").copy()
     selected["Feature"] = selected["gene"]
 
     return selected
