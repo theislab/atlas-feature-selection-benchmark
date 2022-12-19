@@ -49,7 +49,6 @@ install_scPNMF <- function() {
 #'
 #' @returns data.frame containing the selected features
 select_scPNMF <- function(sce, n_features) {
-
     message("Normalising counts...")
     sce <- scuttle::logNormCounts(sce)
 
