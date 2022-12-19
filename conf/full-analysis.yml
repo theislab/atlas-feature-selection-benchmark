@@ -51,6 +51,7 @@ methods:
     settings:
       - statistic: mean
         n_features: 2000
+  - name: scPNMF
 integration:
   seeds:
     - 1
