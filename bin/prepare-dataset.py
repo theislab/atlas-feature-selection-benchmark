@@ -12,12 +12,13 @@ Options:
     --batch-col=<str>          Name of the obs column containing batch information.
     --label-col=<str>          Name of the obs column containing label information.
     --query-batches=<str>      Comma separated list of batches to be used as the query.
+    --species=<str>            Species of the dataset.
     --reference-out=<path>     Path to reference output file.
     --query-out=<path>         Path to query output file.
 """
 
 
-def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
+def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, species):
     """
     Prepare a dataset for the benchmarking pipeline
 
@@ -33,6 +34,8 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
         Name of the column of adata.obs containing label information
     query_batches
         List containing the batch names for the query
+    species
+        Species of the dataset
 
     Returns
     -------
@@ -64,6 +67,7 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     adata.var_names = adata_raw.var_names.copy()
     adata.obs["Batch"] = adata_raw.obs[batch_col]
     adata.obs["Label"] = adata_raw.obs[label_col]
+    adata.uns["Species"] = species
     del adata_raw
 
     print("Removing cells with less than 100 counts...")
@@ -139,12 +143,13 @@ def main():
     batch_col = args["--batch-col"]
     label_col = args["--label-col"]
     query_batches = args["--query-batches"].split(",")
+    species = args["--species"]
     reference_out = args["--reference-out"]
     query_out = args["--query-out"]
 
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
-    reference, query = prepare_dataset(input, name, batch_col, label_col, query_batches)
+    reference, query = prepare_dataset(input, name, batch_col, label_col, query_batches, species)
     print(f"Writing reference to '{reference_out}'...")
     reference.write_h5ad(reference_out)
     print(f"Writing query to '{query_out}'...")
