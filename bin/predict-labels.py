@@ -45,7 +45,14 @@ def predict_labels(reference, query, params, seed=1):
 
     print("Using the following parameters...")
     params_dict = dict(zip(params["Parameter"], params["Value"]))
-    for param in ["n_estimators", "num_leaves", "max_depth", "min_child_samples", "subsample_freq", "max_bin"]:
+    for param in [
+        "n_estimators",
+        "num_leaves",
+        "max_depth",
+        "min_child_samples",
+        "subsample_freq",
+        "max_bin",
+    ]:
         params_dict[param] = int(params_dict[param])
 
     for param, value in params_dict.items():
@@ -53,14 +60,14 @@ def predict_labels(reference, query, params, seed=1):
 
     print("Training final classification model...")
     lgbm_classifier = LGBMClassifier(
-        boosting_type='gbdt',
-        metric='multiclass',
-        objective='multi_logloss',
+        boosting_type="gbdt",
+        metric="multiclass",
+        objective="multi_logloss",
         num_class=n_labels,
         n_jobs=1,
         verbose=0,
         random_state=seed,
-        **params_dict
+        **params_dict,
     )
     lgbm_classifier.fit(X_train, Y_train)
 
