@@ -80,7 +80,9 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     reference = reference[reference.obs["Label"].isin(keep_labels)].copy()
     reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
     label_counts = query.obs["Label"].value_counts()
-    keep_labels = set(keep_labels + list(label_counts.index[label_counts >= 20])) # Make sure we keep can labels from the reference
+    # Remove uncommon labels in the query but
+    # make sure we keep can labels from the reference
+    keep_labels = set(keep_labels + list(label_counts.index[label_counts >= 20]))
     query = query[query.obs["Label"].isin(keep_labels)].copy()
     query.obs["Label"] = query.obs["Label"].cat.remove_unused_categories()
 
@@ -97,6 +99,7 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     print_adata(query, "QUERY DATA", "Batch", "Label")
 
     return (reference, query)
+
 
 def print_adata(adata, title, batch_col, label_col):
     """
@@ -119,14 +122,10 @@ def print_adata(adata, title, batch_col, label_col):
     print(f"Cells: {adata.n_obs}")
     print(f"Genes: {adata.n_vars}")
     print("-----------------------")
-    print(
-        f"Batches: '{batch_col}' ({len(adata.obs[batch_col].cat.categories)})"
-    )
+    print(f"Batches: '{batch_col}' ({len(adata.obs[batch_col].cat.categories)})")
     print(adata.obs[batch_col].value_counts().to_string())
     print("-----------------------")
-    print(
-        f"Labels: '{label_col}' ({len(adata.obs[label_col].cat.categories)})"
-    )
+    print(f"Labels: '{label_col}' ({len(adata.obs[label_col].cat.categories)})")
     print(adata.obs[label_col].value_counts().to_string())
     print("-----------------------")
     if "Species" in adata.uns_keys():
@@ -158,7 +157,9 @@ def main():
 
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
-    reference, query = prepare_dataset(input, name, batch_col, label_col, query_batches, species)
+    reference, query = prepare_dataset(
+        input, name, batch_col, label_col, query_batches, species
+    )
     print(f"Writing reference to '{reference_out}'...")
     reference.write_h5ad(reference_out)
     print(f"Writing query to '{query_out}'...")
