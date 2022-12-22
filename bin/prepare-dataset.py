@@ -45,26 +45,8 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     from scanpy.preprocessing import filter_cells, filter_genes
     from anndata import AnnData
 
-    print(f"Preparing {name} dataset...")
-    print()
-    print("====== RAW DATA =======")
-    print(f"Cells: {adata_raw.n_obs}")
-    print(f"Genes: {adata_raw.n_vars}")
-    print("-----------------------")
-    print(
-        f"Batches ({len(adata_raw.obs[batch_col].cat.categories)}): {batch_col}"
-    )
-    print(adata_raw.obs[label_col].value_counts().to_string())
-    print("-----------------------")
-    print(
-        f"Labels ({len(adata_raw.obs[label_col].cat.categories)}): {label_col}"
-    )
-    print(adata_raw.obs[label_col].value_counts().to_string())
-    print("-----------------------")
-    print("Object:")
-    print(adata_raw)
-    print("=======================")
-    print()
+    print(f"Preparing '{name}' dataset...")
+    print_adata(adata_raw, "RAW DATA", batch_col, label_col)
 
     print("Creating new AnnData...")
     adata = AnnData(X=adata_raw.X.copy())
@@ -83,10 +65,9 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
 
     print("Splitting reference and query...")
     print(
-        f"Selecting {len(query_batches)} batches as the query: {', '.join(query_batches)}"
+        f"Selecting {len(query_batches)} batch(es) as the query: {', '.join(query_batches)}"
     )
     is_query = adata.obs["Batch"].isin(query_batches)
-    adata[adata.obs["Batch"].isin(query_batches)]
     reference = adata[~is_query].copy()
     reference.obs["Batch"] = reference.obs["Batch"].cat.remove_unused_categories()
     query = adata[is_query].copy()
@@ -112,35 +93,51 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     reference.var = reference.var.drop(["n_counts"], axis=1)
     query.obs = query.obs.drop(["n_counts", "n_genes"], axis=1)
 
-    print()
-    print("====== REFERENCE DATA =======")
-    print(f"Cells: {reference.n_obs}")
-    print(f"Genes: {reference.n_vars}")
-    print(
-        f"Batches ({len(reference.obs['Batch'].cat.categories)}): Batch ({', '.join(reference.obs['Batch'].cat.categories)})"
-    )
-    print(
-        f"Labels ({len(reference.obs['Label'].cat.categories)}): Label ({', '.join(reference.obs['Label'].cat.categories)})"
-    )
-    print("Object:")
-    print(reference)
-    print("============================")
-    print()
-    print("====== QUERY DATA =======")
-    print(f"Cells: {query.n_obs}")
-    print(f"Genes: {query.n_vars}")
-    print(
-        f"Batches ({len(query.obs['Batch'].cat.categories)}): Batch ({', '.join(query.obs['Batch'].cat.categories)})"
-    )
-    print(
-        f"Labels ({len(query.obs['Label'].cat.categories)}): Label ({', '.join(query.obs['Label'].cat.categories)})"
-    )
-    print("Object:")
-    print(query)
-    print("=========================")
-    print()
+    print_adata(reference, "REFERENCE DATA", "Batch", "Label")
+    print_adata(query, "QUERY DATA", "Batch", "Label")
 
     return (reference, query)
+
+def print_adata(adata, title, batch_col, label_col):
+    """
+    Print an AnnData object with information about batches, labels and species
+
+    Parameters
+    ----------
+    adata
+        AnnData object to print
+    title
+        Title for the object
+    batch_col
+        Name of the column of adata.obs containing batch information
+    label_col
+        Name of the column of adata.obs containing label information
+    """
+
+    print()
+    print(f"====== {title} =======")
+    print(f"Cells: {adata.n_obs}")
+    print(f"Genes: {adata.n_vars}")
+    print("-----------------------")
+    print(
+        f"Batches: '{batch_col}' ({len(adata.obs[batch_col].cat.categories)})"
+    )
+    print(adata.obs[batch_col].value_counts().to_string())
+    print("-----------------------")
+    print(
+        f"Labels: '{label_col}' ({len(adata.obs[label_col].cat.categories)})"
+    )
+    print(adata.obs[label_col].value_counts().to_string())
+    print("-----------------------")
+    if "Species" in adata.uns_keys():
+        print(f"Species: '{adata.uns['Species']}'")
+    else:
+        print("Species not set")
+    print("-----------------------")
+    print("Object:")
+    print(adata)
+    print("=======================")
+    print()
 
 
 def main():
