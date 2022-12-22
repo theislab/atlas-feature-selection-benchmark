@@ -132,12 +132,11 @@ process MAP_SCANVI {
         """
 }
 
-process PREDICT_LABELS {
+process OPTIMISE_CLASSIFIER {
     conda "envs/lightgbm.yml"
 
-    publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy",
-        pattern: "*-labels.tsv"
+    publishDir "$params.outdir/predicted-labels/${dataset}",
+        mode: "copy"
 
     label "process_medium"
 
@@ -145,19 +144,46 @@ process PREDICT_LABELS {
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
 
     output:
-        tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query}/adata.h5ad"), path("${integration}-labels.tsv")
+        tuple val(dataset), path("parameters.tsv")
+
+    script:
+        """
+        optimise-classifier.py \\
+            --out-file "parameters.tsv" \\
+            ${reference}/adata.h5ad
+        """
+
+    stub:
+        """
+        mkdir "parameters.tsv"
+        """
+}
+
+process PREDICT_LABELS {
+    conda "envs/lightgbm.yml"
+
+    publishDir "$params.outdir/predicted-labels/${dataset}/${method}",
+        mode: "copy",
+        pattern: "*.tsv"
+
+    input:
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query), path(parameters)
+
+    output:
+        tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query}/adata.h5ad"), path("${method}-${integration}-${seed}.tsv")
 
     script:
         """
         predict-labels.py \\
             --reference "${reference}/adata.h5ad" \\
-            --out-file "${integration}-labels.tsv" \\
+            --params "${parameters}" \\
+            --out-file "${method}-${integration}-${seed}.tsv" \\
             ${query}/adata.h5ad
         """
 
     stub:
         """
-        mkdir "${integration}-labels.tsv"
+        mkdir "${method}-${integration}-${seed}.tsv"
         """
 }
 
@@ -183,7 +209,13 @@ workflow INTEGRATION {
         MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
         MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/_functions.py"))
 
+        scvi_all_ch = INTEGRATE_SCVI.out
+            .first { it[1] == "all" }
+
+        OPTIMISE_CLASSIFIER(scvi_all_ch)
+
         mapped_ch = MAP_SCVI.out.mix(MAP_SCANVI.out)
+            .combine(OPTIMISE_CLASSIFIER.out, by: 0)
 
         PREDICT_LABELS(mapped_ch)
 

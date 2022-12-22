@@ -58,7 +58,7 @@ def predict_labels(reference, query, params, seed=1):
         objective='multi_logloss',
         num_class=n_labels,
         n_jobs=1,
-        verbose=-1,
+        verbose=0,
         random_state=seed,
         **params_dict
     )
