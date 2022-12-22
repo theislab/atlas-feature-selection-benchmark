@@ -72,15 +72,8 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     print("Removing cells with less than 100 genes...")
     filter_cells(adata, min_genes=100)
 
-    print("Removing genes with 0 counts...")
-    filter_genes(adata, min_counts=1)
-
     print("Removing unused labels...")
     adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
-
-    print("Removing QC stats...")
-    adata.obs = adata.obs.drop(["n_counts", "n_genes"], axis=1)
-    adata.var = adata.var.drop(["n_counts"], axis=1)
 
     print("Splitting reference and query...")
     print(
@@ -92,6 +85,16 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches):
     reference.obs["Batch"] = reference.obs["Batch"].cat.remove_unused_categories()
     query = adata[is_query].copy()
     query.obs["Batch"] = query.obs["Batch"].cat.remove_unused_categories()
+    del adata
+
+    print("Removing genes with 0 counts in the reference...")
+    filter_genes(reference, min_counts=1)
+    query = query[:, reference.var_names].copy()
+
+    print("Removing QC stats...")
+    reference.obs = reference.obs.drop(["n_counts", "n_genes"], axis=1)
+    reference.var = reference.var.drop(["n_counts"], axis=1)
+    query.obs = query.obs.drop(["n_counts", "n_genes"], axis=1)
 
     print()
     print("====== REFERENCE DATA =======")
