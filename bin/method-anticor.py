@@ -43,7 +43,7 @@ def select_anticor_features(input, temp_dir):
         input.X.T,
         input.var.index.tolist(),
         pre_remove_pathways=[],  # Turn off pathway filtering
-        scratch_dir=temp_dir,    # Set temporary directory
+        scratch_dir=temp_dir,  # Set temporary directory
     )
 
     print("Selecting top features...")

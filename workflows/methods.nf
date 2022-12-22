@@ -452,9 +452,7 @@ workflow METHODS {
 
         method_names = params.methods.collect{method -> method.name}
 
-        all_ch = method_names.contains("all") ?
-            METHOD_ALL(prepared_datasets_ch) :
-            Channel.empty()
+        all_ch = METHOD_ALL(prepared_datasets_ch)
         triku_ch = method_names.contains("triku") ?
             METHOD_TRIKU(prepared_datasets_ch) :
             Channel.empty()
