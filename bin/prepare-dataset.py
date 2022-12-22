@@ -50,12 +50,17 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     print("====== RAW DATA =======")
     print(f"Cells: {adata_raw.n_obs}")
     print(f"Genes: {adata_raw.n_vars}")
+    print("-----------------------")
     print(
-        f"Batches ({len(adata_raw.obs[batch_col].cat.categories)}): {batch_col} ({', '.join(adata_raw.obs[batch_col].cat.categories)})"
+        f"Batches ({len(adata_raw.obs[batch_col].cat.categories)}): {batch_col}"
     )
+    print(adata_raw.obs[label_col].value_counts().to_string())
+    print("-----------------------")
     print(
-        f"Labels ({len(adata_raw.obs[label_col].cat.categories)}): {label_col} ({', '.join(adata_raw.obs[label_col].cat.categories)})"
+        f"Labels ({len(adata_raw.obs[label_col].cat.categories)}): {label_col}"
     )
+    print(adata_raw.obs[label_col].value_counts().to_string())
+    print("-----------------------")
     print("Object:")
     print(adata_raw)
     print("=======================")
@@ -76,9 +81,6 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     print("Removing cells with less than 100 genes...")
     filter_cells(adata, min_genes=100)
 
-    print("Removing unused labels...")
-    adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
-
     print("Splitting reference and query...")
     print(
         f"Selecting {len(query_batches)} batches as the query: {', '.join(query_batches)}"
@@ -90,6 +92,16 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     query = adata[is_query].copy()
     query.obs["Batch"] = query.obs["Batch"].cat.remove_unused_categories()
     del adata
+
+    print("Removing labels with fewer than 20 cells...")
+    label_counts = reference.obs["Label"].value_counts()
+    keep_labels = list(label_counts.index[label_counts >= 20])
+    reference = reference[reference.obs["Label"].isin(keep_labels)].copy()
+    reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
+    label_counts = query.obs["Label"].value_counts()
+    keep_labels = set(keep_labels + list(label_counts.index[label_counts >= 20])) # Make sure we keep can labels from the reference
+    query = query[query.obs["Label"].isin(keep_labels)].copy()
+    query.obs["Label"] = query.obs["Label"].cat.remove_unused_categories()
 
     print("Removing genes with 0 counts in the reference...")
     filter_genes(reference, min_counts=1)
