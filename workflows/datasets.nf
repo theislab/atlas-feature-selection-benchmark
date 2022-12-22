@@ -97,7 +97,7 @@ process PREPARE_DATASET {
     publishDir "$params.outdir/datasets-prepped/"
 
     input:
-        tuple val(name), val(batch_col), val(label_col), val(query_batches), path(file)
+        tuple val(name), val(batch_col), val(label_col), val(query_batches), val(species), path(file)
 
     output:
         tuple val(name), path("${name}-reference.h5ad"), path("${name}-query.h5ad")
@@ -109,6 +109,7 @@ process PREPARE_DATASET {
             --batch-col "${batch_col}" \\
             --label-col "${label_col}" \\
             --query-batches "${query_batches}" \\
+            --species "${species}" \\
             --reference-out "${name}-reference.h5ad" \\
             --query-out "${name}-query.h5ad" \\
             ${file}
@@ -159,7 +160,8 @@ workflow DATASETS {
                     dataset.name,
                     dataset.batch_col,
                     dataset.label_col,
-                    dataset.query_batches
+                    dataset.query_batches,
+                    dataset.species
                 )
             }
             .join(raw_datasets_ch)

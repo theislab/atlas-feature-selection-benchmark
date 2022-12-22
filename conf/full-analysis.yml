@@ -4,18 +4,22 @@ datasets:
     batch_col: Batch
     label_col: Group
     query_batches: Batch4
+    species: Simulation
   - name: tinySim2
     batch_col: Batch
     label_col: Group
     query_batches: Batch4
+    species: Simulation
   - name: scIBPancreas
     batch_col: tech
     label_col: celltype
     query_batches: inDrop3
+    species: Human
   - name: neurips
     batch_col: batch
     label_col: cell_type
     query_batches: s4d1,s4d8,s4d9
+    species: Human
 methods:
   - name: all
   - name: random
