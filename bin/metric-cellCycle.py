@@ -36,7 +36,7 @@ def calculate_cellCycleConservation(adata):
         return 1.0
 
     print("Calculating cell cycle conservation score...")
-    score = cell_cycle(adata, adata, batch_key="Batch", embed="X_emb", organism=adata.uns["Species"], verbose=True)
+    score = cell_cycle(adata, adata, batch_key="Batch", embed="X_emb", organism=adata.uns["Species"].lower(), verbose=True)
     print("Final score: {score}")
 
     return score
