@@ -1,7 +1,7 @@
 #!/usr/bin/env Rscript
 
 "
-Evaluate integration using the Seurat mixing metric
+Evaluate integration using the Seurat local structure metric
 
 Usage:
     metric-mixing.R --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
@@ -24,34 +24,37 @@ suppressMessages({
     source("_functions.R")
 })
 
-#' Calculate the Seurat mixing metric for an integrated dataset
+#' Calculate the Seurat local structure metric for an integrated dataset
 #'
 #' @param seurat Seurat object containing the integrated dataset
 #'
-#' @returns The mixing metric score
-calculate_mixing <- function(seurat) {
-    max_k <- 300
-    if (max_k > ncol(seurat)) {
+#' @returns The local structure metric score
+calculate_localStructure <- function(seurat) {
+    seurat <- Seurat::NormalizeData(seurat)
+
+    neighbors <- 100
+    min_batch_size <- min(table(seurat[["Batch"]]))
+    if (neighbors > min_batch_size) {
         warning(
-            "'max_k' greater than the number of cells, setting 'max_k' to ",
-            ncol(seurat)
+            "some batches have less than 'neighbors' cells, ",
+            "setting 'neighbors' to half the smallest batch (",
+            floor(min_batch_size / 2), ")"
         )
-        max_k <- ncol(seurat)
+        neighbors <- floor(min_batch_size / 2)
     }
 
-    message("Calculating cell mixing scores...")
-    cell_scores <- Seurat::MixingMetric(
+    message("Calculating local structure scores...")
+    cell_scores <- Seurat::LocalStruct(
         seurat,
         "Batch",
+        neighbors = neighbors,
         reduction = "emb",
-        dims      = ncol(seurat[["emb"]]),
-        max.k     = max_k
+        reduced.dims = seq_len(ncol(seurat[["emb"]])),
+        orig.dims = seq_len(ncol(seurat[["emb"]]))
     )
 
     message("Calculating final score...")
-    # Calculate the mean normalised by the max score as the overall score
-    # Subtract from 1 so higher scores are better
-    score <- 1 - mean(cell_scores / max_k)
+    score <- mean(unlist(cell_scores))
 
     return(score)
 }
@@ -81,13 +84,13 @@ main <- function() {
     seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
-    score <- calculate_mixing(seurat)
+    score <- calculate_localStructure(seurat)
     output <- format_metric_results(
         dataset,
         method,
         integration,
         "Integration",
-        "Mixing",
+        "LocalStructure",
         score
     )
     print(output)

@@ -68,6 +68,35 @@ process METRIC_MIXING {
         """
 }
 
+process METRIC_LOCALSTRUCTURE {
+    conda "envs/seurat.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "localStructure.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-localStructure.tsv")
+
+    script:
+        """
+        metric-localStructure.R \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-localStructure.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-localStructure.tsv"
+        """
+}
+
 process METRIC_ARI {
     conda "envs/scib.yml"
 
@@ -657,6 +686,9 @@ workflow METRICS {
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
+        localStructure_ch = metric_names.contains("localStructure") ?
+            METRIC_LOCALSTRUCTURE(reference_ch, file(params.bindir + "/_functions.R")) :
+            Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
             METRIC_KBET(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -717,6 +749,7 @@ workflow METRICS {
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
+                localStructure_ch,
                 kBET_ch,
                 accuracy_ch,
                 rareAccuracy_ch,

@@ -73,9 +73,7 @@ main <- function() {
     )
 
     message("Converting to Seurat object...")
-    # Store dummy logcounts for Seurat's conversion function
-    SingleCellExperiment::logcounts(input) <- SingleCellExperiment::counts(input)
-    seurat <- SeuratObject::as.Seurat(input)
+    seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     features <- select_features_dubstepr(seurat)
