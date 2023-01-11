@@ -65,6 +65,8 @@ metrics:
     type: Integration
   - name: mixing
     type: Integration
+  - name: localStructure
+    type: Integration
   - name: kBET
     type: Integration
   - name: cLISI
