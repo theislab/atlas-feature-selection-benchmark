@@ -34,12 +34,14 @@ calculate_localStructure <- function(seurat) {
     seurat <- Seurat::NormalizeData(seurat)
 
     neighbors <- 100
-    if (neighbors > ncol(seurat) / 2) {
+    min_batch_size <- min(table(seurat[["Batch"]]))
+    if (neighbors > min_batch_size) {
         warning(
-            "'neigbors' greater than half the number of cells, setting 'neighbors' to ",
-            floor(ncol(seurat) / 2)
+            "some batches have less than 'neighbors' cells, ",
+            "setting 'neighbors' to half the smallest batch (",
+            floor(min_batch_size / 2), ")"
         )
-        neighbours <- floor(ncol(seurat) / 2)
+        neighbors <- floor(min_batch_size / 2)
     }
 
     message("Calculating local structure scores...")
