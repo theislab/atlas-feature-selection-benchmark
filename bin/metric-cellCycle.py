@@ -30,13 +30,23 @@ def calculate_cellCycleConservation(adata):
     """
     from scib.metrics import cell_cycle
 
-    if (adata.uns["Species"].lower() not in ["human", "mouse"]):
+    if adata.uns["Species"].lower() not in ["human", "mouse"]:
         from warnings import warn
-        warn(f"'{adata.uns['Species']}' is not a valid species ('human', 'mouse'). A score of 1 will be returned.")
+
+        warn(
+            f"'{adata.uns['Species']}' is not a valid species ('human', 'mouse'). A score of 1 will be returned."
+        )
         return 1.0
 
     print("Calculating cell cycle conservation score...")
-    score = cell_cycle(adata, adata, batch_key="Batch", embed="X_emb", organism=adata.uns["Species"].lower(), verbose=True)
+    score = cell_cycle(
+        adata,
+        adata,
+        batch_key="Batch",
+        embed="X_emb",
+        organism=adata.uns["Species"].lower(),
+        verbose=True,
+    )
     print("Final score: {score}")
 
     return score
