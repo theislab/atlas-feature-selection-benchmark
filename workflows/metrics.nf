@@ -362,6 +362,35 @@ process METRIC_GRAPHCONNECTIVITY {
         """
 }
 
+process METRIC_CELLCYCLE {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "cellCycle.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cellCycle.tsv")
+
+    script:
+        """
+        metric-cellCycle.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-cellCycle.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-cellCycle.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -658,6 +687,9 @@ workflow METRICS {
         isolatedLabelsASW_ch = metric_names.contains("isolatedLabelsASW") ?
             METRIC_ISOLATEDLABELSASW(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        cellCycle_ch = metric_names.contains("cellCycle") ?
+            METRIC_CELLCYCLE(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -700,7 +732,8 @@ workflow METRICS {
                 mcc_ch,
 				graphConnectivity_ch,
 				batchPCR_ch,
-				iLISI_ch
+				iLISI_ch,
+                cellCycle_ch
             )
             .map {it -> file(it[3])}
             .toList()
