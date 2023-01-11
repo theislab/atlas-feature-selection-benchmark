@@ -77,10 +77,8 @@ main <- function() {
         obsp   = FALSE
     )
     message("Converting to Seurat object...")
-    # Store dummy logcounts for Seurat's conversion function
-    SingleCellExperiment::logcounts(input) <- SingleCellExperiment::counts(input)
     SingleCellExperiment::reducedDimNames(input) <- "emb"
-    seurat <- SeuratObject::as.Seurat(input)
+    seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     score <- calculate_mixing(seurat)
