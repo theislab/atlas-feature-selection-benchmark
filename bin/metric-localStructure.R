@@ -30,7 +30,6 @@ suppressMessages({
 #'
 #' @returns The local structure metric score
 calculate_localStructure <- function(seurat) {
-
     seurat <- Seurat::NormalizeData(seurat)
 
     neighbors <- 100
