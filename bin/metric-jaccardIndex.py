@@ -23,15 +23,37 @@ def calculate_JaccardIndex(labels, average=None):
     ----------
     labels
         DataFrame containing real and predicted cell labels
-        average
+    average
         The type of averaging performed when there are multiple labels. See https://scikit-learn.org/stable/modules/generated/sklearn.metrics.jaccard_score.html.
+        Can also be set to "rarity" to weight labels according to how uncommon they are.
+
     Returns
     -------
     The Jaccard index
     """
     from sklearn.metrics import jaccard_score
 
-    score = jaccard_score(labels["Label"], labels["PredLabel"], average=average)
+    if average == "rarity":
+        from pandas import DataFrame
+
+        print("Calculating label weights...")
+        label_stats = DataFrame({
+            "Count" : labels["Label"].value_counts()
+        })
+        label_stats["Frequency"] = label_stats["Count"] / labels.shape[0]
+        inverse_freq_sum = sum(1 / label_stats["Frequency"])
+        label_stats["Weight"] = 1 / (label_stats["Frequency"] * inverse_freq_sum)
+
+        print("Calculating label scores...")
+        label_stats["Score"] = jaccard_score(labels["Label"], labels["PredLabel"], labels=label_stats.index, average=None)
+        label_stats["WeightedScore"] = label_stats["Weight"] * label_stats["Score"]
+
+        print(label_stats)
+
+        print("Calulating weighted score...")
+        score = sum(label_stats["WeightedScore"])
+    else:
+        score = jaccard_score(labels["Label"], labels["PredLabel"], average=average)
 
     return score
 
@@ -58,7 +80,7 @@ def main():
     print(input)
     score = calculate_JaccardIndex(input, average=average)
     output = format_metric_results(
-        dataset, method, integration, "Classification", f"JaccardIndex{average}", score
+        dataset, method, integration, "Classification", f"JaccardIndex-{average}", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
