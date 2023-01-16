@@ -37,15 +37,15 @@ def calculate_JaccardIndex(labels, average=None):
         from pandas import DataFrame
 
         print("Calculating label weights...")
-        label_stats = DataFrame({
-            "Count" : labels["Label"].value_counts()
-        })
+        label_stats = DataFrame({"Count": labels["Label"].value_counts()})
         label_stats["Frequency"] = label_stats["Count"] / labels.shape[0]
         inverse_freq_sum = sum(1 / label_stats["Frequency"])
         label_stats["Weight"] = 1 / (label_stats["Frequency"] * inverse_freq_sum)
 
         print("Calculating label scores...")
-        label_stats["Score"] = jaccard_score(labels["Label"], labels["PredLabel"], labels=label_stats.index, average=None)
+        label_stats["Score"] = jaccard_score(
+            labels["Label"], labels["PredLabel"], labels=label_stats.index, average=None
+        )
         label_stats["WeightedScore"] = label_stats["Weight"] * label_stats["Score"]
 
         print(label_stats)
