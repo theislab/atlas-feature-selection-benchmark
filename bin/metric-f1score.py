@@ -43,7 +43,7 @@ def calculate_f1score(labels, average=None):
         })
         label_stats["Frequency"] = label_stats["Count"] / labels.shape[0]
         inverse_freq_sum = sum(1 / label_stats["Frequency"])
-        label_stats["Weight"] = [1 / (freq * inverse_freq_sum) for freq in label_stats["Frequency"]]
+        label_stats["Weight"] = 1 / (label_stats["Frequency"] * inverse_freq_sum)
 
         print("Calculating label scores...")
         label_stats["Score"] = f1_score(labels["Label"], labels["PredLabel"], labels=label_stats.index, average=None)
