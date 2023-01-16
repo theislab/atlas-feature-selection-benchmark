@@ -573,6 +573,36 @@ process METRIC_F1_MACRO {
         """
 }
 
+process METRIC_F1_RARITY {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "F1Rarity.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-F1Rarity.tsv")
+
+    script:
+        """
+        metric-f1score.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "rarity" \\
+            --out-file "${dataset}-${method}-${integration}-F1Rarity.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-F1Rarity.tsv"
+        """
+}
+
 process METRIC_JACCARDINDEX_MICRO {
     conda "envs/sklearn.yml"
 
@@ -630,6 +660,36 @@ process METRIC_JACCARDINDEX_MACRO {
     stub:
         """
         touch "${dataset}-${method}-${integration}-JaccardIndexMacro.tsv"
+        """
+}
+
+process METRIC_JACCARDINDEX_RARITY {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "JaccardIndexRarity.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-JaccardIndexRarity.tsv")
+
+    script:
+        """
+        metric-jaccardIndex.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --average "rarity" \\
+            --out-file "${dataset}-${method}-${integration}-JaccardIndexRarity.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-JaccardIndexRarity.tsv"
         """
 }
 
@@ -736,11 +796,17 @@ workflow METRICS {
         f1_macro_ch = metric_names.contains("f1Macro") ?
             METRIC_F1_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        f1_rarity_ch = metric_names.contains("f1Rarity") ?
+            METRIC_F1_RARITY(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
             METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
             METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+        jaccard_rarity_ch = metric_names.contains("jaccardIndexRarity") ?
+            METRIC_JACCARDINDEX_RARITY(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
@@ -755,6 +821,7 @@ workflow METRICS {
                 rareAccuracy_ch,
                 f1_micro_ch,
                 f1_macro_ch,
+                f1_rarity_ch,
 				cLISI_ch,
                 ari_ch,
                 labelASW_ch,
@@ -762,6 +829,7 @@ workflow METRICS {
                 isolatedLabelsASW_ch,
                 jaccard_micro_ch,
                 jaccard_macro_ch,
+                jaccard_rarity_ch,
                 mcc_ch,
 				graphConnectivity_ch,
 				batchPCR_ch,

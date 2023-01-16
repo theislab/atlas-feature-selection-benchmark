@@ -101,9 +101,13 @@ metrics:
     type: Classification
   - name: jaccardIndexMacro
     type: Classification
+  - name: jaccardIndexRarity
+    type: Classification
   - name: f1Micro
     type: Classification
   - name: f1Macro
+    type: Classification
+  - name: f1Rarity
     type: Classification
 reports:
   - name: metrics
