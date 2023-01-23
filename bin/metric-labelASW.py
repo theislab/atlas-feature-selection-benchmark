@@ -31,7 +31,7 @@ def calculate_label_asw(adata):
     from scib.metrics import silhouette
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    score = silhouette(adata, label_key="Label", embed="X_emb")
     print(f"Final score: {score}")
 
     return score

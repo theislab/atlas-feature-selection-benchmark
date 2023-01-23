@@ -33,7 +33,7 @@ def calculate_batch_asw(adata):
     from scib.metrics import silhouette_batch
 
     print("Calculating final score...")
-    score = silhouette_batch(adata, batch_key="Batch", group_key="Label", embed="X_emb")
+    score = silhouette_batch(adata, batch_key="Batch", label_key="Label", embed="X_emb")
     print(f"Final score: {score}")
 
     return score
