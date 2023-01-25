@@ -22,4 +22,4 @@ dependencies:
   - scipy=1.9.0
   - pip:
     - git+https://github.com/theislab/scib.git@v1.1.1
-    - balanced-clustering==0.1.0
+    - git+https://github.com/hsmaan/balanced-clustering.git@a2ae3a4d349efecb517a0a0183c80f1519f6d2f1
