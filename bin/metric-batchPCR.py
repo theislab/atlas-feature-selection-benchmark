@@ -32,7 +32,13 @@ def calculate_batchPCR(adata):
 
     print("Calculating final score...")
     score = pcr_comparison(
-        adata, adata, "Batch", embed="X_emb", n_comps=50, scale=True, verbose=True
+        adata,
+        adata,
+        covariate="Batch",
+        embed="X_emb",
+        n_comps=50,
+        scale=True,
+        verbose=True,
     )
     print("Final score: {score}")
 

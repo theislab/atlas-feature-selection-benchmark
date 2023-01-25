@@ -31,7 +31,7 @@ def calculate_graphConnectivity(adata):
     from scib.metrics import graph_connectivity
 
     print("Calculating final score...")
-    score = graph_connectivity(adata, "Label")
+    score = graph_connectivity(adata, label_key="Label")
     print("Final score: {score}")
 
     return score

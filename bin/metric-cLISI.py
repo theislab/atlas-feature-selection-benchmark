@@ -33,10 +33,10 @@ def calculate_cLISI(adata):
     print("Calculating final score...")
     score = clisi_graph(
         adata,
-        "Batch",
-        "Label",
+        label_key="Label",
+        type_="embed",
+        use_rep="X_emb",
         k0=90,
-        type_=None,
         subsample=None,
         scale=True,
         n_cores=1,

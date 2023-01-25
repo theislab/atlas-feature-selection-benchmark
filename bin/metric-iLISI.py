@@ -33,9 +33,10 @@ def calculate_iLISI(adata):
     print("Calculating final score...")
     score = ilisi_graph(
         adata,
-        "Batch",
+        batch_key="Batch",
+        type_="embed",
+        use_rep="X_emb",
         k0=90,
-        type_=None,
         subsample=None,
         scale=True,
         n_cores=1,

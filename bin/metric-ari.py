@@ -29,11 +29,15 @@ def calculate_ari(adata):
     -------
     The ARI score [0, 1] where 0 is no match between the pair of labels, and 1 a perfect match.
     """
-    from scib.metrics import ari
-    from scib.metrics import opt_louvain
+    from scib.metrics import ari, cluster_optimal_resolution
+    from scanpy.preprocessing import neighbors
 
+    print("Calculating neighbors...")
+    neighbors(adata, use_rep="X_emb")
     print("Optimising clusters...")
-    opt_louvain(adata, label_key="Label", cluster_key="Cluster", function=ari)
+    cluster_optimal_resolution(
+        adata, label_key="Label", cluster_key="Cluster", metric=ari
+    )
     print("Calculating score...")
     score = ari(adata, group1="Label", group2="Cluster")
     print(f"Final score: {score}")
