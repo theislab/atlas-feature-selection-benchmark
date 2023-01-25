@@ -40,7 +40,9 @@ def calculate_bNMI(adata):
         adata, label_key="Label", cluster_key="Cluster", metric=bNMI
     )
     print("Calculating score...")
-    score = balanced_v_measure(labels_true=adata.obs["Label"], labels_pred=adata.obs["Cluster"])
+    score = balanced_v_measure(
+        labels_true=adata.obs["Label"], labels_pred=adata.obs["Cluster"]
+    )
     print(f"Final score: {score}")
 
     return score

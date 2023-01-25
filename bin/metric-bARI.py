@@ -40,7 +40,9 @@ def calculate_bARI(adata):
         adata, label_key="Label", cluster_key="Cluster", metric=bARI
     )
     print("Calculating score...")
-    score = balanced_adjusted_rand_index(labels_true=adata.obs["Label"], labels_pred=adata.obs["Cluster"])
+    score = balanced_adjusted_rand_index(
+        labels_true=adata.obs["Label"], labels_pred=adata.obs["Cluster"]
+    )
     print(f"Final score: {score}")
 
     return score
