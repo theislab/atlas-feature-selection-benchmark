@@ -73,6 +73,8 @@ metrics:
     type: Integration
   - name: nmi
     type: Integration
+  - name: bNMI
+    type: Integration
   - name: batchASW
     type: Integration
   - name: labelASW
