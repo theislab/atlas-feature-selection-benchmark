@@ -126,6 +126,35 @@ process METRIC_ARI {
         """
 }
 
+process METRIC_BARI {
+    conda "envs/balanced-clustering.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "bARI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-bARI.tsv")
+
+    script:
+        """
+        metric-bARI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-bARI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-bARI.tsv"
+        """
+}
+
 process METRIC_NMI {
     conda "envs/scib.yml"
 
@@ -758,6 +787,9 @@ workflow METRICS {
         ari_ch = metric_names.contains("ari") ?
             METRIC_ARI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        bARI_ch = metric_names.contains("bARI") ?
+            METRIC_BARI(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         nmi_ch = metric_names.contains("nmi") ?
             METRIC_NMI(reference_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
@@ -824,6 +856,7 @@ workflow METRICS {
                 f1_rarity_ch,
 				cLISI_ch,
                 ari_ch,
+                bARI_ch,
                 labelASW_ch,
 				isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,

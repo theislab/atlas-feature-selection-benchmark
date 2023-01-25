@@ -89,6 +89,8 @@ metrics:
     type: Integration
   - name: ari
     type: Integration
+  - name: bARI
+    type: Integration
   - name: cellCycle
     type: Integration
   - name: accuracy
