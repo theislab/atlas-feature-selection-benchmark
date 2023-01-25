@@ -39,7 +39,7 @@ def calculate_ari(adata):
         adata, label_key="Label", cluster_key="Cluster", metric=ari
     )
     print("Calculating score...")
-    score = ari(adata, group1="Label", group2="Cluster")
+    score = ari(adata, label_key="Label", cluster_key="Cluster")
     print(f"Final score: {score}")
 
     return score
