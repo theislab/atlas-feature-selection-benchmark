@@ -35,7 +35,12 @@ def calculate_kBET(adata):
 
     print("Calculating score...")
     score = kBET(
-        adata, batch_key="Batch", label_key="Label", embed="X_emb", verbose=True
+        adata,
+        batch_key="Batch",
+        label_key="Label",
+        type_="embed",
+        embed="X_emb",
+        verbose=True,
     )
     print(f"Final score: {score}")
 
