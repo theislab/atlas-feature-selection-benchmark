@@ -83,14 +83,19 @@ def prepare_dataset(adata_raw, name, batch_col, query_batches, label_col, unseen
     keep_labels = list(label_counts.index[label_counts >= 20])
     reference = reference[reference.obs["Label"].isin(keep_labels)].copy()
     reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
-    # Remove uncommon labels in the query but
-    # make sure we keep labels from the reference
     label_counts = query.obs["Label"].value_counts()
-    keep_labels = set(keep_labels + list(label_counts.index[label_counts >= 20]))
+    keep_labels = list(label_counts.index[label_counts >= 20])
     query = query[query.obs["Label"].isin(keep_labels)].copy()
     query.obs["Label"] = query.obs["Label"].cat.remove_unused_categories()
 
     print(f"Removing {len(unseen_labels)} unseen population(s) from the reference: {', '.join(unseen_labels)}")
+    non_ref_labels = set(query.obs["Label"].unique()) - set(reference.obs["Label"].unique()) - set(unseen_labels)
+    if len(non_ref_labels) > 0:
+        raise ValueError(f"The query contains non-unseen labels not present in the reference: {', '.join(non_ref_labels)}."
+        "These should be removed in the data loader or set as unseen labels.")
+    non_query_labels = set(unseen_labels) - set(query.obs["Label"].unique())
+    if len(non_query_labels) > 0:
+        raise ValueError(f"These unseen labels are not in the query after filtering: {', '.join(non_query_labels)}.")
     reference = reference[~reference.obs["Label"].isin(unseen_labels)].copy()
     reference.obs["Unseen"] = reference.obs["Label"].isin(unseen_labels)
     query.obs["Unseen"] = query.obs["Label"].isin(unseen_labels)
@@ -148,6 +153,7 @@ def print_adata(adata, title, batch_col, label_col):
     if "Unseen" in adata.obs.columns:
         print(f"Unseen labels:")
         print(adata.obs["Unseen"].value_counts().to_string())
+        print(adata.obs["Label"][adata.obs["Unseen"]].unique().tolist())
     else:
         print("Unseen labels not set")
     print("-----------------------")
