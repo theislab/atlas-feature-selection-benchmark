@@ -4,21 +4,22 @@
 Prepare a dataset for the benchmarking pipeline.
 
 Usage:
-    prepare-dataset.py --name=<str> --batch-col=<str> --label-col=<str> --query-batches=<str> --reference-out=<path> --query-out=path [options] <file>
+    prepare-dataset.py --name=<str> --batch-col=<str> --query-batches=<str> --label-col=<str> --unseen-labels=<str> --reference-out=<path> --query-out=path [options] <file>
 
 Options:
     -h --help                  Show this screen.
     --name=<str>               Name of the dataset.
     --batch-col=<str>          Name of the obs column containing batch information.
-    --label-col=<str>          Name of the obs column containing label information.
     --query-batches=<str>      Comma separated list of batches to be used as the query.
+    --label-col=<str>          Name of the obs column containing label information.
+    --unseen-labels=<str>      Comma separated list of labels to be used as unseen populations.
     --species=<str>            Species of the dataset.
     --reference-out=<path>     Path to reference output file.
     --query-out=<path>         Path to query output file.
 """
 
 
-def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, species):
+def prepare_dataset(adata_raw, name, batch_col, query_batches, label_col, unseen_labels, species):
     """
     Prepare a dataset for the benchmarking pipeline
 
@@ -30,10 +31,12 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
         Name of the dataset
     batch_col
         Name of the column of adata.obs containing batch information
-    label_col
-        Name of the column of adata.obs containing label information
     query_batches
         List containing the batch names for the query
+    label_col
+        Name of the column of adata.obs containing label information
+    unseen_labels
+        List containing the unseen population labels for the query
     species
         Species of the dataset
 
@@ -43,6 +46,7 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     """
 
     from scanpy.preprocessing import filter_cells, filter_genes
+    from pandas.api.types import union_categoricals
     from anndata import AnnData
 
     print(f"Preparing '{name}' dataset...")
@@ -79,12 +83,17 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     keep_labels = list(label_counts.index[label_counts >= 20])
     reference = reference[reference.obs["Label"].isin(keep_labels)].copy()
     reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
-    label_counts = query.obs["Label"].value_counts()
     # Remove uncommon labels in the query but
-    # make sure we keep can labels from the reference
+    # make sure we keep labels from the reference
+    label_counts = query.obs["Label"].value_counts()
     keep_labels = set(keep_labels + list(label_counts.index[label_counts >= 20]))
     query = query[query.obs["Label"].isin(keep_labels)].copy()
     query.obs["Label"] = query.obs["Label"].cat.remove_unused_categories()
+
+    print(f"Removing {len(unseen_labels)} unseen population(s) from the reference: {', '.join(unseen_labels)}")
+    reference = reference[~reference.obs["Label"].isin(unseen_labels)].copy()
+    reference.obs["Unseen"] = reference.obs["Label"].isin(unseen_labels)
+    query.obs["Unseen"] = query.obs["Label"].isin(unseen_labels)
 
     print("Removing genes with 0 counts in the reference...")
     filter_genes(reference, min_counts=1)
@@ -94,6 +103,12 @@ def prepare_dataset(adata_raw, name, batch_col, label_col, query_batches, specie
     reference.obs = reference.obs.drop(["n_counts", "n_genes"], axis=1)
     reference.var = reference.var.drop(["n_counts"], axis=1)
     query.obs = query.obs.drop(["n_counts", "n_genes"], axis=1)
+
+    # Make sure we have the same categories in the reference and query
+    # even if they aren't present
+    all_labels = union_categoricals([reference.obs["Label"], query.obs["Label"]], sort_categories=True).categories
+    reference.obs["Label"] = reference.obs["Label"].cat.set_categories(all_labels)
+    query.obs["Label"] = query.obs["Label"].cat.set_categories(all_labels)
 
     print_adata(reference, "REFERENCE DATA", "Batch", "Label")
     print_adata(query, "QUERY DATA", "Batch", "Label")
@@ -124,9 +139,17 @@ def print_adata(adata, title, batch_col, label_col):
     print("-----------------------")
     print(f"Batches: '{batch_col}' ({len(adata.obs[batch_col].cat.categories)})")
     print(adata.obs[batch_col].value_counts().to_string())
+    print(adata.obs[batch_col].cat.categories.to_list())
     print("-----------------------")
     print(f"Labels: '{label_col}' ({len(adata.obs[label_col].cat.categories)})")
     print(adata.obs[label_col].value_counts().to_string())
+    print(adata.obs[label_col].cat.categories.to_list())
+    print("-----------------------")
+    if "Unseen" in adata.obs.columns:
+        print(f"Unseen labels:")
+        print(adata.obs["Unseen"].value_counts().to_string())
+    else:
+        print("Unseen labels not set")
     print("-----------------------")
     if "Species" in adata.uns_keys():
         print(f"Species: '{adata.uns['Species']}'")
@@ -149,8 +172,9 @@ def main():
     file = args["<file>"]
     name = args["--name"]
     batch_col = args["--batch-col"]
-    label_col = args["--label-col"]
     query_batches = args["--query-batches"].split(",")
+    label_col = args["--label-col"]
+    unseen_labels = args["--unseen-labels"].split(",")
     species = args["--species"]
     reference_out = args["--reference-out"]
     query_out = args["--query-out"]
@@ -158,7 +182,7 @@ def main():
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
     reference, query = prepare_dataset(
-        input, name, batch_col, label_col, query_batches, species
+        input, name, batch_col, query_batches, label_col, unseen_labels, species
     )
     print(f"Writing reference to '{reference_out}'...")
     reference.write_h5ad(reference_out)
