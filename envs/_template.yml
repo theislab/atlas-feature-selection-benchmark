@@ -17,6 +17,7 @@ dependencies:
   - docopt=0.6.2
   - h5py=3.7.0
   - hdf5=1.12.2
+  - matplotlib-base=3.6.3
   - numba=0.55.2
   - numpy=1.22.4
   - pandas=1.4.3
