@@ -2,23 +2,27 @@ experiment: full-analysis
 datasets:
   - name: tinySim
     batch_col: Batch
-    label_col: Group
     query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
     species: Simulation
   - name: tinySim2
     batch_col: Batch
-    label_col: Group
     query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
     species: Simulation
   - name: scIBPancreas
     batch_col: tech
+    query_batches: celseq,celseq2
     label_col: celltype
-    query_batches: inDrop3
+    unseen_labels: activated_stellate
     species: Human
   - name: neurips
     batch_col: batch
-    label_col: cell_type
     query_batches: s4d1,s4d8,s4d9
+    label_col: cell_type
+    unseen_labels: "CD8+ T naive,Proerythroblast"
     species: Human
 methods:
   - name: all
