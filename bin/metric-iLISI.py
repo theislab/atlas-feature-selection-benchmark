@@ -30,13 +30,22 @@ def calculate_iLISI(adata):
     """
     from scib.metrics import ilisi_graph
 
+    # Reduce the k0 parameter for small datasets to avoid theislab/scib/issues/374
+    # This should only happen for tiny test datasets
+    if adata.n_obs < 500:
+        import warnings
+        warnings.warn("Less than 500 cells, setting k0=50")
+        k0 = 50
+    else:
+        k0 = 90
+
     print("Calculating final score...")
     score = ilisi_graph(
         adata,
         batch_key="Batch",
         type_="embed",
         use_rep="X_emb",
-        k0=90,
+        k0=k0,
         subsample=None,
         scale=True,
         n_cores=1,
