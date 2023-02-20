@@ -480,6 +480,42 @@ process METRIC_CELLCYCLE {
 
 /*
 ------------------------------
+    Mapping metrics
+------------------------------
+*/
+
+process METRIC_MLISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "mLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-mLISI.tsv")
+
+    script:
+        """
+        metric-mLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-mLISI.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-mLISI.tsv"
+        """
+}
+
+/*
+------------------------------
     Classification metrics
 ------------------------------
 */
@@ -795,6 +831,8 @@ workflow METRICS {
 
     main:
 
+        reference_query_ch = reference_ch.join(query_ch, by: [0, 1, 2])
+
         metric_names = params.metrics.collect{metric -> metric.name}
 
         // Integration metrics
@@ -845,6 +883,11 @@ workflow METRICS {
             Channel.empty()
         cellCycle_ch = metric_names.contains("cellCycle") ?
             METRIC_CELLCYCLE(reference_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
+
+        // Mapping metrics
+        mLISI_ch = metric_names.contains("mLISI") ?
+            METRIC_MLISI(reference_query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         // Classification metrics
@@ -901,7 +944,8 @@ workflow METRICS {
 				graphConnectivity_ch,
 				batchPCR_ch,
 				iLISI_ch,
-                cellCycle_ch
+                cellCycle_ch,
+                mLISI_ch
             )
             .map {it -> file(it[3])}
             .toList()

@@ -54,7 +54,7 @@ def calculate_mLISI(adata):
         n_cores=1,
         verbose=True,
     )
-    print("Final score: {score}")
+    print(f"Final score: {score}")
 
     return score
 
@@ -74,12 +74,12 @@ def main():
     reference_file = args["--reference"]
     out_file = args["--out-file"]
 
-    print("Reading query data from '{file}'...")
+    print(f"Reading query data from '{query_file}'...")
     query = read_h5ad(query_file)
     query.obs["Dataset"] = "Query"
     print("Read data:")
     print(query)
-    print("Reading reference data from '{file}'...")
+    print(f"Reading reference data from '{reference_file}'...")
     reference = read_h5ad(reference_file)
     reference.obs["Dataset"] = "Reference"
     print("Read data:")
@@ -87,12 +87,14 @@ def main():
     print("Merging query and reference...")
     input = reference.concatenate(query)
     input.obs["Dataset"] = input.obs["Dataset"].astype("category")
+    print("Merged data:")
+    print(input)
     score = calculate_mLISI(input)
     output = format_metric_results(
         dataset, method, integration, "Mapping", "mLISI", score
     )
     print(output)
-    print("Writing output to '{out_file}'...")
+    print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")
 
