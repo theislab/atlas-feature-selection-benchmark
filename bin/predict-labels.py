@@ -82,6 +82,7 @@ def predict_labels(reference, query, params, seed=1):
     results = DataFrame(
         {
             "ID": query.obs_names,
+            "Unseen": query.obs["Unseen"],
             "Label": query.obs["Label"],
             "PredLabel": pred_labels,
             "MaxProb": [

@@ -55,10 +55,13 @@ main <- function() {
         col_types = readr::cols(
             .default  = readr::col_double(),
             ID        = readr::col_character(),
+            Unseen    = readr::col_logical(),
             Label     = readr::col_character(),
             PredLabel = readr::col_character()
         )
     )
+    message("Removing unseen populations...")
+    input <- input[!input$Unseen, ]
     message("Read data:")
     print(input)
     score <- calculate_rare_accuracy(input)
