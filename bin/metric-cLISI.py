@@ -34,6 +34,7 @@ def calculate_cLISI(adata):
     # This should only happen for tiny test datasets
     if adata.n_obs < 500:
         import warnings
+
         warnings.warn("Less than 500 cells, setting k0=50")
         k0 = 50
     else:

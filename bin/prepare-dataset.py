@@ -19,7 +19,9 @@ Options:
 """
 
 
-def prepare_dataset(adata_raw, name, batch_col, query_batches, label_col, unseen_labels, species):
+def prepare_dataset(
+    adata_raw, name, batch_col, query_batches, label_col, unseen_labels, species
+):
     """
     Prepare a dataset for the benchmarking pipeline
 
@@ -88,14 +90,24 @@ def prepare_dataset(adata_raw, name, batch_col, query_batches, label_col, unseen
     query = query[query.obs["Label"].isin(keep_labels)].copy()
     query.obs["Label"] = query.obs["Label"].cat.remove_unused_categories()
 
-    print(f"Removing {len(unseen_labels)} unseen population(s) from the reference: {', '.join(unseen_labels)}")
-    non_ref_labels = set(query.obs["Label"].unique()) - set(reference.obs["Label"].unique()) - set(unseen_labels)
+    print(
+        f"Removing {len(unseen_labels)} unseen population(s) from the reference: {', '.join(unseen_labels)}"
+    )
+    non_ref_labels = (
+        set(query.obs["Label"].unique())
+        - set(reference.obs["Label"].unique())
+        - set(unseen_labels)
+    )
     if len(non_ref_labels) > 0:
-        raise ValueError(f"The query contains non-unseen labels not present in the reference: {', '.join(non_ref_labels)}."
-        "These should be removed in the data loader or set as unseen labels.")
+        raise ValueError(
+            f"The query contains non-unseen labels not present in the reference: {', '.join(non_ref_labels)}."
+            "These should be removed in the data loader or set as unseen labels."
+        )
     non_query_labels = set(unseen_labels) - set(query.obs["Label"].unique())
     if len(non_query_labels) > 0:
-        raise ValueError(f"These unseen labels are not in the query after filtering: {', '.join(non_query_labels)}.")
+        raise ValueError(
+            f"These unseen labels are not in the query after filtering: {', '.join(non_query_labels)}."
+        )
     reference = reference[~reference.obs["Label"].isin(unseen_labels)].copy()
     reference.obs["Unseen"] = reference.obs["Label"].isin(unseen_labels)
     query.obs["Unseen"] = query.obs["Label"].isin(unseen_labels)
@@ -111,7 +123,9 @@ def prepare_dataset(adata_raw, name, batch_col, query_batches, label_col, unseen
 
     # Make sure we have the same categories in the reference and query
     # even if they aren't present
-    all_labels = union_categoricals([reference.obs["Label"], query.obs["Label"]], sort_categories=True).categories
+    all_labels = union_categoricals(
+        [reference.obs["Label"], query.obs["Label"]], sort_categories=True
+    ).categories
     reference.obs["Label"] = reference.obs["Label"].cat.set_categories(all_labels)
     query.obs["Label"] = query.obs["Label"].cat.set_categories(all_labels)
 
