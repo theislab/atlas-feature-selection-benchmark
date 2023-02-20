@@ -209,8 +209,11 @@ workflow INTEGRATION {
         MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/_functions.py"))
         MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/_functions.py"))
 
+        // Use one scVI integration with all features for each dataset to
+        // optimise classifier hyperparameters
         scvi_all_ch = INTEGRATE_SCVI.out
-            .first { it[1] == "all" }
+            .filter { it[1] == "all" }
+            .filter { it[3] == params.integration.seeds.min()}
 
         OPTIMISE_CLASSIFIER(scvi_all_ch)
 

@@ -97,7 +97,7 @@ process PREPARE_DATASET {
     publishDir "$params.outdir/datasets-prepped/"
 
     input:
-        tuple val(name), val(batch_col), val(label_col), val(query_batches), val(species), path(file)
+        tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)
 
     output:
         tuple val(name), path("${name}-reference.h5ad"), path("${name}-query.h5ad")
@@ -107,8 +107,9 @@ process PREPARE_DATASET {
         prepare-dataset.py \\
             --name "${name}" \\
             --batch-col "${batch_col}" \\
-            --label-col "${label_col}" \\
             --query-batches "${query_batches}" \\
+            --label-col "${label_col}" \\
+            --unseen-labels "${unseen_labels}" \\
             --species "${species}" \\
             --reference-out "${name}-reference.h5ad" \\
             --query-out "${name}-query.h5ad" \\
@@ -159,8 +160,9 @@ workflow DATASETS {
                 tuple(
                     dataset.name,
                     dataset.batch_col,
-                    dataset.label_col,
                     dataset.query_batches,
+                    dataset.label_col,
+                    dataset.unseen_labels,
                     dataset.species
                 )
             }

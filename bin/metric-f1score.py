@@ -75,6 +75,8 @@ def main():
 
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
+    print("Removing unseen populations...")
+    input = input[~input["Unseen"]]
     print("Read data:")
     print(input)
     score = calculate_f1score(input, average=average)
