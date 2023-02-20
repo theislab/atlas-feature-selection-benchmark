@@ -100,14 +100,18 @@ def main():
 
     print(f"Writing output to '{out_dir}'...")
     output.save(out_dir, save_anndata=True, overwrite=True)
+    # Set unseen labels to string for plotting
+    full.obs["Unseen"] = full.obs["Unseen"].astype(str)
     umap_file = join(out_dir, "umap-unintegrated.png")
     umap = plot_embedding(
-        full, basis="X_umap_unintegrated", groups=["Dataset", "Batch", "Label"]
+        full,
+        basis="X_umap_unintegrated",
+        groups=["Dataset", "Batch", "Label", "Unseen"],
     )
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
     umap_file = join(out_dir, "umap-integrated.png")
-    umap = plot_embedding(full, groups=["Dataset", "Batch", "Label"])
+    umap = plot_embedding(full, groups=["Dataset", "Batch", "Label", "Unseen"])
     print(f"Saving integrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
     print("Done!")
