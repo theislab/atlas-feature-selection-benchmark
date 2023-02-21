@@ -491,7 +491,7 @@ process METRIC_MLISI {
         saveAs: { filename -> "mLISI.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(labels)
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
         path(functions)
 
     output:
@@ -828,10 +828,9 @@ workflow METRICS {
     take:
         reference_ch
         query_ch
+        labels_ch
 
     main:
-
-        reference_query_ch = reference_ch.join(query_ch, by: [0, 1, 2])
 
         metric_names = params.metrics.collect{metric -> metric.name}
 
@@ -887,36 +886,36 @@ workflow METRICS {
 
         // Mapping metrics
         mLISI_ch = metric_names.contains("mLISI") ?
-            METRIC_MLISI(reference_query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_MLISI(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
-            METRIC_ACCURACY(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_ACCURACY(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
-            METRIC_RAREACCURACY(query_ch, file(params.bindir + "/_functions.R")) :
+            METRIC_RAREACCURACY(labels_ch, file(params.bindir + "/_functions.R")) :
             Channel.empty()
         f1_micro_ch = metric_names.contains("f1Micro") ?
-            METRIC_F1_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_F1_MICRO(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         f1_macro_ch = metric_names.contains("f1Macro") ?
-            METRIC_F1_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_F1_MACRO(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         f1_rarity_ch = metric_names.contains("f1Rarity") ?
-            METRIC_F1_RARITY(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_F1_RARITY(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
-            METRIC_JACCARDINDEX_MICRO(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_JACCARDINDEX_MICRO(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
-            METRIC_JACCARDINDEX_MACRO(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_JACCARDINDEX_MACRO(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         jaccard_rarity_ch = metric_names.contains("jaccardIndexRarity") ?
-            METRIC_JACCARDINDEX_RARITY(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_JACCARDINDEX_RARITY(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
-            METRIC_MCC(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_MCC(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
         metrics_ch = batchPurity_ch

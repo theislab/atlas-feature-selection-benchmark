@@ -65,7 +65,19 @@ reference_ch = datasets_features_ch
         )
     }
 
-query_ch = reference_ch
+query_ch = datasets_features_ch
+    .combine(integrations_ch)
+    .map { input ->
+        tuple(
+            input[0], // Dataset name
+            input[3], // Method name
+            input[5], // Integration name
+            file(params.outdir + "/" + input[0] + "/" + input[3] + "/" + input[5] + "-reference/adata.h5ad"),
+            file(params.outdir + "/" + input[0] + "/" + input[3] + "/" + input[5] + "-mapped/adata.h5ad")
+        )
+    }
+
+labels_ch = reference_ch
     .map { input ->
         tuple(
             input[0], // Dataset name
@@ -144,7 +156,11 @@ workflow WF_ALL {
     DATASETS()
     METHODS(DATASETS.out.prepared_datasets_ch)
     INTEGRATION(METHODS.out.datasets_features_ch)
-    METRICS(INTEGRATION.out.reference_ch, INTEGRATION.out.query_ch)
+    METRICS(
+        INTEGRATION.out.reference_ch,
+        INTEGRATION.out.query_ch,
+        INTEGRATION.out.labels_ch
+    )
     REPORTS(METRICS.out)
 }
 

@@ -233,7 +233,20 @@ workflow INTEGRATION {
                     file(it[4] + "/adata.h5ad"), // Path to reference H5AD
                 )
             }
-        query_ch = PREDICT_LABELS.out
+
+        query_ch = MAP_SCVI.out
+            .mix(MAP_SCANVI.out)
+            .map { it ->
+                tuple(
+                    it[0],                       // Dataset name
+                    it[1],                       // Method name
+                    it[2] + "-" + it[3],         // Integration name
+                    file(it[4] + "/adata.h5ad"), // Path to reference H5AD
+                    file(it[5] + "/adata.h5ad"), // Path to query H5AD
+                )
+            }
+
+        labels_ch = PREDICT_LABELS.out
 }
 
 /*
