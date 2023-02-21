@@ -117,6 +117,8 @@ metrics:
     type: Classification
   - name: f1Rarity
     type: Classification
+  - name: mLISI
+    type: Mapping
 reports:
   - name: metrics
   - name: integration-variation

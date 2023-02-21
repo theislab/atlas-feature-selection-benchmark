@@ -131,9 +131,9 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
 
     from pandas import DataFrame
 
-    if not metric_type in ["Integration", "Classification"]:
+    if not metric_type in ["Integration", "Classification", "Mapping"]:
         raise ValueError(
-            "'metric_type' must be one of 'Integration' or 'Classification'"
+            "'metric_type' must be one of 'Integration', 'Classification', or 'Mapping'"
         )
 
     if value < 0 or value > 1:

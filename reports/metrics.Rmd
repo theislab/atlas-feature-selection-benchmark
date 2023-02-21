@@ -100,6 +100,38 @@ out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
 
 `r out`
 
+# Mapping metrics {.tabset}
+
+```{r mapping-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r mapping-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Mapping',",
+        "value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r mapping-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Mapping',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
 # Classification metrics {.tabset}
 
 ```{r classification-dotplots, results = "hide"}
