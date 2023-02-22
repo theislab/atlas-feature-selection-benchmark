@@ -16,7 +16,7 @@ Options:
 """
 
 
-def calculate_cell_distance(reference, query, upper_bound=30.0):
+def calculate_cell_distance(reference, query):
     """
     Calculate the cell Mahalanobis mapping distance metric
 
@@ -36,6 +36,7 @@ def calculate_cell_distance(reference, query, upper_bound=30.0):
     """
 
     from scipy.spatial.distance import mahalanobis
+    from scipy.stats import chi2
     from numpy import mean
 
     reference_coords = reference.obsm["X_emb"]
@@ -56,20 +57,17 @@ def calculate_cell_distance(reference, query, upper_bound=30.0):
 
         query_coord = query.obsm["X_emb"][idx, :]
 
-        distance = mahalanobis(query_coord, centroids[query_label], inverse_covariances[query_label])
+        distance = mahalanobis(
+            query_coord, centroids[query_label], inverse_covariances[query_label]
+        )
         distances.append(distance)
 
-    print("Calculating cell mapping distance score...")
-    if max(distances) > upper_bound:
-        from warnings import warn
-        warn(f"Some distances are greater than the upper bound ({upper_bound}), these will be clipped to calculate the final score")
-        distances = [min(d, upper_bound) for d in distances]
+    print("Calculating p-values...")
+    df = reference_coords.shape[1]
+    p_vals = [1 - chi2.cdf(dist, df=df) for dist in distances]
 
-    # To get the final score:
-    # - Calculate the mean distance across cells
-    # - Subtract this from `upper_bound` as we want lower distances to be better
-    # - Divide by `upper_bound` to get score in the range [0, 1]
-    score = (upper_bound - mean(distances)) / upper_bound
+    print("Calculating final score...")
+    score = mean(p_vals)
 
     return score
 
