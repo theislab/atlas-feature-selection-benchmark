@@ -125,6 +125,8 @@ metrics:
     type: Mapping
   - name: unseenCellDist
     type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
 reports:
   - name: metrics
   - name: integration-variation

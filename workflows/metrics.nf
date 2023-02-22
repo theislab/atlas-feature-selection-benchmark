@@ -886,6 +886,37 @@ process METRIC_UNSEEN_CELLDIST {
         """
 }
 
+process METRIC_UNSEEN_LABELDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "unseenLabelDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-unseenLabelDist.tsv")
+
+    script:
+        """
+        metric-unseenLabelDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-unseenLabelDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-unseenLabelDist.tsv"
+        """
+}
+
 /*
 ------------------------------
     Other processes
@@ -1039,6 +1070,13 @@ workflow METRICS {
                 file(params.bindir + "/_distance_functions.py")
             ) :
             Channel.empty()
+        unseen_labelDist_ch = metric_names.contains("unseenLabelDist") ?
+            METRIC_UNSEEN_LABELDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
 
         metrics_ch = batchPurity_ch
             .mix(
@@ -1069,7 +1107,8 @@ workflow METRICS {
                 mLISI_ch,
                 cellDist_ch,
                 labelDist_ch,
-                unseen_cellDist_ch
+                unseen_cellDist_ch,
+                unseen_labelDist_ch
             )
             .map {it -> file(it[3])}
             .toList()
