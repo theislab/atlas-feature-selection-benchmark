@@ -123,6 +123,8 @@ metrics:
     type: Mapping
   - name: labelDist
     type: Mapping
+  - name: unseenCellDist
+    type: Unseen
 reports:
   - name: metrics
   - name: integration-variation

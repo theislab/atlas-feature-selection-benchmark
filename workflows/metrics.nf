@@ -851,6 +851,43 @@ process METRIC_JACCARDINDEX_RARITY {
 
 /*
 ------------------------------
+    Unseen metrics
+------------------------------
+*/
+
+process METRIC_UNSEEN_CELLDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "unseenCellDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-unseenCellDist.tsv")
+
+    script:
+        """
+        metric-unseenCellDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-unseenCellDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-unseenCellDist.tsv"
+        """
+}
+
+/*
+------------------------------
     Other processes
 ------------------------------
 */
@@ -994,6 +1031,15 @@ workflow METRICS {
             METRIC_MCC(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
+        // Unseen metrics
+        unseen_cellDist_ch = metric_names.contains("unseenCellDist") ?
+            METRIC_UNSEEN_CELLDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
+
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
@@ -1022,7 +1068,8 @@ workflow METRICS {
                 cellCycle_ch,
                 mLISI_ch,
                 cellDist_ch,
-                labelDist_ch
+                labelDist_ch,
+                unseen_cellDist_ch
             )
             .map {it -> file(it[3])}
             .toList()
