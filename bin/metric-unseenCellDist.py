@@ -100,7 +100,7 @@ def main():
     print(reference)
     score = calculate_unseen_cell_distance(reference, query)
     output = format_metric_results(
-        dataset, method, integration, "Mapping", "unseenCellDist", score
+        dataset, method, integration, "Unseen", "unseenCellDist", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
