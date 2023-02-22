@@ -514,6 +514,36 @@ process METRIC_MLISI {
         """
 }
 
+process METRIC_CELLDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "cellDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cellDist.tsv")
+
+    script:
+        """
+        metric-cellDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-cellDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-cellDist.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -888,6 +918,9 @@ workflow METRICS {
         mLISI_ch = metric_names.contains("mLISI") ?
             METRIC_MLISI(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        cellDist_ch = metric_names.contains("cellDist") ?
+            METRIC_CELLDIST(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -944,7 +977,8 @@ workflow METRICS {
 				batchPCR_ch,
 				iLISI_ch,
                 cellCycle_ch,
-                mLISI_ch
+                mLISI_ch,
+                cellDist_ch
             )
             .map {it -> file(it[3])}
             .toList()

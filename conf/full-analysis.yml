@@ -119,6 +119,8 @@ metrics:
     type: Classification
   - name: mLISI
     type: Mapping
+  - name: cellDist
+    type: Mapping
 reports:
   - name: metrics
   - name: integration-variation
