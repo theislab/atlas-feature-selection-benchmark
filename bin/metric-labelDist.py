@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Calculate the cell mapping distance metric
+Calculate the label mapping distance metric
 
 Usage:
-    metric-cellDist.py --dataset=<str> --method=<str> --integration=<str> --reference=<path> --out-file=<path> [options] <file>
+    metric-labelDist.py --dataset=<str> --method=<str> --integration=<str> --reference=<path> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
@@ -16,9 +16,9 @@ Options:
 """
 
 
-def calculate_cell_distance(reference, query):
+def calculate_label_distance(reference, query):
     """
-    Calculate the cell Mahalanobis mapping distance metric
+    Calculate the label Mahalanobis mapping distance metric
 
     Parameters
     ----------
@@ -40,28 +40,38 @@ def calculate_cell_distance(reference, query):
     reference_coords = reference.obsm["X_emb"]
     reference_labels = reference.obs["Label"].tolist()
 
-    print("Calculating inverse covariance matrices...")
-    inverse_covariances = get_inverse_covariances(reference_coords, reference_labels)
-    print("Calculating centroid positions...")
-    centroids = get_centroids(reference_coords, reference_labels)
+    query_coords = query.obsm["X_emb"]
+    query_labels = query.obs["Label"].tolist()
 
-    print("Calculating cell Mahalonobis distances...")
+    print("Calculating inverse covariance matrices...")
+    inverse_covariances = get_inverse_covariances(query_coords, query_labels)
+    print("Calculating query centroid positions...")
+    query_centroids = get_centroids(query_coords, query_labels)
+    print("Calculating reference centroid positions...")
+    reference_centroids = get_centroids(reference_coords, reference_labels)
+
+    print("Calculating label Mahalonobis distances...")
     distances = []
-    for idx in range(query.n_obs):
-        query_label = query.obs["Label"][idx]
-        # Skip labels that are not in the reference
-        if query_label not in inverse_covariances.keys():
+    for label in set(query_labels):
+        # Skip labels with less than 2 * dim samples
+        if query_labels.count(label) < 2 * query_coords.shape[1]:
+            print(f"Label '{label}' has less than 2 * dim samples, skipping...")
             continue
 
-        query_coord = query.obsm["X_emb"][idx, :]
+        # Skip labels that are not in the reference
+        if label not in reference_centroids.keys():
+            print(f"Label '{label}' is not in the reference, skipping...")
+            continue
 
         distance = mahalanobis(
-            query_coord, centroids[query_label], inverse_covariances[query_label]
+            reference_centroids[label],
+            query_centroids[label],
+            inverse_covariances[label],
         )
         distances.append(distance)
 
     print("Calculating p-values...")
-    df = reference_coords.shape[1]
+    df = query_coords.shape[1]
     p_vals = [1 - chi2.cdf(dist, df=df) for dist in distances]
 
     print("Calculating final score...")
@@ -95,9 +105,9 @@ def main():
     reference.obs["Dataset"] = "Reference"
     print("Read data:")
     print(reference)
-    score = calculate_cell_distance(reference, query)
+    score = calculate_label_distance(reference, query)
     output = format_metric_results(
-        dataset, method, integration, "Mapping", "cellDist", score
+        dataset, method, integration, "Mapping", "labelDist", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")
