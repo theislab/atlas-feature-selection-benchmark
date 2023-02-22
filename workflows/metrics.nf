@@ -523,6 +523,7 @@ process METRIC_CELLDIST {
     input:
         tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
         path(functions)
+        path(distance_functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cellDist.tsv")
@@ -919,7 +920,11 @@ workflow METRICS {
             METRIC_MLISI(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
         cellDist_ch = metric_names.contains("cellDist") ?
-            METRIC_CELLDIST(query_ch, file(params.bindir + "/_functions.py")) :
+            METRIC_CELLDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
             Channel.empty()
 
         // Classification metrics
