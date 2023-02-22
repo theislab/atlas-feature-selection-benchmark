@@ -545,6 +545,37 @@ process METRIC_CELLDIST {
         """
 }
 
+process METRIC_LABELDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "labelDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-labelDist.tsv")
+
+    script:
+        """
+        metric-labelDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-labelDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-labelDist.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -926,6 +957,13 @@ workflow METRICS {
                 file(params.bindir + "/_distance_functions.py")
             ) :
             Channel.empty()
+        labelDist_ch = metric_names.contains("labelDist") ?
+            METRIC_LABELDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -983,7 +1021,8 @@ workflow METRICS {
 				iLISI_ch,
                 cellCycle_ch,
                 mLISI_ch,
-                cellDist_ch
+                cellDist_ch,
+                labelDist_ch
             )
             .map {it -> file(it[3])}
             .toList()

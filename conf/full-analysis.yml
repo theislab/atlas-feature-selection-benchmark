@@ -121,6 +121,8 @@ metrics:
     type: Mapping
   - name: cellDist
     type: Mapping
+  - name: labelDist
+    type: Mapping
 reports:
   - name: metrics
   - name: integration-variation
