@@ -514,6 +514,35 @@ process METRIC_MLISI {
         """
 }
 
+process METRIC_QLISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "qLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-qLISI.tsv")
+
+    script:
+        """
+        metric-qLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-qLISI.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-qLISI.tsv"
+        """
+}
+
 process METRIC_CELLDIST {
     conda "envs/scanpy.yml"
 
@@ -1018,6 +1047,9 @@ workflow METRICS {
         mLISI_ch = metric_names.contains("mLISI") ?
             METRIC_MLISI(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        qLISI_ch = metric_names.contains("qLISI") ?
+            METRIC_QLISI(query_ch, file(params.bindir + "/_functions.py")) :
+            Channel.empty()
         cellDist_ch = metric_names.contains("cellDist") ?
             METRIC_CELLDIST(
                 query_ch,
@@ -1105,6 +1137,7 @@ workflow METRICS {
 				iLISI_ch,
                 cellCycle_ch,
                 mLISI_ch,
+                qLISI_ch,
                 cellDist_ch,
                 labelDist_ch,
                 unseen_cellDist_ch,
