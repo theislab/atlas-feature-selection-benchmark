@@ -22,6 +22,7 @@ suppressPackageStartupMessages({
 # Source functions
 suppressMessages({
     source("io.R")
+    source("metrics.R")
 })
 
 #' Calculate the Seurat local structure metric for an integrated dataset
