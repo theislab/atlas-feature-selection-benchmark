@@ -62,7 +62,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from pandas import read_csv
-    from _functions import format_metric_results
+    from functions.functions import format_metric_results
 
     args = docopt(__doc__)
     file = args["<file>"]

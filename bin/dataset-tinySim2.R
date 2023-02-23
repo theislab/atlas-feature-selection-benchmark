@@ -17,7 +17,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Simulate a tiny dataset

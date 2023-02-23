@@ -34,7 +34,7 @@ def calculate_unseen_cell_distance(reference, query):
 
     from scipy.spatial.distance import mahalanobis
     from scipy.stats import chi2
-    from _distance_functions import get_inverse_covariances, get_centroids
+    from functions.distances import get_inverse_covariances, get_centroids
     from numpy import mean
 
     reference_coords = reference.obsm["X_emb"]
@@ -77,7 +77,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.functions import format_metric_results
 
     args = docopt(__doc__)
 

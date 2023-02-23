@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Select features using Seurat

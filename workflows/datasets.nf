@@ -135,16 +135,16 @@ workflow DATASETS {
         dataset_names = params.datasets.collect{dataset -> dataset.name}
 
         tinySim_ch  = dataset_names.contains("tinySim")  ?
-            DATASET_TINYSIM(file(params.bindir + "/_functions.R"))  :
+            DATASET_TINYSIM(file(params.bindir + "/functions/functions.R"))  :
             Channel.empty()
         tinySim2_ch = dataset_names.contains("tinySim2") ?
-            DATASET_TINYSIM2(file(params.bindir + "/_functions.R")) :
+            DATASET_TINYSIM2(file(params.bindir + "/functions/functions.R")) :
             Channel.empty()
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
             Channel.empty()
 		neurips_ch = dataset_names.contains("neurips") ?
-            DATASET_NEURIPS(file(params.bindir + "/_functions.R")) :
+            DATASET_NEURIPS(file(params.bindir + "/functions/functions.R")) :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch

@@ -21,7 +21,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Calculate the Seurat mixing metric for an integrated dataset

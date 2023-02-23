@@ -16,7 +16,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Calculate classification accuracy for the rarest cell label

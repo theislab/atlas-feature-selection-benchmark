@@ -14,7 +14,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Select features using the deviance method from scry

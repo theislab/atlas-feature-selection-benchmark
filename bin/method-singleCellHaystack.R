@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("functions.R")
 })
 
 #' Install singleCellHaystack from CRAN using remotes

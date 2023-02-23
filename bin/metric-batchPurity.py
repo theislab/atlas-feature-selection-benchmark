@@ -59,7 +59,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.functions import format_metric_results
 
     args = docopt(__doc__)
 
