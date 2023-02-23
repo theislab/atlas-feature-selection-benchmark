@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("functions.R")
+    source("io.R")
 })
 
 #' Install DUBStepR from GitHub using remotes

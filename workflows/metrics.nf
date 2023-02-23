@@ -47,7 +47,8 @@ process METRIC_MIXING {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
+        path(io_functions)
+        path(metric_functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-mixing.tsv")
@@ -76,7 +77,8 @@ process METRIC_LOCALSTRUCTURE {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
+        path(io_functions)
+        path(metric_functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-localStructure.tsv")
@@ -648,7 +650,8 @@ process METRIC_RAREACCURACY {
 
     input:
         tuple val(dataset), val(method), val(integration), path(query), path(labels)
-        path(functions)
+        path(io_functions)
+        path(metric_functions)
 
     output:
         tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-rareAccuracy.tsv")
@@ -998,10 +1001,18 @@ workflow METRICS {
             METRIC_BATCHPURITY(reference_ch, file(params.bindir + "/functions/functions.py")) :
             Channel.empty()
         mixing_ch = metric_names.contains("mixing") ?
-            METRIC_MIXING(reference_ch, file(params.bindir + "/functions/functions.R")) :
+            METRIC_MIXING(
+                reference_ch,
+                file(params.bindir + "/functions/io.R"),
+                file(params.bindir + "/functions/metrics.R")
+            ) :
             Channel.empty()
         localStructure_ch = metric_names.contains("localStructure") ?
-            METRIC_LOCALSTRUCTURE(reference_ch, file(params.bindir + "/functions/functions.R")) :
+            METRIC_LOCALSTRUCTURE(
+                reference_ch,
+                file(params.bindir + "/functions/io.R"),
+                file(params.bindir + "/functions/metrics.R")
+            ) :
             Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
             METRIC_KBET(reference_ch, file(params.bindir + "/functions/functions.py")) :
@@ -1070,7 +1081,11 @@ workflow METRICS {
             METRIC_ACCURACY(labels_ch, file(params.bindir + "/functions/functions.py")) :
             Channel.empty()
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
-            METRIC_RAREACCURACY(labels_ch, file(params.bindir + "/functions/functions.R")) :
+            METRIC_RAREACCURACY(
+                labels_ch,
+                file(params.bindir + "/functions/io.R"),
+                file(params.bindir + "/functions/metrics.R")
+            ) :
             Channel.empty()
         f1_micro_ch = metric_names.contains("f1Micro") ?
             METRIC_F1_MICRO(labels_ch, file(params.bindir + "/functions/functions.py")) :

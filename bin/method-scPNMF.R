@@ -14,7 +14,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    source("functions.R")
+    source("io.R")
 })
 
 #' Install scPNMF from GitHub using remotes

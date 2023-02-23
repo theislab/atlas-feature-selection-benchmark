@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("functions.R")
+    source("io.R")
 })
 
 #' Select features using the NBumi method

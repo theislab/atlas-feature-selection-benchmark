@@ -460,31 +460,31 @@ workflow METHODS {
             METHOD_HOTSPOT(prepared_datasets_ch) :
             Channel.empty()
         scsegindex_ch = method_names.contains("scsegindex") ?
-            METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_SCSEGINDEX(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         dubstepr_ch = method_names.contains("dubstepr") ?
-            METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_DUBSTEPR(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         nbumi_ch = method_names.contains("nbumi") ?
-            METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_NBUMI(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         osca_ch = method_names.contains("osca") ?
-            METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_OSCA(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         scry_ch = method_names.contains("scry") ?
-            METHOD_SCRY(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_SCRY(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         singleCellHaystack_ch = method_names.contains("singleCellHaystack") ?
-            METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_SINGLECELLHAYSTACK(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         brennecke_ch = method_names.contains("Brennecke") ?
-            METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_BRENNECKE(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         wilcoxon_ch = method_names.contains("wilcoxon") ?
             METHOD_WILCOXON(prepared_datasets_ch) :
             Channel.empty()
         scpnmf_ch = method_names.contains("scPNMF") ?
-            METHOD_SCPNMF(prepared_datasets_ch, file(params.bindir + "/functions/functions.R")) :
+            METHOD_SCPNMF(prepared_datasets_ch, file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         anticor_ch = method_names.contains("anticor") ?
             METHOD_ANTICOR(prepared_datasets_ch) :
@@ -530,7 +530,7 @@ workflow METHODS {
                 }
             seurat_ch = METHOD_SEURAT(
                 prepared_datasets_ch.combine(seurat_params_ch),
-                file(params.bindir + "/functions/functions.R")
+                file(params.bindir + "/functions/io.R")
             )
         } else {
             seurat_ch = Channel.empty()

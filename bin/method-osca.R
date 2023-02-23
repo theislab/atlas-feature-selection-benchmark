@@ -14,7 +14,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    source("functions.R")
+    source("io.R")
 })
 
 #' Select features using the OSCA method
