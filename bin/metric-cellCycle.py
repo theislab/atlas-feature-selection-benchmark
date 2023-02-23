@@ -72,7 +72,7 @@ def main():
     print(input)
     score = calculate_cellCycleConservation(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "CellCycle", score
+        dataset, method, integration, "IntegrationBio", "CellCycle", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

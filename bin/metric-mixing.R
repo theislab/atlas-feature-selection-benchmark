@@ -87,7 +87,7 @@ main <- function() {
         dataset,
         method,
         integration,
-        "Integration",
+        "IntegrationBatch",
         "Mixing",
         score
     )

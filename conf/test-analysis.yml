@@ -1,0 +1,161 @@
+experiment: test
+datasets:
+  - name: tinySim
+    batch_col: Batch
+    query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
+    species: Simulation
+  - name: tinySim2
+    batch_col: Batch
+    query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
+    species: Simulation
+  # - name: scIBPancreas
+  #   batch_col: tech
+  #   query_batches: celseq,celseq2
+  #   label_col: celltype
+  #   unseen_labels: activated_stellate
+  #   species: Human
+  # - name: neurips
+  #   batch_col: batch
+  #   query_batches: s4d1,s4d8,s4d9
+  #   label_col: cell_type
+  #   unseen_labels: "CD8+ T naive,Proerythroblast"
+  #   species: Human
+methods:
+  - name: all
+  - name: random
+    settings:
+      - n_features: 2000
+        seed: 1
+      - n_features: 2000
+        seed: 2
+      - n_features: 2000
+        seed: 3
+      - n_features: 2000
+        seed: 4
+      - n_features: 2000
+        seed: 5
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 2000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "False"
+      - flavor: pearson
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "True"
+      - flavor: pearson
+        n_features: 2000
+        batch: "True"
+  - name: hotspot
+  - name: scsegindex
+  # - name: dubstepr
+  - name: osca
+  - name: seurat
+    settings:
+      - method: vst
+        n_features: 2000
+      - method: mvp
+        n_features: 2000
+      - method: disp
+        n_features: 2000
+  - name: scry
+  - name: singleCellHaystack
+  - name: Brennecke
+  # - name: wilcoxon
+  - name: statistic
+    settings:
+      - statistic: mean
+        n_features: 2000
+      - statistic: variance
+        n_features: 2000
+  - name: nbumi
+  # - name: scPNMF
+  - name: anticor
+integration:
+  seeds:
+    - 1
+metrics:
+  - name: batchPurity
+    type: Integration
+  - name: mixing
+    type: Integration
+  - name: localStructure
+    type: Integration
+  - name: kBET
+    type: Integration
+  - name: cLISI
+    type: Integration
+  - name: nmi
+    type: Integration
+  # - name: bNMI
+  #   type: Integration
+  - name: batchASW
+    type: Integration
+  - name: labelASW
+    type: Integration
+  - name: isolatedLabelsF1
+    type: Integration
+  - name: isolatedLabelsASW
+    type: Integration
+  - name: graphConnectivity
+    type: Integration
+  - name: batchPCR
+    type: Integration
+  # - name: iLISI
+  #   type: Integration
+  - name: ari
+    type: Integration
+  - name: bARI
+    type: Integration
+  # - name: cellCycle
+  #   type: Integration
+  - name: accuracy
+    type: Classification
+  - name: rareAccuracy
+    type: Classification
+  - name: MCC
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
+    type: Classification
+  - name: jaccardIndexRarity
+    type: Classification
+  - name: f1Micro
+    type: Classification
+  - name: f1Macro
+    type: Classification
+  - name: f1Rarity
+    type: Classification
+  - name: mLISI
+    type: Mapping
+  - name: qLISI
+    type: Mapping
+  - name: cellDist
+    type: Mapping
+  - name: labelDist
+    type: Mapping
+  - name: unseenCellDist
+    type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
+reports:
+  - name: metrics

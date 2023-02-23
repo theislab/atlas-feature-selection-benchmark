@@ -77,7 +77,7 @@ def main():
     print(input)
     score = calculate_iLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "iLISI", score
+        dataset, method, integration, "IntegrationBatch", "iLISI", score
     )
     print(output)
     print("Writing output to '{out_file}'...")

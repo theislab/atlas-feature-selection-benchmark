@@ -67,7 +67,7 @@ def main():
     print(input)
     score = calculate_kBET(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "kBET", score
+        dataset, method, integration, "IntegrationBatch", "kBET", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

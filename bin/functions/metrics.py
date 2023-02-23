@@ -11,7 +11,8 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
     integration
         The name of the integration the metric has been calculated for
     metric_type
-        The type of the metric, either 'Integration', 'Classification', 'Mapping' or 'Unseen'
+        The type of the metric, either 'IntegrationBatch', 'IntegrationBio',
+        'Classification', 'Mapping' or 'Unseen'
     metric
         The name of the metric that has been calculated
     value
@@ -24,9 +25,9 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
 
     from pandas import DataFrame
 
-    if not metric_type in ["Integration", "Classification", "Mapping", "Unseen"]:
+    if not metric_type in ["IntegrationBatch", "IntegrationBio", "Classification", "Mapping", "Unseen"]:
         raise ValueError(
-            "'metric_type' must be one of 'Integration', 'Classification', 'Mapping' or 'Unseen'"
+            "'metric_type' must be one of 'IntegrationBatch', 'IntegrationBio', 'Classification', 'Mapping' or 'Unseen'"
         )
 
     if value < 0 or value > 1:

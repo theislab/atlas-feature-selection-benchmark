@@ -65,7 +65,7 @@ def main():
     print(input)
     score = calculate_ari(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "ARI", score
+        dataset, method, integration, "IntegrationBio", "ARI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

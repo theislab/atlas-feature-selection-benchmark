@@ -65,58 +65,43 @@ integration:
   seeds:
     - 1
 metrics:
+  # Integration (batch) metrics
   - name: batchPurity
-    type: Integration
+    type: IntegrationBatch
   - name: mixing
-    type: Integration
-  - name: localStructure
-    type: Integration
+    type: IntegrationBatch
   - name: kBET
-    type: Integration
-  - name: cLISI
-    type: Integration
-  - name: nmi
-    type: Integration
-  - name: bNMI
-    type: Integration
-  - name: batchASW
-    type: Integration
-  - name: labelASW
-    type: Integration
-  - name: isolatedLabelsF1
-    type: Integration
-  - name: isolatedLabelsASW
-    type: Integration
-  - name: graphConnectivity
-    type: Integration
+    type: IntegrationBatch
   - name: batchPCR
-    type: Integration
+    type: IntegrationBatch
   - name: iLISI
-    type: Integration
+    type: IntegrationBatch
+  - name: batchASW
+    type: IntegrationBatch
+  - name: graphConnectivity
+    type: IntegrationBatch
+  # Integration (bio) metrics
+  - name: localStructure
+    type: IntegrationBio
+  - name: cLISI
+    type: IntegrationBio
   - name: ari
-    type: Integration
+    type: IntegrationBio
   - name: bARI
-    type: Integration
+    type: IntegrationBio
+  - name: nmi
+    type: IntegrationBio
+  - name: bNMI
+    type: IntegrationBio
+  - name: labelASW
+    type: IntegrationBio
+  - name: isolatedLabelsF1
+    type: IntegrationBio
+  - name: isolatedLabelsASW
+    type: IntegrationBio
   - name: cellCycle
-    type: Integration
-  - name: accuracy
-    type: Classification
-  - name: rareAccuracy
-    type: Classification
-  - name: MCC
-    type: Classification
-  - name: jaccardIndexMicro
-    type: Classification
-  - name: jaccardIndexMacro
-    type: Classification
-  - name: jaccardIndexRarity
-    type: Classification
-  - name: f1Micro
-    type: Classification
-  - name: f1Macro
-    type: Classification
-  - name: f1Rarity
-    type: Classification
+    type: IntegrationBio
+  # Mapping metrics
   - name: mLISI
     type: Mapping
   - name: qLISI
@@ -125,6 +110,26 @@ metrics:
     type: Mapping
   - name: labelDist
     type: Mapping
+  # Classification metrics
+  - name: accuracy
+    type: Classification
+  - name: rareAccuracy
+    type: Classification
+  - name: f1Micro
+    type: Classification
+  - name: f1Macro
+    type: Classification
+  - name: f1Rarity
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
+    type: Classification
+  - name: jaccardIndexRarity
+    type: Classification
+  - name: MCC
+    type: Classification
+  # Unseen metrics
   - name: unseenCellDist
     type: Unseen
   - name: unseenLabelDist

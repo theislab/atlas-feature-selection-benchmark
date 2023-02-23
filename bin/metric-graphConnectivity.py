@@ -57,7 +57,7 @@ def main():
     print(input)
     score = calculate_graphConnectivity(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphConnectivity", score
+        dataset, method, integration, "IntegrationBatch", "GraphConnectivity", score
     )
     print(output)
     print("Writing output to '{out_file}'...")

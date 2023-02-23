@@ -67,7 +67,7 @@ def main():
     else:
         metric = "IsolatedLabelASW"
     output = format_metric_results(
-        dataset, method, integration, "Integration", metric, score
+        dataset, method, integration, "IntegrationBio", metric, score
     )
     print(output)
     print("Writing output to '{out_file}'...")

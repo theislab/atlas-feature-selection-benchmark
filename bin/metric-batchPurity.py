@@ -75,7 +75,7 @@ def main():
     print(input)
     score = calculate_batch_purity(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "BatchPurity", score
+        dataset, method, integration, "IntegrationBatch", "BatchPurity", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

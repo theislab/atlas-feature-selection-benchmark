@@ -96,7 +96,7 @@ def main():
     print(input)
     score = calculate_bNMI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "bNMI", score
+        dataset, method, integration, "IntegrationBio", "bNMI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

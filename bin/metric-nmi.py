@@ -66,7 +66,7 @@ def main():
     print(input)
     score = calculate_nmi(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "NMI", score
+        dataset, method, integration, "IntegrationBio", "NMI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

@@ -65,7 +65,7 @@ def main():
     print(input)
     score = calculate_batchPCR(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "BatchPCR", score
+        dataset, method, integration, "IntegrationBatch", "BatchPCR", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

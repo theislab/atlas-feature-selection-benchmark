@@ -59,7 +59,7 @@ def main():
     print(input)
     score = calculate_batch_asw(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "batchASW", score
+        dataset, method, integration, "IntegrationBatch", "batchASW", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

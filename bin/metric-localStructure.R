@@ -90,7 +90,7 @@ main <- function() {
         dataset,
         method,
         integration,
-        "Integration",
+        "IntegrationBio",
         "LocalStructure",
         score
     )

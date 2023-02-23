@@ -6,7 +6,7 @@
 
 /*
 ------------------------------
-    Integration metrics
+    Integration (batch) metrics
 ------------------------------
 */
 
@@ -68,6 +68,131 @@ process METRIC_MIXING {
         touch "${dataset}-${method}-${integration}-mixing.tsv"
         """
 }
+
+process METRIC_KBET {
+    conda "envs/scib-kBET.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "kBET.tsv" }
+
+    label "process_low"
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-kBET.tsv")
+
+    script:
+        """
+        metric-kBET-install.R
+        metric-kBET.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-kBET.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-kBET.tsv"
+        """
+}
+
+process METRIC_ILISI {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "iLISI.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-iLISI.tsv")
+
+    script:
+        """
+        metric-iLISI.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-iLISI.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-iLISI.tsv"
+        """
+}
+
+process METRIC_BATCHPCR {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "batchPCR.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchPCR.tsv")
+
+    script:
+        """
+        metric-batchPCR.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-batchPCR.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-batchPCR.tsv"
+        """
+}
+
+process METRIC_GRAPHCONNECTIVITY {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "graphConnectivity.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-graphConnectivity.tsv")
+
+    script:
+        """
+        metric-graphConnectivity.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-graphConnectivity.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-graphConnectivity.tsv"
+        """
+}
+
+/*
+------------------------------
+    Integration (bio) metrics
+------------------------------
+*/
 
 process METRIC_LOCALSTRUCTURE {
     conda "envs/seurat.yml"
@@ -215,38 +340,6 @@ process METRIC_BNMI {
         """
 }
 
-process METRIC_KBET {
-    conda "envs/scib-kBET.yml"
-
-    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "kBET.tsv" }
-
-    label "process_low"
-
-    input:
-        tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
-
-    output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-kBET.tsv")
-
-    script:
-        """
-        metric-kBET-install.R
-        metric-kBET.py \\
-            --dataset "${dataset}" \\
-            --method "${method}" \\
-            --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-kBET.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "${dataset}-${method}-${integration}-kBET.tsv"
-        """
-}
-
 process METRIC_LABELASW {
     conda "envs/scib.yml"
 
@@ -302,35 +395,6 @@ process METRIC_CLISI {
     stub:
         """
         touch "${dataset}-${method}-${integration}-cLISI.tsv"
-        """
-}
-
-process METRIC_ILISI {
-    conda "envs/scib.yml"
-
-    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "iLISI.tsv" }
-
-    input:
-        tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
-
-    output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-iLISI.tsv")
-
-    script:
-        """
-        metric-iLISI.py \\
-            --dataset "${dataset}" \\
-            --method "${method}" \\
-            --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-iLISI.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "${dataset}-${method}-${integration}-iLISI.tsv"
         """
 }
 
@@ -390,64 +454,6 @@ process METRIC_ISOLATEDLABELSASW {
     stub:
         """
         touch "${dataset}-${method}-${integration}-isolatedLabelsASW.tsv"
-        """
-}
-
-process METRIC_BATCHPCR {
-    conda "envs/scib.yml"
-
-    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "batchPCR.tsv" }
-
-    input:
-        tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
-
-    output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchPCR.tsv")
-
-    script:
-        """
-        metric-batchPCR.py \\
-            --dataset "${dataset}" \\
-            --method "${method}" \\
-            --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-batchPCR.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "${dataset}-${method}-${integration}-batchPCR.tsv"
-        """
-}
-
-process METRIC_GRAPHCONNECTIVITY {
-    conda "envs/scib.yml"
-
-    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
-        saveAs: { filename -> "graphConnectivity.tsv" }
-
-    input:
-        tuple val(dataset), val(method), val(integration), path(reference)
-        path(functions)
-
-    output:
-        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-graphConnectivity.tsv")
-
-    script:
-        """
-        metric-graphConnectivity.py \\
-            --dataset "${dataset}" \\
-            --method "${method}" \\
-            --integration "${integration}" \\
-            --out-file "${dataset}-${method}-${integration}-graphConnectivity.tsv" \\
-            ${reference}
-        """
-
-    stub:
-        """
-        touch "${dataset}-${method}-${integration}-graphConnectivity.tsv"
         """
 }
 
@@ -1002,18 +1008,29 @@ workflow METRICS {
         r_io_funcs = file(params.bindir + "/functions/io.R")
         r_metrics_funcs = file(params.bindir + "/functions/metrics.R")
 
-        // Integration metrics
+        // Integration (batch) metrics
         batchPurity_ch = metric_names.contains("batchPurity") ?
             METRIC_BATCHPURITY(reference_ch, py_metrics_funcs) :
             Channel.empty()
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(reference_ch, r_io_funcs, r_metrics_funcs) :
             Channel.empty()
-        localStructure_ch = metric_names.contains("localStructure") ?
-            METRIC_LOCALSTRUCTURE(reference_ch, r_io_funcs, r_metrics_funcs) :
-            Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
             METRIC_KBET(reference_ch, py_metrics_funcs) :
+            Channel.empty()
+        batchPCR_ch = metric_names.contains("batchPCR") ?
+            METRIC_BATCHPCR(reference_ch, py_metrics_funcs) :
+            Channel.empty()
+		iLISI_ch = metric_names.contains("iLISI") ?
+            METRIC_ILISI(reference_ch,py_metrics_funcs) :
+            Channel.empty()
+        graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
+            METRIC_GRAPHCONNECTIVITY(reference_ch, py_metrics_funcs) :
+            Channel.empty()
+
+        // Integration (bio) metrics
+        localStructure_ch = metric_names.contains("localStructure") ?
+            METRIC_LOCALSTRUCTURE(reference_ch, r_io_funcs, r_metrics_funcs) :
             Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
             METRIC_CLISI(reference_ch, py_metrics_funcs) :
@@ -1032,15 +1049,6 @@ workflow METRICS {
             Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
             METRIC_LABELASW(reference_ch, py_metrics_funcs) :
-            Channel.empty()
-        batchPCR_ch = metric_names.contains("batchPCR") ?
-            METRIC_BATCHPCR(reference_ch, py_metrics_funcs) :
-            Channel.empty()
-		iLISI_ch = metric_names.contains("iLISI") ?
-            METRIC_ILISI(reference_ch,py_metrics_funcs) :
-            Channel.empty()
-        graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
-            METRIC_GRAPHCONNECTIVITY(reference_ch, py_metrics_funcs) :
             Channel.empty()
         isolatedLabelsF1_ch = metric_names.contains("isolatedLabelsF1") ?
             METRIC_ISOLATEDLABELSF1(reference_ch, py_metrics_funcs) :
@@ -1105,20 +1113,21 @@ workflow METRICS {
 
         metrics_ch = Channel.empty()
             .mix(
-                // Integration metrics
+                // Integration (batch) metrics
                 batchPurity_ch,
                 mixing_ch,
-                localStructure_ch,
                 kBET_ch,
+                batchPCR_ch,
+                iLISI_ch,
+                graphConnectivity_ch,
+                // Integration (bio) metrics
+                localStructure_ch,
                 cLISI_ch,
                 ari_ch,
                 bARI_ch,
                 nmi_ch,
                 bNMI_ch,
                 labelASW_ch,
-                batchPCR_ch,
-                iLISI_ch,
-                graphConnectivity_ch,
                 isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,
                 cellCycle_ch,
