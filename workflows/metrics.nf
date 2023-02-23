@@ -514,6 +514,68 @@ process METRIC_MLISI {
         """
 }
 
+process METRIC_CELLDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "cellDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cellDist.tsv")
+
+    script:
+        """
+        metric-cellDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-cellDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-cellDist.tsv"
+        """
+}
+
+process METRIC_LABELDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "labelDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-labelDist.tsv")
+
+    script:
+        """
+        metric-labelDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-labelDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-labelDist.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -789,6 +851,74 @@ process METRIC_JACCARDINDEX_RARITY {
 
 /*
 ------------------------------
+    Unseen metrics
+------------------------------
+*/
+
+process METRIC_UNSEEN_CELLDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "unseenCellDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-unseenCellDist.tsv")
+
+    script:
+        """
+        metric-unseenCellDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-unseenCellDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-unseenCellDist.tsv"
+        """
+}
+
+process METRIC_UNSEEN_LABELDIST {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "unseenLabelDist.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+        path(distance_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-unseenLabelDist.tsv")
+
+    script:
+        """
+        metric-unseenLabelDist.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-unseenLabelDist.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-unseenLabelDist.tsv"
+        """
+}
+
+/*
+------------------------------
     Other processes
 ------------------------------
 */
@@ -888,6 +1018,20 @@ workflow METRICS {
         mLISI_ch = metric_names.contains("mLISI") ?
             METRIC_MLISI(query_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
+        cellDist_ch = metric_names.contains("cellDist") ?
+            METRIC_CELLDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
+        labelDist_ch = metric_names.contains("labelDist") ?
+            METRIC_LABELDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -918,6 +1062,22 @@ workflow METRICS {
             METRIC_MCC(labels_ch, file(params.bindir + "/_functions.py")) :
             Channel.empty()
 
+        // Unseen metrics
+        unseen_cellDist_ch = metric_names.contains("unseenCellDist") ?
+            METRIC_UNSEEN_CELLDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
+        unseen_labelDist_ch = metric_names.contains("unseenLabelDist") ?
+            METRIC_UNSEEN_LABELDIST(
+                query_ch,
+                file(params.bindir + "/_functions.py"),
+                file(params.bindir + "/_distance_functions.py")
+            ) :
+            Channel.empty()
+
         metrics_ch = batchPurity_ch
             .mix(
                 mixing_ch,
@@ -944,7 +1104,11 @@ workflow METRICS {
 				batchPCR_ch,
 				iLISI_ch,
                 cellCycle_ch,
-                mLISI_ch
+                mLISI_ch,
+                cellDist_ch,
+                labelDist_ch,
+                unseen_cellDist_ch,
+                unseen_labelDist_ch
             )
             .map {it -> file(it[3])}
             .toList()

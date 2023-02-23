@@ -56,8 +56,8 @@ write_h5ad <- function(sce, file, ...) {
 #'
 #' @return data.frame containing the formatted results
 format_metric_results <- function(dataset, method, integration, metric_type, metric, value) {
-    if (!(metric_type %in% c("Integration", "Classification", "Mapping"))) {
-        stop("'metric_type' must be one of 'Integration', 'Classification' or 'Mapping'")
+    if (!(metric_type %in% c("Integration", "Classification", "Mapping", "Unseen"))) {
+        stop("'metric_type' must be one of 'Integration', 'Classification', 'Mapping' or 'Unseen'")
     }
 
     if (value < 0 || value > 1) {

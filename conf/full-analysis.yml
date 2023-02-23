@@ -119,6 +119,14 @@ metrics:
     type: Classification
   - name: mLISI
     type: Mapping
+  - name: cellDist
+    type: Mapping
+  - name: labelDist
+    type: Mapping
+  - name: unseenCellDist
+    type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
 reports:
   - name: metrics
   - name: integration-variation

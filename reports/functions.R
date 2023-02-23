@@ -13,7 +13,8 @@ plot_metrics_dotplot <- function(metrics, dataset,
                                      "All",
                                      "Integration",
                                      "Mapping",
-                                     "Classification"
+                                     "Classification",
+                                     "Unseen"
                                  ),
                                  value = "Value"
                                 ) {

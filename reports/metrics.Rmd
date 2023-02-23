@@ -163,3 +163,35 @@ out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
 ```
 
 `r out`
+
+# Unseen population metrics {.tabset}
+
+```{r unseen-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r unseen-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Unseen',",
+        "value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r unseen-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Unseen',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
