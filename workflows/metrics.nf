@@ -998,7 +998,10 @@ workflow METRICS {
 
         // Integration metrics
         batchPurity_ch = metric_names.contains("batchPurity") ?
-            METRIC_BATCHPURITY(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_BATCHPURITY(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         mixing_ch = metric_names.contains("mixing") ?
             METRIC_MIXING(
@@ -1015,70 +1018,118 @@ workflow METRICS {
             ) :
             Channel.empty()
         kBET_ch = metric_names.contains("kBET") ?
-            METRIC_KBET(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_KBET(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         cLISI_ch = metric_names.contains("cLISI") ?
-            METRIC_CLISI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_CLISI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         ari_ch = metric_names.contains("ari") ?
-            METRIC_ARI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_ARI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         bARI_ch = metric_names.contains("bARI") ?
-            METRIC_BARI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_BARI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         nmi_ch = metric_names.contains("nmi") ?
-            METRIC_NMI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_NMI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         bNMI_ch = metric_names.contains("bNMI") ?
-            METRIC_BNMI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_BNMI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         labelASW_ch = metric_names.contains("labelASW") ?
-            METRIC_LABELASW(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_LABELASW(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         batchPCR_ch = metric_names.contains("batchPCR") ?
-            METRIC_BATCHPCR(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_BATCHPCR(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
 		iLISI_ch = metric_names.contains("iLISI") ?
-            METRIC_ILISI(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_ILISI(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
-            METRIC_GRAPHCONNECTIVITY(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_GRAPHCONNECTIVITY(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         isolatedLabelsF1_ch = metric_names.contains("isolatedLabelsF1") ?
-            METRIC_ISOLATEDLABELSF1(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_ISOLATEDLABELSF1(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         isolatedLabelsASW_ch = metric_names.contains("isolatedLabelsASW") ?
-            METRIC_ISOLATEDLABELSASW(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_ISOLATEDLABELSASW(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         cellCycle_ch = metric_names.contains("cellCycle") ?
-            METRIC_CELLCYCLE(reference_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_CELLCYCLE(
+                reference_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
 
         // Mapping metrics
         mLISI_ch = metric_names.contains("mLISI") ?
-            METRIC_MLISI(query_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_MLISI(
+                query_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         qLISI_ch = metric_names.contains("qLISI") ?
-            METRIC_QLISI(query_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_QLISI(
+                query_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         cellDist_ch = metric_names.contains("cellDist") ?
             METRIC_CELLDIST(
                 query_ch,
-                file(params.bindir + "/functions/functions.py"),
+                file(params.bindir + "/functions/metrics.py"),
                 file(params.bindir + "/functions/distances.py")
             ) :
             Channel.empty()
         labelDist_ch = metric_names.contains("labelDist") ?
             METRIC_LABELDIST(
                 query_ch,
-                file(params.bindir + "/functions/functions.py"),
+                file(params.bindir + "/functions/metrics.py"),
                 file(params.bindir + "/functions/distances.py")
             ) :
             Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
-            METRIC_ACCURACY(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_ACCURACY(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         rareAccuracy_ch = metric_names.contains("rareAccuracy") ?
             METRIC_RAREACCURACY(
@@ -1088,39 +1139,60 @@ workflow METRICS {
             ) :
             Channel.empty()
         f1_micro_ch = metric_names.contains("f1Micro") ?
-            METRIC_F1_MICRO(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_F1_MICRO(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         f1_macro_ch = metric_names.contains("f1Macro") ?
-            METRIC_F1_MACRO(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_F1_MACRO(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         f1_rarity_ch = metric_names.contains("f1Rarity") ?
-            METRIC_F1_RARITY(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_F1_RARITY(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
 		jaccard_micro_ch = metric_names.contains("jaccardIndexMicro") ?
-            METRIC_JACCARDINDEX_MICRO(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_JACCARDINDEX_MICRO(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         jaccard_macro_ch = metric_names.contains("jaccardIndexMacro") ?
-            METRIC_JACCARDINDEX_MACRO(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_JACCARDINDEX_MACRO(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         jaccard_rarity_ch = metric_names.contains("jaccardIndexRarity") ?
-            METRIC_JACCARDINDEX_RARITY(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_JACCARDINDEX_RARITY(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
         mcc_ch = metric_names.contains("MCC") ?
-            METRIC_MCC(labels_ch, file(params.bindir + "/functions/functions.py")) :
+            METRIC_MCC(
+                labels_ch,
+                file(params.bindir + "/functions/metrics.py")
+            ) :
             Channel.empty()
 
         // Unseen metrics
         unseen_cellDist_ch = metric_names.contains("unseenCellDist") ?
             METRIC_UNSEEN_CELLDIST(
                 query_ch,
-                file(params.bindir + "/functions/functions.py"),
+                file(params.bindir + "/functions/metrics.py"),
                 file(params.bindir + "/functions/distances.py")
             ) :
             Channel.empty()
         unseen_labelDist_ch = metric_names.contains("unseenLabelDist") ?
             METRIC_UNSEEN_LABELDIST(
                 query_ch,
-                file(params.bindir + "/functions/functions.py"),
+                file(params.bindir + "/functions/metrics.py"),
                 file(params.bindir + "/functions/distances.py")
             ) :
             Channel.empty()

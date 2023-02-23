@@ -4,8 +4,8 @@
 #' @param method The name of the method the metric has been calculated for
 #' @param integration The name of the integration the metric has been calculated
 #' for
-#' @param metric_type The type of the metric, either "Integration" or
-#' "Classification"
+#' @param metric_type The type of the metric, either 'Integration',
+#' 'Classification', 'Mapping' or 'Unseen'
 #' @param metric The name of the metric that has been calculated
 #' @param value The value of the calculated metric
 #'

@@ -13,7 +13,7 @@ Options:
 """
 
 import scvi
-from functions.functions import (
+from functions.integration import (
     add_umap,
     add_integrated_embeddings,
     suffix_embeddings,

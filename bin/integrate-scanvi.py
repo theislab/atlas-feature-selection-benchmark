@@ -13,7 +13,7 @@ Options:
 """
 
 import scvi
-from functions.functions import add_integrated_embeddings, plot_embedding
+from functions.integration import add_integrated_embeddings, plot_embedding
 
 
 def run_scANVI(scvi_model, seed):

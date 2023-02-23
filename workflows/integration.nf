@@ -203,11 +203,11 @@ workflow INTEGRATION {
         scvi_ch = datasets_features_ch
             .combine(Channel.fromList(params.integration.seeds))
 
-        INTEGRATE_SCVI(scvi_ch, file(params.bindir + "/functions/functions.py"))
-        INTEGRATE_SCANVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/functions.py"))
+        INTEGRATE_SCVI(scvi_ch, file(params.bindir + "/functions/integration.py"))
+        INTEGRATE_SCANVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/integration.py"))
 
-        MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/functions.py"))
-        MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/functions/functions.py"))
+        MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/integration.py"))
+        MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/functions/integration.py"))
 
         // Use one scVI integration with all features for each dataset to
         // optimise classifier hyperparameters
