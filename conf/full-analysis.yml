@@ -119,6 +119,8 @@ metrics:
     type: Classification
   - name: mLISI
     type: Mapping
+  - name: qLISI
+    type: Mapping
   - name: cellDist
     type: Mapping
   - name: labelDist
