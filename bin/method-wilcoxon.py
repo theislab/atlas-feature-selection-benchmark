@@ -39,6 +39,8 @@ def select_features_wilcoxon(adata, n_features):
     log1p(adata)
 
     print("Testing for marker genes...")
+    # Remove labels with no cells (unseen labels)
+    adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
     rank_genes_groups(adata, groupby="Label", method="wilcoxon", tie_correct=True)
 
     print("Filtering marker genes...")
