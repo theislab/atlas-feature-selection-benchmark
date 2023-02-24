@@ -30,6 +30,13 @@ def calculate_qLISI(adata):
     """
     from scib.metrics import ilisi_graph
 
+    # Return 1 if there is only one batch
+    if adata.obs["Batch"].nunique() == 1:
+        import warnings
+
+        warnings.warn("Only one batch, returning a score of 1")
+        return 1
+
     # Reduce the k0 parameter for small datasets to avoid theislab/scib/issues/374
     # This should only happen for tiny test datasets
     if adata.n_obs < 500:
