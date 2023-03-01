@@ -28,6 +28,7 @@ def calculate_cLISI(adata):
     -------
     cLISI score
     """
+
     from scib.metrics import clisi_graph
 
     # Reduce the k0 parameter for small datasets to avoid theislab/scib/issues/374
@@ -40,7 +41,7 @@ def calculate_cLISI(adata):
     else:
         k0 = 90
 
-    print("Calculating final score...")
+    print("Calculating cLISI score...")
     score = clisi_graph(
         adata,
         label_key="Label",
@@ -49,7 +50,7 @@ def calculate_cLISI(adata):
         k0=k0,
         subsample=None,
         scale=True,
-        n_cores=1,
+        n_cores=2,
         verbose=True,
     )
     print(f"Final score: {score}")

@@ -107,6 +107,8 @@ process METRIC_ILISI {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "iLISI.tsv" }
 
+    label "process_tiny"
+
     input:
         tuple val(dataset), val(method), val(integration), path(reference)
         path(functions)
@@ -372,6 +374,8 @@ process METRIC_LABELASW {
 process METRIC_CLISI {
     conda "envs/scib.yml"
 
+    label "process_tiny"
+
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "cLISI.tsv" }
 
@@ -390,6 +394,8 @@ process METRIC_CLISI {
             --integration "${integration}" \\
             --out-file "${dataset}-${method}-${integration}-cLISI.tsv" \\
             ${reference}
+        echo "FINISHED2"
+        touch "${dataset}-${method}-${integration}-cLISI.tsv"
         """
 
     stub:
@@ -498,6 +504,8 @@ process METRIC_MLISI {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "mLISI.tsv" }
 
+    label "process_tiny"
+
     input:
         tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
         path(functions)
@@ -527,6 +535,8 @@ process METRIC_QLISI {
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "qLISI.tsv" }
+
+    label "process_tiny"
 
     input:
         tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")

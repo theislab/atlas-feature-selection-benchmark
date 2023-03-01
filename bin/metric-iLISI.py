@@ -49,7 +49,7 @@ def calculate_iLISI(adata):
         k0=k0,
         subsample=None,
         scale=True,
-        n_cores=1,
+        n_cores=2,
         verbose=True,
     )
     print("Final score: {score}")

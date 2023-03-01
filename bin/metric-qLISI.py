@@ -56,7 +56,7 @@ def calculate_qLISI(adata):
         k0=k0,
         subsample=None,
         scale=True,
-        n_cores=1,
+        n_cores=2,
         verbose=True,
     )
     print(f"Final score: {score}")
