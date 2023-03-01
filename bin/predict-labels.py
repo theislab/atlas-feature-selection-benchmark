@@ -116,6 +116,7 @@ def main():
     print(query)
     print(f"Reading reference data from '{file}'...")
     reference = read_h5ad(reference_file)
+    reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
     print("Read reference data:")
     print(reference)
     print(f"Reading parameters from '{file}'...")
