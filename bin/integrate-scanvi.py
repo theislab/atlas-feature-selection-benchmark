@@ -66,6 +66,7 @@ def main():
     print(f"Reading AnnData from '{adata_file}'...")
     adata = scvi.data.read_h5ad(adata_file)
     print("Setting reference labels...")
+    adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
     adata.obs["ReferenceLabel"] = adata.obs["Label"].values
     model_adata = adata[:, adata.var["Selected"]].copy()
     print(f"Reading model from '{dir}'...")

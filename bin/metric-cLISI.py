@@ -41,6 +41,8 @@ def calculate_cLISI(adata):
     else:
         k0 = 90
 
+    adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
+
     print("Calculating cLISI score...")
     score = clisi_graph(
         adata,

@@ -394,8 +394,6 @@ process METRIC_CLISI {
             --integration "${integration}" \\
             --out-file "${dataset}-${method}-${integration}-cLISI.tsv" \\
             ${reference}
-        echo "FINISHED2"
-        touch "${dataset}-${method}-${integration}-cLISI.tsv"
         """
 
     stub:
