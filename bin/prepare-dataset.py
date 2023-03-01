@@ -48,14 +48,18 @@ def prepare_dataset(
     """
 
     from scanpy.preprocessing import filter_cells, filter_genes
+    from scipy.sparse import csr_matrix
     from pandas.api.types import union_categoricals
     from anndata import AnnData
 
     print(f"Preparing '{name}' dataset...")
     print_adata(adata_raw, "RAW DATA", batch_col, label_col)
 
+    print("Getting sparse counts matrix...")
+    counts = csr_matrix(adata_raw.X.copy())
+
     print("Creating new AnnData...")
-    adata = AnnData(X=adata_raw.X.copy())
+    adata = AnnData(X=counts)
     adata.obs_names = adata_raw.obs_names.copy()
     adata.var_names = adata_raw.var_names.copy()
     adata.obs["Batch"] = adata_raw.obs[batch_col]
