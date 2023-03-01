@@ -35,7 +35,12 @@ def calculate_isolatedLabels(adata, cluster):
 
     print(f"Calculating isolated labels score (cluster={cluster})...")
     score = isolated_labels(
-        adata, "Label", "Batch", "X_emb", cluster=cluster, verbose=True
+        adata,
+        label_key="Label",
+        batch_key="Batch",
+        embed="X_emb",
+        cluster=cluster,
+        verbose=True
     )
     print("Final score: {score}")
 
@@ -57,8 +62,9 @@ def main():
     cluster = args["--cluster"]
     out_file = args["--out-file"]
 
-    print("Reading data from '{file}'...")
+    print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
+    input.obs["Label"] = input.obs["Label"].cat.remove_unused_categories()
     print("Read data:")
     print(input)
     score = calculate_isolatedLabels(input, cluster)
