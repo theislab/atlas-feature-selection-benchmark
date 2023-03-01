@@ -40,7 +40,7 @@ def calculate_isolatedLabels(adata, cluster):
         batch_key="Batch",
         embed="X_emb",
         cluster=cluster,
-        verbose=True
+        verbose=True,
     )
     print("Final score: {score}")
 

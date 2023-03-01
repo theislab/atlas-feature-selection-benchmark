@@ -11,7 +11,7 @@
 #'
 #' @return data.frame containing the formatted results
 format_metric_results <- function(dataset, method, integration, metric_type,
-                                  metric, value) {
+    metric, value) {
     if (!(metric_type %in% c(
         "IntegrationBatch",
         "IntegrationBio",

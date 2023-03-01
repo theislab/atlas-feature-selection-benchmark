@@ -104,10 +104,7 @@ def main():
     print(f"Writing output to '{out_dir}'...")
     output.save(out_dir, save_anndata=False, overwrite=True)
     output_min = minimise_anndata(
-        output.adata,
-        obs = ["Batch", "Label", "Unseen"],
-        obsm = ["X_emb"],
-        uns = ["Species"]
+        output.adata, obs=["Batch", "Label", "Unseen"], obsm=["X_emb"], uns=["Species"]
     )
     output_min.write_h5ad(join(out_dir, "adata.h5ad"))
 

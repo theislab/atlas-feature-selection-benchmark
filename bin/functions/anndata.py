@@ -1,4 +1,6 @@
-def minimise_anndata(adata, X=False, obs=None, layers=None, var=None, uns=None, obsm=None, varm=None):
+def minimise_anndata(
+    adata, X=False, obs=None, layers=None, var=None, uns=None, obsm=None, varm=None
+):
     """
     Minimise an AnnData object by removing unnecessary data
 
@@ -28,7 +30,7 @@ def minimise_anndata(adata, X=False, obs=None, layers=None, var=None, uns=None, 
 
     from anndata import AnnData
 
-    adata_min = AnnData(shape = adata.shape)
+    adata_min = AnnData(shape=adata.shape)
     adata_min.var_names = adata.var_names.copy()
     adata_min.obs_names = adata.obs_names.copy()
 

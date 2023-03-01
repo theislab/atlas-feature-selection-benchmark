@@ -25,7 +25,13 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
 
     from pandas import DataFrame
 
-    if not metric_type in ["IntegrationBatch", "IntegrationBio", "Classification", "Mapping", "Unseen"]:
+    if not metric_type in [
+        "IntegrationBatch",
+        "IntegrationBio",
+        "Classification",
+        "Mapping",
+        "Unseen",
+    ]:
         raise ValueError(
             "'metric_type' must be one of 'IntegrationBatch', 'IntegrationBio', 'Classification', 'Mapping' or 'Unseen'"
         )

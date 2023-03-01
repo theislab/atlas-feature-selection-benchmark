@@ -77,7 +77,9 @@ def main():
     print(f"Reading model from '{scvi_dir}'...")
     model_adata = scvi.data.read_h5ad(join(scvi_dir, "adata.h5ad"))
     model_adata.X = adata[:, model_adata.var_names].X.copy()
-    model_adata.obs["ReferenceLabel"] = model_adata.obs["Label"].cat.remove_unused_categories()
+    model_adata.obs["ReferenceLabel"] = model_adata.obs[
+        "Label"
+    ].cat.remove_unused_categories()
     input = scvi.model.SCVI.load(scvi_dir, adata=model_adata)
     print("Read model:")
     print(input)
@@ -98,9 +100,9 @@ def main():
     output.adata.obsm["X_scVI"] = scvi_emb
     output_min = minimise_anndata(
         output.adata,
-        obs = ["Batch", "Label", "Unseen", "ReferenceLabel"],
-        obsm = ["X_emb", "X_scVI"],
-        uns = ["Species"]
+        obs=["Batch", "Label", "Unseen", "ReferenceLabel"],
+        obsm=["X_emb", "X_scVI"],
+        uns=["Species"],
     )
     output_min.write_h5ad(join(out_dir, "adata.h5ad"))
 
