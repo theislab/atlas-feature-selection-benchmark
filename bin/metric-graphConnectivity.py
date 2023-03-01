@@ -29,8 +29,12 @@ def calculate_graphConnectivity(adata):
     Graph connectivity score
     """
     from scib.metrics import graph_connectivity
+    from scanpy.preprocessing import neighbors
 
-    print("Calculating final score...")
+    print("Calculating nearest neighbors...")
+    neighbors(adata, use_rep="X_emb")
+
+    print("Calculating graph connectivity score...")
     score = graph_connectivity(adata, label_key="Label")
     print("Final score: {score}")
 
@@ -53,6 +57,7 @@ def main():
 
     print("Reading data from '{file}'...")
     input = read_h5ad(file)
+    input.obs["Label"] = input.obs["Label"].cat.remove_unused_categories()
     print("Read data:")
     print(input)
     score = calculate_graphConnectivity(input)
