@@ -9,7 +9,6 @@ process INTEGRATE_SCVI {
     conda "envs/scvi-tools.yml"
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy",
         pattern: "scVI-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
 
@@ -43,7 +42,6 @@ process INTEGRATE_SCANVI {
     conda "envs/scvi-tools.yml"
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy",
         pattern: "scANVI-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
 
@@ -75,7 +73,6 @@ process MAP_SCVI {
     conda "envs/scvi-tools.yml"
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy",
         pattern: "scVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
@@ -107,7 +104,6 @@ process MAP_SCANVI {
     conda "envs/scvi-tools.yml"
 
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
-        mode: "copy",
         pattern: "scANVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
