@@ -66,11 +66,17 @@ def main():
 
     file = args["<file>"]
     reference_dir = args["--reference"]
+    adata_file = join(reference_dir, "adata.h5ad")
     out_dir = args["--out-dir"]
 
+    print(f"Reading reference AnnData from '{adata_file}'...")
+    reference_adata = read_h5ad(adata_file)
+    del reference_adata.obsm  # Clear the reference embeddings
+    print("Subsetting reference to selected features...")
+    model_adata = reference_adata[:, reference_adata.var["Selected"]].copy()
+
     print(f"Reading reference model from '{reference_dir}'...")
-    reference = scvi.model.SCANVI.load(reference_dir)
-    del reference.adata.obsm  # Clear the reference embeddings
+    reference = scvi.model.SCANVI.load(reference_dir, adata=model_adata)
     print("Read model:")
     print(reference)
     print(f"Reading query from '{file}'...")
@@ -78,10 +84,10 @@ def main():
     print("Read query:")
     print(input)
     print("Subsetting query to selected features...")
-    input = input[:, reference.adata.var_names].copy()
-    print(input)
+    query = input[:, model_adata.var_names].copy()
+    print(query)
 
-    output = map_query_scANVI(reference, input)
+    output = map_query_scANVI(reference, query)
 
     print("Adding embeddings to query...")
     add_umap(output.adata)
@@ -89,9 +95,9 @@ def main():
     add_integrated_embeddings(output, output.adata)
 
     print("Concatenating reference and query...")
-    input.obs["Dataset"] = "Query"
-    reference.adata.obs["Dataset"] = "Reference"
-    full = output.adata.concatenate(reference.adata)
+    output.adata.obs["Dataset"] = "Query"
+    model_adata.obs["Dataset"] = "Reference"
+    full = output.adata.concatenate(model_adata)
 
     print("Adding unintegrated UMAP...")
     add_umap(full)
@@ -99,7 +105,9 @@ def main():
     add_integrated_embeddings(output, full)
 
     print(f"Writing output to '{out_dir}'...")
-    output.save(out_dir, save_anndata=True, overwrite=True)
+    input.obsm = full[full.obs["Dataset"] == "Query"].obsm.copy()
+    output.save(out_dir, save_anndata=False, overwrite=True)
+    input.write_h5ad(join(out_dir, "adata.h5ad"))
     # Set unseen labels to string for plotting
     full.obs["Unseen"] = full.obs["Unseen"].astype(str)
     umap_file = join(out_dir, "umap-unintegrated.png")

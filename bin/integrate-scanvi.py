@@ -35,10 +35,6 @@ def run_scANVI(scvi_model, seed):
     print(f"Setting random seed to {seed}...")
     scvi.settings.seed = seed
 
-    print("Setting reference labels...")
-    adata = scvi_model.adata
-    adata.obs["ReferenceLabel"] = adata.obs["Label"].values
-
     print("Creating scANVI model...")
     model = scvi.model.SCANVI.from_scvi_model(
         scvi_model,
@@ -63,11 +59,17 @@ def main():
     args = docopt(__doc__)
 
     dir = args["<dir>"]
+    adata_file = join(dir, "adata.h5ad")
     out_dir = args["--out-dir"]
     seed = int(args["--seed"])
 
+    print(f"Reading AnnData from '{adata_file}'...")
+    adata = scvi.data.read_h5ad(adata_file)
+    print("Setting reference labels...")
+    adata.obs["ReferenceLabel"] = adata.obs["Label"].values
+    model_adata = adata[:, adata.var["Selected"]].copy()
     print(f"Reading model from '{dir}'...")
-    input = scvi.model.SCVI.load(dir)
+    input = scvi.model.SCVI.load(dir, adata=model_adata)
     print("Read model:")
     print(input)
     output = run_scANVI(input, seed)
@@ -76,7 +78,9 @@ def main():
     output.adata.obsm["X_umap_scVI"] = output.adata.obsm["X_umap"].copy()
     add_integrated_embeddings(output, output.adata)
     print(f"Writing output to '{out_dir}'...")
-    output.save(out_dir, save_anndata=True, overwrite=True)
+    adata.obsm = output.adata.obsm.copy()
+    output.save(out_dir, save_anndata=False, overwrite=True)
+    adata.write_h5ad(join(out_dir, "adata.h5ad"))
     umap_file = join(out_dir, "umap-unintegrated.png")
     umap = plot_embedding(output.adata, basis="X_umap_unintegrated")
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")

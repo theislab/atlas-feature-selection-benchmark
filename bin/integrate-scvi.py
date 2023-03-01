@@ -41,6 +41,9 @@ def run_scVI(adata, seed):
     print(f"Setting random seed to {seed}...")
     scvi.settings.seed = seed
 
+    print("Subsetting to selected features...")
+    adata = adata[:, adata.var["Selected"]].copy()
+
     print("Setting up AnnData for scVI...")
     scvi.model.SCVI.setup_anndata(adata, batch_key="Batch")
     print(adata)
@@ -66,9 +69,9 @@ def run_scVI(adata, seed):
     return model
 
 
-def select_features(adata, features):
+def set_features(adata, features):
     """
-    Subset a dataset to selected features
+    Set selected features for a dataset
 
     Parameters
     ----------
@@ -79,13 +82,13 @@ def select_features(adata, features):
 
     Returns
     -------
-    AnnData containing only the selected features
+    None (selected features are set in place)
     """
 
-    print(f"Subsetting to {features.shape[0]} selected features...")
-    adata = adata[:, features["Feature"]].copy()
+    print(f"Setting {features.shape[0]} selected features...")
+    adata.var["Selected"] = adata.var_names.isin(features["Feature"])
 
-    return adata
+    return None
 
 
 def main():
@@ -110,14 +113,17 @@ def main():
     features = read_csv(features_file, sep="\t")
     print("Read features:")
     print(features)
-    input = select_features(input, features)
+    set_features(input, features)
     output = run_scVI(input, seed)
     print("Adding unintegrated UMAP...")
     add_umap(output.adata)
     suffix_embeddings(output.adata)
     add_integrated_embeddings(output, output.adata)
+    input.obsm = output.adata.obsm.copy()
+    print(input)
     print(f"Writing output to '{out_dir}'...")
-    output.save(out_dir, save_anndata=True, overwrite=True)
+    output.save(out_dir, save_anndata=False, overwrite=True)
+    input.write_h5ad(join(out_dir, "adata.h5ad"))
     umap_file = join(out_dir, "umap-unintegrated.png")
     umap = plot_embedding(output.adata, basis="X_umap_unintegrated")
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
