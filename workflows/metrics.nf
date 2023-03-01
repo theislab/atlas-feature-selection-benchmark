@@ -17,7 +17,7 @@ process METRIC_BATCHPURITY {
         saveAs: { filename -> "batchPurity.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -46,7 +46,7 @@ process METRIC_MIXING {
         saveAs: { filename -> "mixing.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(io_functions)
         path(metric_functions)
 
@@ -78,7 +78,7 @@ process METRIC_KBET {
     label "process_low"
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -110,7 +110,7 @@ process METRIC_ILISI {
     label "process_tiny"
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -139,7 +139,7 @@ process METRIC_BATCHPCR {
         saveAs: { filename -> "batchPCR.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -151,6 +151,7 @@ process METRIC_BATCHPCR {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
+            --exprs "${reference_exprs}" \\
             --out-file "${dataset}-${method}-${integration}-batchPCR.tsv" \\
             ${reference}
         """
@@ -168,7 +169,7 @@ process METRIC_GRAPHCONNECTIVITY {
         saveAs: { filename -> "graphConnectivity.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -203,7 +204,7 @@ process METRIC_LOCALSTRUCTURE {
         saveAs: { filename -> "localStructure.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(io_functions)
         path(metric_functions)
 
@@ -216,6 +217,7 @@ process METRIC_LOCALSTRUCTURE {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
+            --exprs "${reference_exprs}" \\
             --out-file "${dataset}-${method}-${integration}-localStructure.tsv" \\
             ${reference}
         """
@@ -233,7 +235,7 @@ process METRIC_ARI {
         saveAs: { filename -> "ari.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -262,7 +264,7 @@ process METRIC_BARI {
         saveAs: { filename -> "bARI.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -291,7 +293,7 @@ process METRIC_NMI {
         saveAs: { filename -> "nmi.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -320,7 +322,7 @@ process METRIC_BNMI {
         saveAs: { filename -> "bNMI.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -349,7 +351,7 @@ process METRIC_LABELASW {
         saveAs: { filename -> "labelASW.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -380,7 +382,7 @@ process METRIC_CLISI {
         saveAs: { filename -> "cLISI.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -409,7 +411,7 @@ process METRIC_ISOLATEDLABELSF1 {
         saveAs: { filename -> "isolatedLabelsF1.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -439,7 +441,7 @@ process METRIC_ISOLATEDLABELSASW {
         saveAs: { filename -> "isolatedLabelsASW.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -468,7 +470,7 @@ process METRIC_CELLCYCLE {
         saveAs: { filename -> "cellCycle.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path(reference)
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
         path(functions)
 
     output:
@@ -480,6 +482,7 @@ process METRIC_CELLCYCLE {
             --dataset "${dataset}" \\
             --method "${method}" \\
             --integration "${integration}" \\
+            --exprs "${reference_exprs}" \\
             --out-file "${dataset}-${method}-${integration}-cellCycle.tsv" \\
             ${reference}
         """

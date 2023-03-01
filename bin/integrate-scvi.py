@@ -41,9 +41,6 @@ def run_scVI(adata, seed):
     print(f"Setting random seed to {seed}...")
     scvi.settings.seed = seed
 
-    print("Subsetting to selected features...")
-    adata = adata[:, adata.var["Selected"]].copy()
-
     print("Setting up AnnData for scVI...")
     scvi.model.SCVI.setup_anndata(adata, batch_key="Batch")
     print(adata)
@@ -69,34 +66,13 @@ def run_scVI(adata, seed):
     return model
 
 
-def set_features(adata, features):
-    """
-    Set selected features for a dataset
-
-    Parameters
-    ----------
-    adata
-        AnnData object containing the dataset to subset
-    features
-        DataFrame containing the selected features
-
-    Returns
-    -------
-    None (selected features are set in place)
-    """
-
-    print(f"Setting {features.shape[0]} selected features...")
-    adata.var["Selected"] = adata.var_names.isin(features["Feature"])
-
-    return None
-
-
 def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
     from pandas import read_csv
     from os.path import join
+    from functions.anndata import minimise_anndata
 
     args = docopt(__doc__)
 
@@ -109,29 +85,42 @@ def main():
     input = read_h5ad(file)
     print("Read data:")
     print(input)
+
     print(f"Reading selected features from '{features_file}'...")
     features = read_csv(features_file, sep="\t")
     print("Read features:")
     print(features)
-    set_features(input, features)
+
+    print(f"Subsetting to {features.shape[0]} selected features...")
+    input = input[:, input.var_names.isin(features["Feature"])].copy()
+
     output = run_scVI(input, seed)
+
     print("Adding unintegrated UMAP...")
     add_umap(output.adata)
     suffix_embeddings(output.adata)
     add_integrated_embeddings(output, output.adata)
-    input.obsm = output.adata.obsm.copy()
-    print(input)
+
     print(f"Writing output to '{out_dir}'...")
     output.save(out_dir, save_anndata=False, overwrite=True)
-    input.write_h5ad(join(out_dir, "adata.h5ad"))
+    output_min = minimise_anndata(
+        output.adata,
+        obs = ["Batch", "Label", "Unseen"],
+        obsm = ["X_emb"],
+        uns = ["Species"]
+    )
+    output_min.write_h5ad(join(out_dir, "adata.h5ad"))
+
     umap_file = join(out_dir, "umap-unintegrated.png")
     umap = plot_embedding(output.adata, basis="X_umap_unintegrated")
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     umap_file = join(out_dir, "umap-integrated.png")
     umap = plot_embedding(output.adata)
     print(f"Saving integrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     print("Done!")
 
 

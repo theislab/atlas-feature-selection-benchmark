@@ -20,7 +20,7 @@ process INTEGRATE_SCVI {
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val("scVI"), val(seed), path("scVI-reference"), path(query)
+        tuple val(dataset), val(method), val("scVI"), val(seed), path(reference), path("scVI-reference"), path(query)
 
     script:
         """
@@ -48,18 +48,19 @@ process INTEGRATE_SCANVI {
         saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(scVI), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(scVI), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val("scANVI"), val(seed), path("scANVI-reference"), path(query)
+        tuple val(dataset), val(method), val("scANVI"), val(seed), path(reference), path("scANVI-reference"), path(query)
 
     script:
         """
         integrate-scanvi.py \\
+            --scvi "${scVI}" \\
             --out-dir "scANVI-reference" \\
             --seed "${seed}" \\
-            ${scVI}
+            ${reference}
         """
 
     stub:
@@ -79,16 +80,17 @@ process MAP_SCVI {
         saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path("scVI-mapped")
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path("scVI-mapped")
 
     script:
         """
         map-scvi.py \\
             --reference "${reference}" \\
+            --reference-model "${reference_model}" \\
             --out-dir scVI-mapped \\
             ${query}
         """
@@ -110,16 +112,17 @@ process MAP_SCANVI {
         saveAs: { pathname -> pathname + "-${seed}" }
 
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
         path(functions)
 
     output:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path("scANVI-mapped")
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path("scANVI-mapped")
 
     script:
         """
         map-scanvi.py \\
             --reference "${reference}" \\
+            --reference-model "${reference_model}" \\
             --out-dir scANVI-mapped \\
             ${query}
         """
@@ -141,7 +144,7 @@ process OPTIMISE_CLASSIFIER {
     label "process_medium"
 
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
 
     output:
         tuple val(dataset), path("parameters.tsv")
@@ -150,7 +153,7 @@ process OPTIMISE_CLASSIFIER {
         """
         optimise-classifier.py \\
             --out-file "parameters.tsv" \\
-            ${reference}/adata.h5ad
+            ${reference_model}/adata.h5ad
         """
 
     stub:
@@ -167,18 +170,18 @@ process PREDICT_LABELS {
         pattern: "*.tsv"
 
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(query), path(parameters)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path(query_model), path(parameters)
 
     output:
-        tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query}/adata.h5ad"), path("${method}-${integration}-${seed}.tsv")
+        tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query_model}/adata.h5ad"), path("${method}-${integration}-${seed}.tsv")
 
     script:
         """
         predict-labels.py \\
-            --reference "${reference}/adata.h5ad" \\
+            --reference "${reference_model}/adata.h5ad" \\
             --params "${parameters}" \\
             --out-file "${method}-${integration}-${seed}.tsv" \\
-            ${query}/adata.h5ad
+            ${query_model}/adata.h5ad
         """
 
     stub:
@@ -230,7 +233,8 @@ workflow INTEGRATION {
                     it[0],                       // Dataset name
                     it[1],                       // Method name
                     it[2] + "-" + it[3],         // Integration name
-                    file(it[4] + "/adata.h5ad"), // Path to reference H5AD
+                    file(it[5] + "/adata.h5ad"), // Path to reference H5AD
+                    it[4]                        // Path to reference expression H5AD
                 )
             }
 
@@ -241,8 +245,8 @@ workflow INTEGRATION {
                     it[0],                       // Dataset name
                     it[1],                       // Method name
                     it[2] + "-" + it[3],         // Integration name
-                    file(it[4] + "/adata.h5ad"), // Path to reference H5AD
-                    file(it[5] + "/adata.h5ad"), // Path to query H5AD
+                    file(it[5] + "/adata.h5ad"), // Path to reference H5AD
+                    file(it[7] + "/adata.h5ad"), // Path to query H5AD
                 )
             }
 

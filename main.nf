@@ -61,7 +61,8 @@ reference_ch = datasets_features_ch
             input[0], // Dataset name
             input[3], // Method name
             input[5], // Integration name
-            file(params.outdir + "/" + input[0] + "/" + input[3] + "/" + input[5] + "-reference/adata.h5ad")
+            file(params.outdir + "/" + input[0] + "/" + input[3] + "/" + input[5] + "-reference/adata.h5ad"),
+            input[1] // Path to reference file
         )
     }
 

@@ -4,12 +4,13 @@
 Map a query dataset to an scANVI reference model
 
 Usage:
-    map-scanvi.py --reference=<path> --out-dir=<path> [options] <file>
+    map-scanvi.py--reference=<file> --reference-model=<path> --out-dir=<path> [options] <file>
 
 Options:
-    -h --help            Show this screen.
-    --reference=<path>   Path to reference model directory.
-    --out-dir=<path>     Path to output directory.
+    -h --help                  Show this screen.
+    --reference=<file>         Path to reference AnnData file.
+    --reference-model=<path>   Path to reference model directory.
+    --out-dir=<path>           Path to output directory.
 """
 
 import scvi
@@ -61,28 +62,30 @@ def main():
     from docopt import docopt
     from scanpy import read_h5ad
     from os.path import join
+    from functions.anndata import minimise_anndata
 
     args = docopt(__doc__)
 
     file = args["<file>"]
-    reference_dir = args["--reference"]
-    adata_file = join(reference_dir, "adata.h5ad")
+    reference_file = args["--reference"]
+    reference_dir = args["--reference-model"]
     out_dir = args["--out-dir"]
 
-    print(f"Reading reference AnnData from '{adata_file}'...")
-    reference_adata = read_h5ad(adata_file)
-    del reference_adata.obsm  # Clear the reference embeddings
-    print("Subsetting reference to selected features...")
-    model_adata = reference_adata[:, reference_adata.var["Selected"]].copy()
+    print(f"Reading reference AnnData from '{reference_file}'...")
+    reference_adata = read_h5ad(reference_file)
 
     print(f"Reading reference model from '{reference_dir}'...")
+    model_adata = read_h5ad(join(reference_dir, "adata.h5ad"))
+    model_adata.X = reference_adata[:, model_adata.var_names].X.copy()
     reference = scvi.model.SCANVI.load(reference_dir, adata=model_adata)
     print("Read model:")
     print(reference)
+
     print(f"Reading query from '{file}'...")
     input = read_h5ad(file)
     print("Read query:")
     print(input)
+
     print("Subsetting query to selected features...")
     query = input[:, model_adata.var_names].copy()
     print(query)
@@ -105,9 +108,15 @@ def main():
     add_integrated_embeddings(output, full)
 
     print(f"Writing output to '{out_dir}'...")
-    input.obsm = full[full.obs["Dataset"] == "Query"].obsm.copy()
     output.save(out_dir, save_anndata=False, overwrite=True)
-    input.write_h5ad(join(out_dir, "adata.h5ad"))
+    output_min = minimise_anndata(
+        output.adata,
+        obs = ["Batch", "Label", "Unseen"],
+        obsm = ["X_emb"],
+        uns = ["Species"]
+    )
+    output_min.write_h5ad(join(out_dir, "adata.h5ad"))
+
     # Set unseen labels to string for plotting
     full.obs["Unseen"] = full.obs["Unseen"].astype(str)
     umap_file = join(out_dir, "umap-unintegrated.png")
@@ -118,10 +127,12 @@ def main():
     )
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     umap_file = join(out_dir, "umap-integrated.png")
     umap = plot_embedding(full, groups=["Dataset", "Batch", "Label", "Unseen"])
     print(f"Saving integrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     print("Done!")
 
 
