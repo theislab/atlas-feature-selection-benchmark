@@ -45,6 +45,8 @@ process INTEGRATE_SCANVI {
         pattern: "scANVI-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
 
+    label "process_low"
+
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(scVI), path(query)
         path(functions)
@@ -75,6 +77,8 @@ process MAP_SCVI {
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         pattern: "scVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
+
+    label "process_low"
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -107,6 +111,8 @@ process MAP_SCANVI {
         pattern: "scANVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
+    label "process_low"
+
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
         path(functions)
@@ -137,7 +143,7 @@ process OPTIMISE_CLASSIFIER {
     publishDir "$params.outdir/predicted-labels/${dataset}",
         mode: "copy"
 
-    label "process_medium"
+    label "process_high"
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -164,6 +170,8 @@ process PREDICT_LABELS {
     publishDir "$params.outdir/predicted-labels/${dataset}/${method}",
         mode: "copy",
         pattern: "*.tsv"
+
+    label "process_low"
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path(query_model), path(parameters)

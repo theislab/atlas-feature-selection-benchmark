@@ -191,6 +191,8 @@ process METHOD_NBUMI {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
+    label: "process_medium"
+
     input:
         tuple val(dataset), path(reference), path(query)
         path(functions)
@@ -392,6 +394,8 @@ process METHOD_SCPNMF {
     conda "envs/scPNMF.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    label "process_medium"
 
     input:
         tuple val(dataset), path(reference), path(query)
