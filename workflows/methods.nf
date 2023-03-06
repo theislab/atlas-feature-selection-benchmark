@@ -191,7 +191,7 @@ process METHOD_NBUMI {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label: "process_medium"
+    label "process_medium"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -395,7 +395,8 @@ process METHOD_SCPNMF {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_medium"
+    label "process_high"
+    label "error_ignore"
 
     input:
         tuple val(dataset), path(reference), path(query)
