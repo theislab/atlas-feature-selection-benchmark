@@ -49,7 +49,7 @@ def calculate_iLISI(adata):
         k0=k0,
         subsample=None,
         scale=True,
-        n_cores=1,
+        n_cores=2,
         verbose=True,
     )
     print("Final score: {score}")
@@ -61,7 +61,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -77,7 +77,7 @@ def main():
     print(input)
     score = calculate_iLISI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "iLISI", score
+        dataset, method, integration, "IntegrationBatch", "iLISI", score
     )
     print(output)
     print("Writing output to '{out_file}'...")

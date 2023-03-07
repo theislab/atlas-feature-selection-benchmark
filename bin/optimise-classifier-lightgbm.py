@@ -140,6 +140,7 @@ def main():
 
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
+    input.obs["Label"] = input.obs["Label"].cat.remove_unused_categories()
     print("Read data:")
     print(input)
     output = optimise_lightgbm(input)

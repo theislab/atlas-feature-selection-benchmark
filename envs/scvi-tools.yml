@@ -10,7 +10,7 @@ dependencies:
   - hdf5=1.12.2
   - jax=0.3.16
   - jaxlib=0.3.15
-  - matplotlib-base=3.5.3
+  - matplotlib-base=3.6.3
   - matplotlib-inline=0.1.5
   - numba=0.55.2
   - numpy=1.22.4

@@ -14,7 +14,7 @@ Options:
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
 })
 
 #' Install scPNMF from GitHub using remotes
@@ -51,10 +51,11 @@ install_scPNMF <- function() {
 select_scPNMF <- function(sce, n_features) {
     message("Normalising counts...")
     sce <- scuttle::logNormCounts(sce)
+    logcounts <- as.matrix(SingleCellExperiment::logcounts(sce)) # Must be a dense matrix
 
     message("Fitting PNMF model...")
     pnmf <- scPNMF::PNMFfun(
-        SingleCellExperiment::logcounts(sce),
+        logcounts,
         K        = 20, # Recommended by vignette
         method   = "EucDist",
         tol      = 1e-4,
@@ -66,7 +67,7 @@ select_scPNMF <- function(sce, n_features) {
     W_select <- scPNMF::basisSelect(
         W          = pnmf$Weight,
         S          = pnmf$Score,
-        X          = SingleCellExperiment::logcounts(sce),
+        X          = logcounts,
         toTest     = TRUE,
         toAnnotate = FALSE,
         mc.cores   = 1

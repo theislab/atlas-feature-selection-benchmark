@@ -49,7 +49,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -65,7 +65,7 @@ def main():
     print(input)
     score = calculate_ari(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "ARI", score
+        dataset, method, integration, "IntegrationBio", "ARI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

@@ -29,8 +29,12 @@ def calculate_graphConnectivity(adata):
     Graph connectivity score
     """
     from scib.metrics import graph_connectivity
+    from scanpy.preprocessing import neighbors
 
-    print("Calculating final score...")
+    print("Calculating nearest neighbors...")
+    neighbors(adata, use_rep="X_emb")
+
+    print("Calculating graph connectivity score...")
     score = graph_connectivity(adata, label_key="Label")
     print("Final score: {score}")
 
@@ -41,7 +45,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -53,11 +57,12 @@ def main():
 
     print("Reading data from '{file}'...")
     input = read_h5ad(file)
+    input.obs["Label"] = input.obs["Label"].cat.remove_unused_categories()
     print("Read data:")
     print(input)
     score = calculate_graphConnectivity(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "GraphConnectivity", score
+        dataset, method, integration, "IntegrationBatch", "GraphConnectivity", score
     )
     print(output)
     print("Writing output to '{out_file}'...")

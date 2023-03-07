@@ -10,7 +10,7 @@ dependencies:
   - hdf5=1.12.2
   - igraph=0.9.9
   - leidenalg=0.8.10
-  - matplotlib-base=3.5.3
+  - matplotlib-base=3.6.3
   - matplotlib-inline=0.1.5
   - networkx=2.8.5
   - numba=0.55.2

@@ -4,13 +4,14 @@
 Evaluate integration using the Seurat local structure metric
 
 Usage:
-    metric-mixing.R --dataset=<str> --method=<str> --integration=<str> --out-file=<path> [options] <file>
+    metric-mixing.R --dataset=<str> --method=<str> --integration=<str> --exprs=<file> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
     --dataset=<str>      Name of the dataset to calculate the metric for.
     --method=<str>       Name of the method to calculate the metric for.
     --integration=<str>  Name of the integration to calculate the metric for.
+    --exprs=<file>       Path to H5AD file containing the expression matrix.
     --out-file=<path>    Path to output file.
 " -> doc
 
@@ -21,7 +22,8 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
+    source("metrics.R")
 })
 
 #' Calculate the Seurat local structure metric for an integrated dataset
@@ -67,6 +69,7 @@ main <- function() {
     dataset <- args[["--dataset"]]
     method <- args[["--method"]]
     integration <- args[["--integration"]]
+    exprs_file <- args[["--exprs"]]
     out_file <- args[["--out-file"]]
 
     message("Reading data from '", file, "'...")
@@ -79,9 +82,19 @@ main <- function() {
         varp   = FALSE,
         obsp   = FALSE
     )
+    message("Reading expression data from '", exprs_file, "'...")
+    exprs <- read_h5ad(
+        exprs_file,
+        X_name = "counts",
+        uns    = FALSE,
+        varm   = FALSE,
+        obsm   = FALSE,
+        varp   = FALSE,
+        obsp   = FALSE
+    )
+    SingleCellExperiment::reducedDim(exprs, "emb") <- SingleCellExperiment::reducedDim(input, "X_emb")
     message("Converting to Seurat object...")
-    SingleCellExperiment::reducedDimNames(input) <- "emb"
-    seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
+    seurat <- SeuratObject::as.Seurat(exprs, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     score <- calculate_localStructure(seurat)
@@ -89,7 +102,7 @@ main <- function() {
         dataset,
         method,
         integration,
-        "Integration",
+        "IntegrationBio",
         "LocalStructure",
         score
     )

@@ -51,7 +51,7 @@ def calculate_mLISI(adata):
         k0=k0,
         subsample=None,
         scale=True,
-        n_cores=1,
+        n_cores=2,
         verbose=True,
     )
     print(f"Final score: {score}")
@@ -63,7 +63,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 

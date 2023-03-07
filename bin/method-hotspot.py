@@ -30,16 +30,26 @@ def select_hotspot_features(adata, n):
     """
 
     from pandas import DataFrame
+    from scipy.sparse import csc_matrix
     import scanpy as sc
     import hotspot
 
-    sc.pp.pca(adata)
     adata.obs["total_counts"] = adata.X.sum(axis=1)
-    sc.pp.filter_genes(adata, min_cells=1)
+    # Save counts for use by HotSpot
+    # Tutorial recommends a CSC matrix for improved speed
+    adata.layers["counts"] = csc_matrix(adata.X.copy())
 
+    print("Calculating PCA...")
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+    sc.pp.scale(adata)
+    sc.tl.pca(adata)
+    sc.pp.pca(adata)
+
+    print("Calculating HotSpot features...")
     hs = hotspot.Hotspot(
         adata,
-        layer_key=None,
+        layer_key="counts",
         model="danb",
         latent_obsm_key="X_pca",
         umi_counts_obs_key="total_counts",
@@ -47,6 +57,7 @@ def select_hotspot_features(adata, n):
     hs.create_knn_graph(weighted_graph=False, n_neighbors=30)
     hs_results = hs.compute_autocorrelations()
 
+    print("Selecting top features...")
     # Filtering like done in tutorial (not really for feature selection, more for specific downstream analyses):
     # https://hotspot.readthedocs.io/en/latest/CD4_Tutorial.html#Grouping-genes-into-lineage-based-modules
     selected_features = (

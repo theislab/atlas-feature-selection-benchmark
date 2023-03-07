@@ -33,6 +33,8 @@ def calculate_bNMI(adata):
     from balanced_clustering import balanced_v_measure
     from scanpy.preprocessing import neighbors
 
+    adata.obs["Label"] = adata.obs["Label"].cat.remove_unused_categories()
+
     print("Calculating neighbors...")
     neighbors(adata, use_rep="X_emb")
     print("Optimising clusters...")
@@ -70,6 +72,10 @@ def bNMI(adata, label_key, cluster_key):
     # The V measure is equivalent to NMI using arithmetic averaging (sklearn default)
     from balanced_clustering import balanced_v_measure
 
+    # balanced_v_measure() fails if there is only one cluster so return 0
+    if len(adata.obs[cluster_key].unique()) == 1:
+        return 0
+
     clusters = adata.obs[cluster_key].to_numpy()
     labels = adata.obs[label_key].to_numpy()
 
@@ -80,7 +86,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -96,7 +102,7 @@ def main():
     print(input)
     score = calculate_bNMI(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "bNMI", score
+        dataset, method, integration, "IntegrationBio", "bNMI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

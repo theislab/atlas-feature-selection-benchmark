@@ -21,7 +21,8 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
+    source("metrics.R")
 })
 
 #' Calculate the Seurat mixing metric for an integrated dataset
@@ -86,7 +87,7 @@ main <- function() {
         dataset,
         method,
         integration,
-        "Integration",
+        "IntegrationBatch",
         "Mixing",
         score
     )

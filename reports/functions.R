@@ -11,7 +11,8 @@
 plot_metrics_dotplot <- function(metrics, dataset,
                                  metric_type = c(
                                      "All",
-                                     "Integration",
+                                     "IntegrationBatch",
+                                     "IntegrationBio",
                                      "Mapping",
                                      "Classification",
                                      "Unseen"
