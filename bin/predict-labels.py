@@ -4,17 +4,16 @@
 Predict labels for a query dataset
 
 Usage:
-    predict-labels.py --reference=<path> --params=<path> --out-file=<path> [options] <file>
+    predict-labels.py --reference=<path> --out-file=<path> [options] <file>
 
 Options:
     -h --help            Show this screen.
     --reference=<path>   Path to reference dataset file.
-    --params=<path>      Path to TSV file containing hyperparameter settings
     --out-file=<path>    Path to output file.
 """
 
 
-def predict_labels(reference, query, params, seed=1):
+def predict_labels(reference, query, seed=1):
     """
     Predict labels for a query dataset
 
@@ -24,59 +23,43 @@ def predict_labels(reference, query, params, seed=1):
         AnnData object containing the reference dataset
     query
         AnnData object containing the query dataset
-    params
-        DataFrame containing hyperparameters
+    seed
+        Random seed to use
 
     Returns
     -------
     DataFrame containing predicted labels and probabilities for each label class
     """
 
-    from lightgbm import LGBMClassifier
-    from sklearn.preprocessing import normalize
+    from numpy.random import seed as np_seed
+    from sklearn.linear_model import LogisticRegression
     from pandas import DataFrame
-    from numpy import argmax
+
+    np_seed(seed)
 
     print("Creating training dataset...")
     X_train = reference.obsm["X_emb"]
     Y_train = reference.obs["Label"].cat.codes
     labels = reference.obs["Label"].cat.categories.tolist()
-    n_labels = len(labels)
 
-    print("Using the following parameters...")
-    params_dict = dict(zip(params["Parameter"], params["Value"]))
-    for param in [
-        "n_estimators",
-        "num_leaves",
-        "max_depth",
-        "min_child_samples",
-        "subsample_freq",
-        "max_bin",
-    ]:
-        params_dict[param] = int(params_dict[param])
-
-    for param, value in params_dict.items():
-        print(f"{param:<25}: {value}")
-
-    print("Training final classification model...")
-    lgbm_classifier = LGBMClassifier(
-        boosting_type="gbdt",
-        metric="multiclass",
-        objective="multi_logloss",
-        num_class=n_labels,
-        n_jobs=1,
-        verbose=0,
+    print("Training classifier...")
+    logreg_classifier = LogisticRegression(
+        penalty="none",
+        class_weight="balanced",
         random_state=seed,
-        **params_dict,
+        solver="lbfgs",
+        max_iter=10000,
+        multi_class="multinomial",
+        verbose=1,
+        n_jobs=-1,
     )
-    lgbm_classifier.fit(X_train, Y_train)
+    logreg_classifier.fit(X_train, Y_train)
 
-    print("Predicting query labels...")
+    print("Creating test dataset...")
     X_test = query.obsm["X_emb"]
-    scores = lgbm_classifier.predict_proba(X_test)
-    probs = normalize(scores, axis=1, norm="l1")
-    pred_categories = [argmax(line) for line in probs]
-    pred_labels = [labels[cat] for cat in pred_categories]
+    print("Predicting labels...")
+    Y_pred = logreg_classifier.predict(X_test)
+    Y_pred_proba = logreg_classifier.predict_proba(X_test)
 
     print("Formatting results...")
     results = DataFrame(
@@ -84,15 +67,12 @@ def predict_labels(reference, query, params, seed=1):
             "ID": query.obs_names,
             "Unseen": query.obs["Unseen"],
             "Label": query.obs["Label"],
-            "PredLabel": pred_labels,
-            "MaxProb": [
-                prob_values[pred_cat]
-                for pred_cat, prob_values in zip(pred_categories, probs)
-            ],
+            "PredLabel": [labels[i] for i in Y_pred],
+            "MaxProb": [max(p) for p in Y_pred_proba],
         }
     )
-    for i in range(len(labels)):
-        results["Prob" + labels[i]] = probs[:, i]
+    for i, label in enumerate(labels):
+        results["Prob" + label] = Y_pred_proba[:, i]
 
     return results
 
@@ -101,13 +81,11 @@ def main():
     """The main script function"""
     from docopt import docopt
     from anndata import read_h5ad
-    from pandas import read_csv
 
     args = docopt(__doc__)
 
     file = args["<file>"]
     reference_file = args["--reference"]
-    params_file = args["--params"]
     out_file = args["--out-file"]
 
     print(f"Reading query data from '{file}'...")
@@ -119,11 +97,7 @@ def main():
     reference.obs["Label"] = reference.obs["Label"].cat.remove_unused_categories()
     print("Read reference data:")
     print(reference)
-    print(f"Reading parameters from '{file}'...")
-    params = read_csv(params_file, sep="\t")
-    print("Read parameters:")
-    print(params)
-    output = predict_labels(reference, query, params)
+    output = predict_labels(reference, query)
     print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")

@@ -165,16 +165,14 @@ process OPTIMISE_CLASSIFIER {
 }
 
 process PREDICT_LABELS {
-    conda "envs/lightgbm.yml"
+    conda "envs/sklearn.yml"
 
     publishDir "$params.outdir/predicted-labels/${dataset}/${method}",
         mode: "copy",
         pattern: "*.tsv"
 
-    label "process_low"
-
     input:
-        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path(query_model), path(parameters)
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path(query_model)
 
     output:
         tuple val(dataset), val(method), val("${integration}-${seed}"), path("${query_model}/adata.h5ad"), path("${method}-${integration}-${seed}.tsv")
@@ -183,7 +181,6 @@ process PREDICT_LABELS {
         """
         predict-labels.py \\
             --reference "${reference_model}/adata.h5ad" \\
-            --params "${parameters}" \\
             --out-file "${method}-${integration}-${seed}.tsv" \\
             ${query_model}/adata.h5ad
         """
@@ -218,14 +215,14 @@ workflow INTEGRATION {
 
         // Use one scVI integration with all features for each dataset to
         // optimise classifier hyperparameters
-        scvi_all_ch = INTEGRATE_SCVI.out
-            .filter { it[1] == "all" }
-            .filter { it[3] == params.integration.seeds.min()}
+        // scvi_all_ch = INTEGRATE_SCVI.out
+        //     .filter { it[1] == "all" }
+        //     .filter { it[3] == params.integration.seeds.min()}
 
-        OPTIMISE_CLASSIFIER(scvi_all_ch)
+        // OPTIMISE_CLASSIFIER(scvi_all_ch)
 
         mapped_ch = MAP_SCVI.out.mix(MAP_SCANVI.out)
-            .combine(OPTIMISE_CLASSIFIER.out, by: 0)
+            // .combine(OPTIMISE_CLASSIFIER.out, by: 0)
 
         PREDICT_LABELS(mapped_ch)
 
