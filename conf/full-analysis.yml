@@ -114,6 +114,8 @@ metrics:
     type: Mapping
   - name: labelDist
     type: Mapping
+  - name: reconstruction
+    type: Mapping
   # Classification metrics
   - name: accuracy
     type: Classification
