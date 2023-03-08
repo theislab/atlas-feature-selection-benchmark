@@ -525,6 +525,37 @@ process METRIC_CELLCYCLE {
         """
 }
 
+process METRIC_LDFDIFF {
+    conda "envs/CellMixS.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "ldfDiff.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
+        path(io_functions)
+        path(metric_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-ldfDiff.tsv")
+
+    script:
+        """
+        metric-ldfDiff.R \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --exprs "${reference_exprs}" \\
+            --out-file "${dataset}-${method}-${integration}-ldfDiff.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-ldfDiff.tsv"
+        """
+}
+
 /*
 ------------------------------
     Mapping metrics
@@ -1135,6 +1166,9 @@ workflow METRICS {
         cellCycle_ch = metric_names.contains("cellCycle") ?
             METRIC_CELLCYCLE(reference_ch, py_metrics_funcs) :
             Channel.empty()
+        ldfDiff_ch = metric_names.contains("ldfDiff") ?
+            METRIC_LDFDIFF(reference_ch, r_io_funcs, r_metrics_funcs) :
+            Channel.empty()
 
         // Mapping metrics
         mLISI_ch = metric_names.contains("mLISI") ?
@@ -1211,6 +1245,7 @@ workflow METRICS {
                 isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,
                 cellCycle_ch,
+                ldfDiff_ch,
                 // Mapping metrics
                 mLISI_ch,
                 qLISI_ch,

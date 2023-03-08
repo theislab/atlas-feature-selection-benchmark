@@ -103,6 +103,8 @@ metrics:
     type: IntegrationBio
   - name: cellCycle
     type: IntegrationBio
+  - name: ldfDiff
+    type: IntegrationBio
   # Mapping metrics
   - name: mLISI
     type: Mapping
