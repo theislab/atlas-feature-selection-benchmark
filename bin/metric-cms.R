@@ -57,7 +57,6 @@ main <- function() {
     dataset <- args[["--dataset"]]
     method <- args[["--method"]]
     integration <- args[["--integration"]]
-    exprs_file <- args[["--exprs"]]
     out_file <- args[["--out-file"]]
 
     message("Reading data from '", file, "'...")

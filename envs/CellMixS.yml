@@ -12,6 +12,8 @@ dependencies:
   - bioconductor-cellmixs=1.14.0
   - bioconductor-edger=3.40.0
   - bioconductor-limma=3.54.0
+  - bioconductor-scater=1.26.0
+  - bioconductor-scuttle=1.8.0
   - bioconductor-singlecellexperiment=1.20.0
   - bioconductor-summarizedexperiment=1.28.0
   - bioconductor-zellkonverter=1.8.0
