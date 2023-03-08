@@ -966,6 +966,36 @@ process METRIC_UNSEEN_LABELDIST {
         """
 }
 
+process METRIC_MILO {
+    conda "envs/milopy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "MILO.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-MILO.tsv")
+
+    script:
+        """
+        metric-milo.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-MILO.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-MILO.tsv"
+        """
+}
+
 /*
 ------------------------------
     Other processes
@@ -1121,6 +1151,9 @@ workflow METRICS {
         unseen_labelDist_ch = metric_names.contains("unseenLabelDist") ?
             METRIC_UNSEEN_LABELDIST(query_ch, py_metrics_funcs, py_distances_funcs) :
             Channel.empty()
+        milo_ch = metric_names.contains("MILO") ?
+            METRIC_MILO(query_ch, py_metrics_funcs) :
+            Channel.empty()
 
         metrics_ch = Channel.empty()
             .mix(
@@ -1159,7 +1192,8 @@ workflow METRICS {
                 mcc_ch,
                 // Unseen metrics
                 unseen_cellDist_ch,
-                unseen_labelDist_ch
+                unseen_labelDist_ch,
+                milo_ch
             )
             .map {it -> file(it[3])}
             .toList()

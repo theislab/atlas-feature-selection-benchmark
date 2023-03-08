@@ -134,6 +134,8 @@ metrics:
     type: Unseen
   - name: unseenLabelDist
     type: Unseen
+  - name: MILO
+    type: Unseen
 reports:
   - name: metrics
   - name: integration-variation
