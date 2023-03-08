@@ -26,7 +26,6 @@ suppressMessages({
 #'
 #' @returns The CMS metric score
 calculate_CMS <- function(sce) {
-
     set.seed(1)
 
     message("Calculating cell mixing scores...")

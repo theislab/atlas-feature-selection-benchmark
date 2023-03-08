@@ -28,7 +28,6 @@ suppressMessages({
 #'
 #' @returns The ldfDiff metric score
 calculate_ldfDiff <- function(input, exprs) {
-
     set.seed(1)
 
     n_dim <- ncol(SingleCellExperiment::reducedDim(input, "X_emb"))
@@ -61,7 +60,7 @@ calculate_ldfDiff <- function(input, exprs) {
 
     message("Calculating final ldfDiff score...")
     # Scores closer to 0 are better so we use 1 - mean absolute values
-    score = 1 - mean(abs(SummarizedExperiment::colData(input)$diff_ldf))
+    score <- 1 - mean(abs(SummarizedExperiment::colData(input)$diff_ldf))
 
     return(score)
 }
