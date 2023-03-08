@@ -116,6 +116,8 @@ metrics:
     type: Mapping
   - name: reconstruction
     type: Mapping
+  - name: kNNcorr
+    type: Mapping
   # Classification metrics
   - name: accuracy
     type: Classification

@@ -717,6 +717,36 @@ process METRIC_RECONSTRUCTION {
         """
 }
 
+process METRIC_KNNCORR {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "kNNcorr.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-kNNcorr.tsv")
+
+    script:
+        """
+        metric-kNNcorr.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --exprs "${query_exprs}" \\
+            --out-file "${dataset}-${method}-${integration}-kNNcorr.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-kNNcorr.tsv"
+        """
+}
+
 /*
 ------------------------------
     Classification metrics
@@ -1216,6 +1246,9 @@ workflow METRICS {
         reconstruction_ch = metric_names.contains("reconstruction") ?
             METRIC_RECONSTRUCTION(query_ch, py_metrics_funcs) :
             Channel.empty()
+        kNNcorr_ch = metric_names.contains("kNNcorr") ?
+            METRIC_KNNCORR(query_ch, py_metrics_funcs) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -1285,6 +1318,7 @@ workflow METRICS {
                 cellDist_ch,
                 labelDist_ch,
                 reconstruction_ch,
+                kNNcorr_ch,
                 // Classification metrics
                 accuracy_ch,
                 rareAccuracy_ch,
