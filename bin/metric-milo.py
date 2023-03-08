@@ -67,6 +67,7 @@ def calculate_MILO(input):
 
     return score
 
+
 def main():
     """The main script function"""
     from docopt import docopt
