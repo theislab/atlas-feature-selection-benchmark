@@ -80,6 +80,8 @@ metrics:
     type: IntegrationBatch
   - name: graphConnectivity
     type: IntegrationBatch
+  - name: CMS
+    type: IntegrationBatch
   # Integration (bio) metrics
   - name: localStructure
     type: IntegrationBio
