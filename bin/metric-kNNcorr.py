@@ -62,8 +62,7 @@ def calculate_kNNcorr(input, exprs):
             cell_embedding = adata_batch.obsm["X_emb"][cell_idx, :]
             neighbours_embedding = adata_batch.obsm["X_emb"][neighbours, :]
             embedding_distances = euclidean_distances(
-                neighbours_embedding,
-                cell_embedding.reshape(1, -1)
+                neighbours_embedding, cell_embedding.reshape(1, -1)
             )
             batch_distances = batch_distances[:, neighbours].toarray()
             cor, _ = spearmanr(batch_distances.flatten(), embedding_distances.flatten())
