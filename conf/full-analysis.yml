@@ -80,6 +80,8 @@ metrics:
     type: IntegrationBatch
   - name: graphConnectivity
     type: IntegrationBatch
+  - name: CMS
+    type: IntegrationBatch
   # Integration (bio) metrics
   - name: localStructure
     type: IntegrationBio
@@ -100,6 +102,8 @@ metrics:
   - name: isolatedLabelsASW
     type: IntegrationBio
   - name: cellCycle
+    type: IntegrationBio
+  - name: ldfDiff
     type: IntegrationBio
   # Mapping metrics
   - name: mLISI

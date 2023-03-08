@@ -191,6 +191,38 @@ process METRIC_GRAPHCONNECTIVITY {
         """
 }
 
+process METRIC_CMS {
+    conda "envs/CellMixS.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "cms.tsv" }
+
+    label "process_medium"
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
+        path(io_functions)
+        path(metric_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-cms.tsv")
+
+    script:
+        """
+        metric-cms.R \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-cms.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-cms.tsv"
+        """
+}
+
 /*
 ------------------------------
     Integration (bio) metrics
@@ -490,6 +522,37 @@ process METRIC_CELLCYCLE {
     stub:
         """
         touch "${dataset}-${method}-${integration}-cellCycle.tsv"
+        """
+}
+
+process METRIC_LDFDIFF {
+    conda "envs/CellMixS.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "ldfDiff.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
+        path(io_functions)
+        path(metric_functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-ldfDiff.tsv")
+
+    script:
+        """
+        metric-ldfDiff.R \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --exprs "${reference_exprs}" \\
+            --out-file "${dataset}-${method}-${integration}-ldfDiff.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-ldfDiff.tsv"
         """
 }
 
@@ -1068,6 +1131,9 @@ workflow METRICS {
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
             METRIC_GRAPHCONNECTIVITY(reference_ch, py_metrics_funcs) :
             Channel.empty()
+        cms_ch = metric_names.contains("CMS") ?
+            METRIC_CMS(reference_ch, r_io_funcs, r_metrics_funcs) :
+            Channel.empty()
 
         // Integration (bio) metrics
         localStructure_ch = metric_names.contains("localStructure") ?
@@ -1099,6 +1165,9 @@ workflow METRICS {
             Channel.empty()
         cellCycle_ch = metric_names.contains("cellCycle") ?
             METRIC_CELLCYCLE(reference_ch, py_metrics_funcs) :
+            Channel.empty()
+        ldfDiff_ch = metric_names.contains("ldfDiff") ?
+            METRIC_LDFDIFF(reference_ch, r_io_funcs, r_metrics_funcs) :
             Channel.empty()
 
         // Mapping metrics
@@ -1164,6 +1233,7 @@ workflow METRICS {
                 batchPCR_ch,
                 iLISI_ch,
                 graphConnectivity_ch,
+                cms_ch,
                 // Integration (bio) metrics
                 localStructure_ch,
                 cLISI_ch,
@@ -1175,6 +1245,7 @@ workflow METRICS {
                 isolatedLabelsF1_ch,
                 isolatedLabelsASW_ch,
                 cellCycle_ch,
+                ldfDiff_ch,
                 // Mapping metrics
                 mLISI_ch,
                 qLISI_ch,
