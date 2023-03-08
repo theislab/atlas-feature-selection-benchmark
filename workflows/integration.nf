@@ -248,6 +248,9 @@ workflow INTEGRATION {
                     it[2] + "-" + it[3],         // Integration name
                     file(it[5] + "/adata.h5ad"), // Path to reference H5AD
                     file(it[7] + "/adata.h5ad"), // Path to query H5AD
+                    it[7],                       // Path to query model directory
+                    it[4],                       // Path to reference expression H5AD
+                    it[6]                        // Path to query expression H5AD
                 )
             }
 

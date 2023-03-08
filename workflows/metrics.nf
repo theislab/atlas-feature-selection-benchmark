@@ -571,7 +571,7 @@ process METRIC_MLISI {
     label "process_tiny"
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
 
     output:
@@ -603,7 +603,7 @@ process METRIC_QLISI {
     label "process_tiny"
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
 
     output:
@@ -632,7 +632,7 @@ process METRIC_CELLDIST {
         saveAs: { filename -> "cellDist.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
         path(distance_functions)
 
@@ -663,7 +663,7 @@ process METRIC_LABELDIST {
         saveAs: { filename -> "labelDist.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
         path(distance_functions)
 
@@ -684,6 +684,36 @@ process METRIC_LABELDIST {
     stub:
         """
         touch "${dataset}-${method}-${integration}-labelDist.tsv"
+        """
+}
+
+process METRIC_RECONSTRUCTION {
+    conda "envs/scvi-tools.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "reconstruction.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path(query), path(query_dir), path(reference_exprs), path(query_exprs)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-reconstruction.tsv")
+
+    script:
+        """
+        metric-reconstruction.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --exprs "${query_exprs}" \\
+            --out-file "${dataset}-${method}-${integration}-reconstruction.tsv" \\
+            "${query_dir}/adata.h5ad"
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-reconstruction.tsv"
         """
 }
 
@@ -974,7 +1004,7 @@ process METRIC_UNSEEN_CELLDIST {
         saveAs: { filename -> "unseenCellDist.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
         path(distance_functions)
 
@@ -1005,7 +1035,7 @@ process METRIC_UNSEEN_LABELDIST {
         saveAs: { filename -> "unseenLabelDist.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
         path(distance_functions)
 
@@ -1036,7 +1066,7 @@ process METRIC_MILO {
         saveAs: { filename -> "MILO.tsv" }
 
     input:
-        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad")
+        tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path("query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
 
     output:
@@ -1183,6 +1213,9 @@ workflow METRICS {
         labelDist_ch = metric_names.contains("labelDist") ?
             METRIC_LABELDIST(query_ch, py_metrics_funcs, py_distances_funcs) :
             Channel.empty()
+        reconstruction_ch = metric_names.contains("reconstruction") ?
+            METRIC_RECONSTRUCTION(query_ch, py_metrics_funcs) :
+            Channel.empty()
 
         // Classification metrics
         accuracy_ch = metric_names.contains("accuracy") ?
@@ -1251,6 +1284,7 @@ workflow METRICS {
                 qLISI_ch,
                 cellDist_ch,
                 labelDist_ch,
+                reconstruction_ch,
                 // Classification metrics
                 accuracy_ch,
                 rareAccuracy_ch,
