@@ -42,6 +42,7 @@ Options:
 
 import scvi
 
+
 def calculate_reconstruction_error(model):
     """
     Calculate the reconstruction error score for a mapped dataset.
