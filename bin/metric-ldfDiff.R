@@ -47,12 +47,23 @@ calculate_ldfDiff <- function(input, exprs) {
     })
     names(batch_objects) <- batches
 
+    # Use k=75 unless one of the batches is smaller than that
+    # (should only happen for the test dataset)
+    k <- min(sapply(batch_objects, ncol)) - 1
+    if (k < 75) {
+        warning(
+            "k was set to ", k,
+            " because one of the batches has fewer than 75 cells"
+        )
+    } else {
+        k <- 75
+    }
     message("Calculating cell ldfDiff scores...")
     input <- CellMixS::ldfDiff(
         sce_pre_list = batch_objects,
         sce_combined = input,
         group        = "Batch",
-        k            = 75,
+        k            = k,
         dim_red      = "X_pca",
         dim_combined = "X_emb",
         n_dim        = n_dim
