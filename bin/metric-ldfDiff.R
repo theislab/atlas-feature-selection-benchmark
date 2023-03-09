@@ -53,7 +53,7 @@ calculate_ldfDiff <- function(input, exprs) {
     if (k < 75) {
         warning(
             "k was set to ", k,
-            " because one of the batches has fewer than 75 cells"
+            " because one of the batches has fewer than 76 cells"
         )
     } else {
         k <- 75
@@ -70,8 +70,19 @@ calculate_ldfDiff <- function(input, exprs) {
     )
 
     message("Calculating final ldfDiff score...")
-    # Scores closer to 0 are better so we use 1 - mean absolute values
-    score <- 1 - mean(abs(SummarizedExperiment::colData(input)$diff_ldf))
+    # Scores closer to 0 are better so use absolute values
+    scores <- abs(SummarizedExperiment::colData(input)$diff_ldf)
+    # Score are unbounded so we set any scores greater than 1 to 1
+    if (any(scores > 1)) {
+        warning(
+            sum(scores > 1), " absolute cell scores (",
+            round(sum(scores > 1) / ncol(input) * 100, 2),
+            "%) are greater than 1. Setting these to 1."
+        )
+        scores[scores > 1] <- 1
+    }
+    # Take the mean of the scores and subtract it from 1 so higher is better
+    score <- 1 - mean(scores)
 
     return(score)
 }
