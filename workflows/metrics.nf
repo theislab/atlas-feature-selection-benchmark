@@ -693,6 +693,8 @@ process METRIC_RECONSTRUCTION {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "reconstruction.tsv" }
 
+    label "process_low"
+
     input:
         tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path(query), path(query_dir), path(reference_exprs), path(query_exprs)
         path(functions)
