@@ -29,7 +29,11 @@ def select_triku_features(adata):
     import triku as tk
     import scanpy as sc
 
-    sc.pp.filter_genes(adata, min_cells=5)
+    print("Filtering and normalizing data...")
+    sc.pp.filter_cells(adata, min_genes=50)
+    sc.pp.filter_genes(adata, min_cells=10)
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
 
     print("Building neighbourhood graph...")
     sc.pp.pca(adata)
