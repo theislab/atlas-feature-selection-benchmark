@@ -58,7 +58,6 @@ def calculate_reconstruction_error(model):
     """
 
     from scanpy.preprocessing import normalize_total, log1p
-    from pandas import DataFrame
     from scipy.sparse import issparse
     from sklearn.metrics.pairwise import cosine_distances
     import numpy as np
@@ -78,6 +77,9 @@ def calculate_reconstruction_error(model):
         print(f"Sample {i + 1} of {n_samples}")
         # Get the posterior sample
         post = model.posterior_predictive_sample(n_samples=1)
+        while np.any(post.sum(1) == 0):
+            print("Posterior has cells with zero counts, resampling...")
+            post = model.posterior_predictive_sample(n_samples=1)
         # Normalise the sample
         post = ((post.T / post.sum(1)).T) * 10000
         post = np.log1p(post)
@@ -100,7 +102,7 @@ def calculate_reconstruction_error(model):
     # Take the mean over cells
     # Divide by 2 to get a score in [0, 1] (range of cosine distances is [0, 2])
     # Substract from 1 so that higher is better
-    score = 1 - np.mean(cell_scores)
+    score = 1 - (np.mean(cell_scores) / 2)
 
     return score
 
