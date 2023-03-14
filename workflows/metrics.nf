@@ -1023,6 +1023,36 @@ process METRIC_JACCARDINDEX_RARITY {
         """
 }
 
+process METRIC_AUPRC {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "AUPRC.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-AUPRC.tsv")
+
+    script:
+        """
+        metric-auprc.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-AUPRC.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-AUPRC.tsv"
+        """
+}
+
+
 /*
 ------------------------------
     Unseen metrics
@@ -1280,6 +1310,9 @@ workflow METRICS {
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(labels_ch, py_metrics_funcs) :
             Channel.empty()
+        auprc_ch = metric_names.contains("AUPRC") ?
+            METRIC_AUPRC(labels_ch, py_metrics_funcs) :
+            Channel.empty()
 
         // Unseen metrics
         unseen_cellDist_ch = metric_names.contains("unseenCellDist") ?
@@ -1331,6 +1364,7 @@ workflow METRICS {
                 jaccard_macro_ch,
                 jaccard_rarity_ch,
                 mcc_ch,
+                auprc_ch,
                 // Unseen metrics
                 unseen_cellDist_ch,
                 unseen_labelDist_ch,

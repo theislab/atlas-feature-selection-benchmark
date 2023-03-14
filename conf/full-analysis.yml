@@ -137,6 +137,8 @@ metrics:
     type: Classification
   - name: MCC
     type: Classification
+  - name: AUPRC
+    type: Classification
   # Unseen metrics
   - name: unseenCellDist
     type: Unseen
