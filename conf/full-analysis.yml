@@ -137,12 +137,16 @@ metrics:
     type: Classification
   - name: MCC
     type: Classification
+  - name: AUPRC
+    type: Classification
   # Unseen metrics
   - name: unseenCellDist
     type: Unseen
   - name: unseenLabelDist
     type: Unseen
   - name: MILO
+    type: Unseen
+  - name: uncertainty
     type: Unseen
 reports:
   - name: metrics

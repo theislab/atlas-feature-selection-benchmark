@@ -1023,6 +1023,36 @@ process METRIC_JACCARDINDEX_RARITY {
         """
 }
 
+process METRIC_AUPRC {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "AUPRC.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-AUPRC.tsv")
+
+    script:
+        """
+        metric-auprc.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-AUPRC.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-AUPRC.tsv"
+        """
+}
+
+
 /*
 ------------------------------
     Unseen metrics
@@ -1148,6 +1178,35 @@ process COMBINE_METRICS {
     stub:
         """
         touch "all-metrics.tsv"
+        """
+}
+
+process METRIC_UNCERTAINTY {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "uncertainty.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-uncertainty.tsv")
+
+    script:
+        """
+        metric-uncertainty.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-uncertainty.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-uncertainty.tsv"
         """
 }
 
@@ -1280,6 +1339,9 @@ workflow METRICS {
         mcc_ch = metric_names.contains("MCC") ?
             METRIC_MCC(labels_ch, py_metrics_funcs) :
             Channel.empty()
+        auprc_ch = metric_names.contains("AUPRC") ?
+            METRIC_AUPRC(labels_ch, py_metrics_funcs) :
+            Channel.empty()
 
         // Unseen metrics
         unseen_cellDist_ch = metric_names.contains("unseenCellDist") ?
@@ -1290,6 +1352,9 @@ workflow METRICS {
             Channel.empty()
         milo_ch = metric_names.contains("MILO") ?
             METRIC_MILO(query_ch, py_metrics_funcs) :
+            Channel.empty()
+        uncertainty_ch = metric_names.contains("uncertainty") ?
+            METRIC_UNCERTAINTY(labels_ch, py_metrics_funcs) :
             Channel.empty()
 
         metrics_ch = Channel.empty()
@@ -1331,10 +1396,12 @@ workflow METRICS {
                 jaccard_macro_ch,
                 jaccard_rarity_ch,
                 mcc_ch,
+                auprc_ch,
                 // Unseen metrics
                 unseen_cellDist_ch,
                 unseen_labelDist_ch,
-                milo_ch
+                milo_ch,
+                uncertainty_ch
             )
             .map {it -> file(it[3])}
             .toList()
