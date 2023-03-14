@@ -146,6 +146,8 @@ metrics:
     type: Unseen
   - name: MILO
     type: Unseen
+  - name: uncertainty
+    type: Unseen
 reports:
   - name: metrics
   - name: integration-variation

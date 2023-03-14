@@ -1181,6 +1181,35 @@ process COMBINE_METRICS {
         """
 }
 
+process METRIC_UNCERTAINTY {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "uncertainty.tsv" }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(query), path(labels)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-uncertainty.tsv")
+
+    script:
+        """
+        metric-uncertainty.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-uncertainty.tsv" \\
+            ${labels}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-uncertainty.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -1324,6 +1353,9 @@ workflow METRICS {
         milo_ch = metric_names.contains("MILO") ?
             METRIC_MILO(query_ch, py_metrics_funcs) :
             Channel.empty()
+        uncertainty_ch = metric_names.contains("uncertainty") ?
+            METRIC_UNCERTAINTY(labels_ch, py_metrics_funcs) :
+            Channel.empty()
 
         metrics_ch = Channel.empty()
             .mix(
@@ -1368,7 +1400,8 @@ workflow METRICS {
                 // Unseen metrics
                 unseen_cellDist_ch,
                 unseen_labelDist_ch,
-                milo_ch
+                milo_ch,
+                uncertainty_ch
             )
             .map {it -> file(it[3])}
             .toList()
