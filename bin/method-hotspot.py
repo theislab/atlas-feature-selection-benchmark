@@ -44,7 +44,6 @@ def select_hotspot_features(adata, n):
     sc.pp.log1p(adata)
     sc.pp.scale(adata)
     sc.tl.pca(adata)
-    sc.pp.pca(adata)
 
     print("Calculating HotSpot features...")
     hs = hotspot.Hotspot(
