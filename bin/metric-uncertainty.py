@@ -33,7 +33,7 @@ def calculate_uncertainty(labels):
     print("Calculating label scores...")
     unseen_labels = labels["Label"].unique()
     label_scores = []
-    for  label in unseen_labels:
+    for label in unseen_labels:
         label_probs = labels[labels["Label"] == label]["MaxProb"]
         label_score = 1 - label_probs.mean()
         print(f"Label '{label}': {label_score:.4f}")
