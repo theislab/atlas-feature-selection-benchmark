@@ -24,6 +24,12 @@ datasets:
     label_col: cell_type
     unseen_labels: "CD8+ T naive,Proerythroblast"
     species: Human
+  - name: fetalLiver
+    batch_col: fetal.ids
+    query_batches: "F16_male_8+1PCW,F33_female_9+5PCW,F45_female_13+6PCW"
+    label_col: cell.labels
+    unseen_labels: "Kupffer Cell,NK,ILC precursor,Early lymphoid_T lymphocyte"
+    species: Human
 methods:
   - name: all
   - name: random
