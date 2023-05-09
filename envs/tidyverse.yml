@@ -31,7 +31,7 @@ dependencies:
   - r-purrr=0.3.5
   - r-readr=2.1.3
   - r-reticulate=1.26
-  - r-rlang=1.0.6
+  - r-rlang=1.1.0
   - r-rmarkdown=2.18
   - r-scales=1.2.1
   - r-stringi=1.7.8
