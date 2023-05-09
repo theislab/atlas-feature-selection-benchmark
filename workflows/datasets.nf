@@ -74,9 +74,6 @@ process DATASET_NEURIPS {
 
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
 
-    input:
-        path(functions)
-
     output:
         tuple val("neurips"), path("neurips.h5ad")
 
@@ -88,6 +85,25 @@ process DATASET_NEURIPS {
     stub:
         """
         touch neurips.h5ad
+        """
+}
+
+process DATASET_FETALLIVER {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+
+    output:
+        tuple val("fetalLiver"), path("fetalLiver.h5ad")
+
+    script:
+        """
+        dataset-fetalLiver.py --out-file "fetalLiver.h5ad"
+        """
+
+    stub:
+        """
+        touch fetalLiver.h5ad
         """
 }
 
@@ -144,14 +160,18 @@ workflow DATASETS {
             DATASET_SCIBPANCREAS() :
             Channel.empty()
 		neurips_ch = dataset_names.contains("neurips") ?
-            DATASET_NEURIPS(file(params.bindir + "/functions/io.R")) :
+            DATASET_NEURIPS() :
+            Channel.empty()
+        fetalLiver_ch = dataset_names.contains("fetalLiver") ?
+            DATASET_FETALLIVER() :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
                 tinySim2_ch,
                 scIBPancreas_ch,
-				neurips_ch
+				neurips_ch,
+                fetalLiver_ch
             )
 
         datasets_ch = Channel
