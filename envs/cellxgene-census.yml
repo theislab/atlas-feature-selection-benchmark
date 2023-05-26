@@ -1,0 +1,25 @@
+name: atlas-feature-selection-cellxgene-census
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - anndata=0.8.0
+  - docopt=0.6.2
+  - h5py=3.7.0
+  - hdf5=1.12.2
+  - matplotlib-base=3.6.3
+  - llvmlite=0.39.1
+  - numpy=1.22.4
+  - pandas=1.4.3
+  - pip=22.2.2
+  - pyarrow=12.0.0
+  - python=3.9.13
+  - scanpy=1.9.3
+  - scikit-learn=1.1.2
+  - scipy=1.9.0
+  - pip:
+    - cellxgene-census==1.0.1
+    - somacore==1.0.2
+    - tiledb==0.21.3
+    - tiledbsoma==1.2.3

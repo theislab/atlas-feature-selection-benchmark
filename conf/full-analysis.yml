@@ -24,6 +24,12 @@ datasets:
     label_col: cell_type
     unseen_labels: "CD8+ T naive,Proerythroblast"
     species: Human
+  - name: reedBreast
+    batch_col: donor_id
+    query_batches: HBCA_Donor_23,HBCA_Donor_24,HBCA_Donor_25,HBCA_Donor_26,HBCA_Donor_27,HBCA_Donor_28,HBCA_Donor_29,HBCA_Donor_30,HBCA_Donor_31,HBCA_Donor_32,HBCA_Donor_33,HBCA_Donor_50,HBCA_Donor_51,HBCA_Donor_52,HBCA_Donor_53,HBCA_Donor_54,HBCA_Donor_55
+    label_col: level2
+    unseen_labels: "BSL2","CD8T 1","CD8T 2","CD8T 3","FB5","LEC1","LEC2"
+    species: Human
 methods:
   - name: all
   - name: random
