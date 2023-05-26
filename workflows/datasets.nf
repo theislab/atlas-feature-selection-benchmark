@@ -9,7 +9,7 @@
 process DATASET_TINYSIM {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -31,7 +31,7 @@ process DATASET_TINYSIM {
 process DATASET_TINYSIM2 {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -53,7 +53,7 @@ process DATASET_TINYSIM2 {
 process DATASET_SCIBPANCREAS {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("scIBPancreas"), path("scIBPancreas.h5ad")
@@ -72,7 +72,11 @@ process DATASET_SCIBPANCREAS {
 process DATASET_NEURIPS {
     conda "envs/scanpy.yml"
 
+<<<<<<< HEAD
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
+=======
+    publishDir "$params.outdir/datasets-raw/"
+>>>>>>> main
 
     output:
         tuple val("neurips"), path("neurips.h5ad")
@@ -107,10 +111,33 @@ process DATASET_FETALLIVER {
         """
 }
 
+process DATASET_REEDBREAST {
+    conda "envs/cellxgene-census.yml"
+
+    label "process_low"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("reedBreast"), path("reedBreast.h5ad")
+
+    script:
+        """
+        dataset-reedBreast.py --out-file "reedBreast.h5ad"
+        """
+
+    stub:
+        """
+        touch reedBreast.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
     publishDir "$params.outdir/datasets-prepped/"
+
+    label "process_medium"
 
     input:
         tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)
@@ -164,6 +191,8 @@ workflow DATASETS {
             Channel.empty()
         fetalLiver_ch = dataset_names.contains("fetalLiver") ?
             DATASET_FETALLIVER() :
+        reedBreast_ch = dataset_names.contains("reedBreast") ?
+            DATASET_REEDBREAST() :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
@@ -171,7 +200,8 @@ workflow DATASETS {
                 tinySim2_ch,
                 scIBPancreas_ch,
 				neurips_ch,
-                fetalLiver_ch
+                fetalLiver_ch,
+                reedBreast_ch
             )
 
         datasets_ch = Channel

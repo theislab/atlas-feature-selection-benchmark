@@ -20,15 +20,15 @@ Options:
 
 
 def prepare_dataset(
-    adata_raw, name, batch_col, query_batches, label_col, unseen_labels, species
+    raw_file, name, batch_col, query_batches, label_col, unseen_labels, species
 ):
     """
     Prepare a dataset for the benchmarking pipeline
 
     Parameters
     ----------
-    adata_raw
-        AnnData object containing the raw dataset to prepare
+    raw_file
+        Path to H5AD file containing the raw dataset to prepare
     name
         Name of the dataset
     batch_col
@@ -47,12 +47,17 @@ def prepare_dataset(
     A tuple containing the prepared reference and query AnnData objects
     """
 
+    from scanpy import read_h5ad
     from scanpy.preprocessing import filter_cells, filter_genes
     from scipy.sparse import csr_matrix
     from pandas.api.types import union_categoricals
     from anndata import AnnData
+    import gc
 
     print(f"Preparing '{name}' dataset...")
+
+    print(f"Reading raw data from '{raw_file}'...")
+    adata_raw = read_h5ad(raw_file)
     print_adata(adata_raw, "RAW DATA", batch_col, label_col)
 
     print("Getting sparse counts matrix...")
@@ -66,6 +71,7 @@ def prepare_dataset(
     adata.obs["Label"] = adata_raw.obs[label_col]
     adata.uns["Species"] = species
     del adata_raw
+    gc.collect()
 
     print("Removing cells with less than 100 counts...")
     filter_cells(adata, min_counts=100)
@@ -83,6 +89,7 @@ def prepare_dataset(
     query = adata[is_query].copy()
     query.obs["Batch"] = query.obs["Batch"].cat.remove_unused_categories()
     del adata
+    gc.collect()
 
     print("Removing labels with fewer than 20 cells...")
     label_counts = reference.obs["Label"].value_counts()
@@ -203,10 +210,8 @@ def main():
     reference_out = args["--reference-out"]
     query_out = args["--query-out"]
 
-    print(f"Reading data from '{file}'...")
-    input = read_h5ad(file)
     reference, query = prepare_dataset(
-        input, name, batch_col, query_batches, label_col, unseen_labels, species
+        file, name, batch_col, query_batches, label_col, unseen_labels, species
     )
     print(f"Writing reference to '{reference_out}'...")
     reference.write_h5ad(reference_out)
