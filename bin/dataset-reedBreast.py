@@ -33,12 +33,14 @@ def get_reedBreast(temp_dir):
     print("Downloading Reed breast dataset from cellxgene...")
     dataset_id = "0ba636a1-4754-4786-a8be-7ab3cf760fd6"
     print(f"Using dataset ID '{dataset_id}'")
-
     temp_h5ad = join(temp_dir.name, "temp.h5ad")
     download_source_h5ad(dataset_id, to_path = temp_h5ad)
 
     print("Reading downloaded H5AD...")
     adata = read_h5ad(temp_h5ad, backed=True)
+
+    print("Setting counts matrix...")
+    adata.X = adata.raw.X.to_memory()
 
     print("Subsetting to WT and BRCA1 cells and removing doublets...")
     is_wt_brca = adata.obs["brca_status"].isin(["WT", "assume_WT", "BRCA1"])
