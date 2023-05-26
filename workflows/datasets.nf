@@ -9,7 +9,7 @@
 process DATASET_TINYSIM {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -31,7 +31,7 @@ process DATASET_TINYSIM {
 process DATASET_TINYSIM2 {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -53,7 +53,7 @@ process DATASET_TINYSIM2 {
 process DATASET_SCIBPANCREAS {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("scIBPancreas"), path("scIBPancreas.h5ad")
@@ -72,7 +72,7 @@ process DATASET_SCIBPANCREAS {
 process DATASET_NEURIPS {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("neurips"), path("neurips.h5ad")
@@ -93,7 +93,7 @@ process DATASET_REEDBREAST {
 
     label "process_low"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("reedBreast"), path("reedBreast.h5ad")
