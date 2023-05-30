@@ -72,11 +72,7 @@ process DATASET_SCIBPANCREAS {
 process DATASET_NEURIPS {
     conda "envs/scanpy.yml"
 
-<<<<<<< HEAD
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
-=======
     publishDir "$params.outdir/datasets-raw/"
->>>>>>> main
 
     output:
         tuple val("neurips"), path("neurips.h5ad")
@@ -95,7 +91,7 @@ process DATASET_NEURIPS {
 process DATASET_FETALLIVER {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("fetalLiver"), path("fetalLiver.h5ad")
@@ -129,6 +125,30 @@ process DATASET_REEDBREAST {
     stub:
         """
         touch reedBreast.h5ad
+        """
+}
+
+process DATASET_SCEIAD {
+    conda "envs/seurat.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    label "process_medium"
+
+    input:
+        path(functions)
+
+    output:
+        tuple val("scEiaD"), path("scEiaD.h5ad")
+
+    script:
+        """
+        dataset-scEiaD.R --out-file "scEiaD.h5ad"
+        """
+
+    stub:
+        """
+        touch scEiaD.h5ad
         """
 }
 
@@ -191,8 +211,12 @@ workflow DATASETS {
             Channel.empty()
         fetalLiver_ch = dataset_names.contains("fetalLiver") ?
             DATASET_FETALLIVER() :
+            Channel.empty()
         reedBreast_ch = dataset_names.contains("reedBreast") ?
             DATASET_REEDBREAST() :
+            Channel.empty()
+        scEiaD_ch  = dataset_names.contains("scEiaD")  ?
+            DATASET_SCEIAD(file(params.bindir + "/functions/io.R"))  :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
@@ -201,7 +225,8 @@ workflow DATASETS {
                 scIBPancreas_ch,
 				neurips_ch,
                 fetalLiver_ch,
-                reedBreast_ch
+                reedBreast_ch,
+                scEiaD_ch
             )
 
         datasets_ch = Channel
