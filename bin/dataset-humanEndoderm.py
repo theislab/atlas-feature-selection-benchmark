@@ -21,43 +21,44 @@ def get_humanEndoderm():
     AnnData containing the dataset
     """
 
-    import scanpy as sc
-    import pandas as pd
-    import os
+    from scanpy import read_mtx
+    from pandas import read_csv
     from os.path import join
-    from os.path import isfile
-    from os.path import dirname
+    from urllib.request import urlopen
+    from zipfile import ZipFile
     from tempfile import TemporaryDirectory
+    import certifi
+    import ssl
 
     # Download archive
-    url = "https://md-datasets-cache-zipfiles-prod.s3.eu-west-1.amazonaws.com/x53tts3zfr-1.zip"
+    url = "https://prod-dcd-datasets-cache-zipfiles.s3.eu-west-1.amazonaws.com/x53tts3zfr-5.zip"
     temp_dir = TemporaryDirectory()
-    dest = join(temp_dir.name, "human-endoderm-atlas.zip")
+    zip_file = join(temp_dir.name, "human-endoderm-atlas.zip")
 
-    if isfile(dest):
-        print(f"File '{dest}' already exists...")
-    else:
-        print(f"Reading dataset from '{url}'...")
-        call = "curl" + " " + url + " -o " + dest
-        os.system(call)
+    print(f"Downloading dataset from '{url}'...")
+    ssl_context = ssl.create_default_context(cafile=certifi.where())
+    with urlopen(url, context=ssl_context) as url_file:
+        with open(zip_file, "wb") as out_file:
+            out_file.write(url_file.read())
 
-    print(f"Unpacking '{dest}'...")
-    call = "unzip" + " " + dest + " -d " + dirname(dest)
-    os.system(call)
+    unpack_dir = join(temp_dir.name, "human-endoderm-atlas")
+    print(f"Unpacking '{zip_file}' to '{unpack_dir}'...")
+    with ZipFile(zip_file, "r") as zip:
+        zip.extractall(unpack_dir)
 
-    dest = dest.replace(".zip", "")
-    datapath = join(dest, "2. Count matrix and meta data/Fetal atlas")
-
-    print("Create adata from counts")
-    adata = sc.read_mtx(join(datapath, "Table_fetal_atlas_count.mtx.gz"))
+    data_dir = join(unpack_dir, "2. Count matrix and meta data/Fetal atlas")
+    counts_file = join(data_dir, "Table_fetal_atlas_count.mtx.gz")
+    print(f"Reading counts from '{counts_file}'...")
+    adata = read_mtx(counts_file)
     adata = adata.T
 
-    print("Adding .obs")
-    coldata = pd.read_csv(join(datapath, "Table_fetal_atlas_meta_info.csv.gz"))
-    adata.obs = coldata
+    obs_file = join(data_dir, "Table_fetal_atlas_meta_info.csv.gz")
+    print(f"Reading obs from '{obs_file}'...")
+    adata.obs = read_csv(obs_file)
 
-    print("Adding .var")
-    genes = pd.read_csv(join(datapath, "Table_fetal_atlas_gene_symbol.csv.gz"), header=None)
+    var_file = join(data_dir, "Table_fetal_atlas_gene_symbol.csv.gz")
+    print(f"Reading var from '{var_file}'...")
+    genes = read_csv(var_file, header=None)
     adata.var["name"] = genes.values
     adata.var.index = adata.var["name"].values
     adata.var_names_make_unique()
