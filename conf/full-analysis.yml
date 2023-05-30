@@ -50,10 +50,10 @@ datasets:
     unseen_labels: "Basal like,Ciliated,Hepatocyte,Mesenchyme subtype 4,T cell/NK cell 1"
     species: Human
   - name: HLCA
-    batch_col: sample
+    batch_col: dataset
     label_col: ann_finest_level
-    query_batches: 368C_0h,368C_72h,368C_24h,356C_72h,390C_24h,368C_12h,356C_24h,356C_12h,390C_0h,390C_72h,356C_0h,390C_12h
-    unseen_labels:
+    query_batches: Barbry_Leroy_2020,Jain_Misharin_2021_10Xv2,Jain_Misharin_2021_10Xv1,Krasnow_2020,Nawijn_2021
+    unseen_labels: "Multiciliated (nasal),Club (nasal),Goblet (subsegmental),SMG serous (nasal),SMG serous (bronchial),SMG mucous,EC aerocyte capillary,Peribronchial fibroblasts,Smooth muscle,Smooth muscle FAM83D+,B cells,DC2,Alveolar Mph CCL3+,Mast cells"
     species: Human
 methods:
   - name: all

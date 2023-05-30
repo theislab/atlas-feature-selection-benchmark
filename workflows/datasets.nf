@@ -174,7 +174,7 @@ process DATASET_HUMANENDODERM {
 }
 
 process DATASET_HLCA {
-    conda "envs/scanpy.yml"
+    conda "envs/cellxgene-census.yml"
 
     publishDir "$params.outdir/datasets-raw/"
 
