@@ -12,56 +12,67 @@ Options:
 """
 
 
-def get_HLCA():
+def get_HLCA(temp_dir):
     """
     Get the HLCA dataset
+
+    Parameters
+    ----------
+    temp_dir
+        Temporary directory object
 
     Returns
     -------
     AnnData containing the HLCA dataset
     """
 
-    import scanpy as sc
-    import numpy as np
-    import os
+    from cellxgene_census import download_source_h5ad
+    from anndata import read_h5ad
     from os.path import join
-    from tempfile import TemporaryDirectory
 
-    originalFolder = os.getcwd()
-    temp_dir = TemporaryDirectory()
-    url = 'curl -o local.h5ad "https://corpora-data-prod.s3.amazonaws.com/13825e35-ea32-4104-a0b7-1986673cd3fc/local.h5ad?X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Credential=ASIATLYQ5N5XY4TTPYHT%2F20220922%2Fus-west-2%2Fs3%2Faws4_request&X-Amz-Date=20220922T075845Z&X-Amz-Expires=604800&X-Amz-SignedHeaders=host&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEN3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLXdlc3QtMiJGMEQCIGqdCwi5z3MfPgw%2FPGFzc26pTh4zaVSZ1%2FjfikjPiRnnAiACDfwMzCp0PNQMqCvC5ouWEM4VirhZzoRd2zwbrZ9TzSr0AwiG%2F%2F%2F%2F%2F%2F%2F%2F%2F%2F8BEAEaDDIzMTQyNjg0NjU3NSIM53jPy5QnbUzV0VJ%2FKsgDWTwdKbB8sjZh4tbclURG%2BAOM7ABYDklCwI%2Fg1iS7MYuKqxeR9CIk6cKtU0P0%2FQ57MuqRO2CeqME4c%2FpUgJIT5Aw1Xy43SqvU09bV2dll9BOs3R6YFCWKPkwyxTCfnJv0iN%2FvUFnq2FeCIl9%2FJi7LKSOE8y7oyGIR29zd8ij9Tumw5enbkZmeooA2w3bxJEbqduqacugc32m6YCVknMdH0prnx%2BXYBP%2FOLyqSqAPt0AK7Tw74E1rUSmEDr8FCEQ%2FS657zXKWOtBXBKbF1nTIcp%2B5egKxP6jBl%2BYPchCBMXQ%2ByFsgvkDBNYQHajrmCWhG267iQyROZVBk5gItkjQhmbeNIdyGnqlhJAxF1dNiRGhtaiE%2BbilYoBJokIR%2BYkIF0J%2BCf5NF6j5PjCL8XVdZBHbcqLCTgECaKNK%2BHz%2F7kYowGeMJ3s7C4Zy46X0D4bFyjRMJZCoc8LPmqmWeYRwbp%2BulwFHV18md1nw8pq56aiqFaSWPg%2BPOQNeV6xz1Hx%2FU%2BFAUqO7xzwiaLU0N%2BvO%2BTEHSU7eacnKboF2sZ3dtBfXs%2FwGPBnRbC3rqkB0w9KPagpKlOATsyK8yJbb2IU5SltCoqISCUFL78MPPYr5kGOqYB33Ne3CMNPbVbLkz%2Bt5npWYhBb482b1gVL35CS4ryaQbt4aiQbhn5QS%2FX70eY9XIrpIVYxUgDQ0ebqYBGUCq9lVu0RQDyC6Uwqnuw8pDWG%2BDPkCR65hv%2FyZVBnZ%2Fei4IVp7E%2FtAPk%2F%2Bqpx3qNbtnxZ10RIudsMzds0u%2FzQAXBwotI5FaoP%2Bd6VML8cbb6PIoJl%2BS%2BgsW7JORsfS%2B4sfLAynUHzObanA%3D%3D&X-Amz-Signature=3f5c9f6174dda96fac6f7df7af1199919a5bcda3eadf357d3bf0a2bee688191e"'
+    print("Downloading HLCA dataset from cellxgene...")
+    dataset_id = "066943a2-fdac-4b29-b348-40cede398e4e"
+    print(f"Using dataset ID '{dataset_id}'")
+    temp_h5ad = join(temp_dir.name, "temp.h5ad")
+    download_source_h5ad(dataset_id, to_path=temp_h5ad)
 
-    print("Reading dataset from " + url + "...")
-    os.chdir(temp_dir.name)
-    os.system(url)
+    print("Reading downloaded H5AD...")
+    adata = read_h5ad(temp_h5ad, backed=True)
 
-    adata = sc.read_h5ad(join(temp_dir.name, "local.h5ad"))
-    
-    print("Cleaning up temporary directory...")
-    temp_dir.cleanup()
-    
-    adata = adata[adata.obs['ann_level_1']=="Immune"]
-    adataSmall = adata[[study in ["Banovich_Kropski_2020","Misharin_2021","Krasnow_2020","Meyer_2019"] for study in adata.obs["study"]]].copy()
-    adataSmall.obs = adataSmall.obs[['ann_finest_level','sample']]
-    
-    os.chdir(originalFolder)
+    print("Setting counts matrix...")
+    adata.X = adata.raw.X.to_memory()
 
-    return adataSmall
+    print("Setting var names...")
+    adata.var_names = adata.var["feature_name"].astype(str)
+    adata.var_names_make_unique()
+
+    print("Minimizing dataset...")
+    del adata.raw
+    del adata.uns
+    del adata.obsm
+    del adata.obsp
+
+    return adata
 
 
 def main():
     """The main script function"""
     from docopt import docopt
+    from tempfile import TemporaryDirectory
 
     args = docopt(__doc__)
 
     out_file = args["--out-file"]
 
-    output = get_HLCA()
+    temp_dir = TemporaryDirectory()
+
+    output = get_HLCA(temp_dir)
     print("Read dataset:")
     print(output)
     print(f"Writing output to '{out_file}'...")
     output.write_h5ad(out_file)
+    print("Cleaning up temporary directory...")
+    temp_dir.cleanup()
     print("Done!")
 
 
