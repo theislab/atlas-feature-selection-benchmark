@@ -4,7 +4,7 @@
 Download the human endoderm atlas (DOI: 10.1016/j.cell.2021.04.028)
 
 Usage:
-    dataset-HumanEndoderm.py --out-file=<path> [options]
+    dataset-humanEndoderm.py --out-file=<path> [options]
 
 Options:
     -h --help               Show this screen.
@@ -12,7 +12,7 @@ Options:
 """
 
 
-def get_HumanEndoderm():
+def get_humanEndoderm():
     """
     Get the human endoderm atlas
 
@@ -28,19 +28,19 @@ def get_HumanEndoderm():
     from os.path import isfile
     from os.path import dirname
     from tempfile import TemporaryDirectory
-    
+
     # Download archive
     url = "https://md-datasets-cache-zipfiles-prod.s3.eu-west-1.amazonaws.com/x53tts3zfr-1.zip"
     temp_dir = TemporaryDirectory()
     dest = join(temp_dir.name, "human-endoderm-atlas.zip")
-    
+
     if isfile(dest):
         print(f"File '{dest}' already exists...")
     else:
         print(f"Reading dataset from '{url}'...")
         call = "curl" + " " + url + " -o " + dest
         os.system(call)
-    
+
     print(f"Unpacking '{dest}'...")
     call = "unzip" + " " + dest + " -d " + dirname(dest)
     os.system(call)
@@ -51,20 +51,20 @@ def get_HumanEndoderm():
     print("Create adata from counts")
     adata = sc.read_mtx(join(datapath, "Table_fetal_atlas_count.mtx.gz"))
     adata = adata.T
-    
+
     print("Adding .obs")
     coldata = pd.read_csv(join(datapath, "Table_fetal_atlas_meta_info.csv.gz"))
     adata.obs = coldata
-    
+
     print("Adding .var")
     genes = pd.read_csv(join(datapath, "Table_fetal_atlas_gene_symbol.csv.gz"), header=None)
     adata.var["name"] = genes.values
     adata.var.index = adata.var["name"].values
     adata.var_names_make_unique()
-    
+
     print("Cleaning up temporary directory...")
     temp_dir.cleanup()
-    
+
     return adata
 
 
@@ -76,7 +76,7 @@ def main():
 
     out_file = args["--out-file"]
 
-    output = get_HumanEndoderm()
+    output = get_humanEndoderm()
     print("Read dataset:")
     print(output)
     print(f"Writing output to '{out_file}'...")

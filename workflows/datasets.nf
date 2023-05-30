@@ -158,16 +158,16 @@ process DATASET_HUMANENDODERM {
     publishDir "$params.outdir/datasets-raw/", mode: "copy"
 
     output:
-        tuple val("HumanEndoderm"), path("HumanEndoderm.h5ad")
+        tuple val("humanEndoderm"), path("humanEndoderm.h5ad")
 
     script:
         """
-        dataset-HumanEndoderm.py --out-file "HumanEndoderm.h5ad"
+        dataset-humanEndoderm.py --out-file "humanEndoderm.h5ad"
         """
 
     stub:
         """
-        touch HumanEndoderm.h5ad
+        touch humanEndoderm.h5ad
         """
 }
 
@@ -237,7 +237,7 @@ workflow DATASETS {
         scEiaD_ch  = dataset_names.contains("scEiaD")  ?
             DATASET_SCEIAD(file(params.bindir + "/functions/io.R"))  :
             Channel.empty()
-        HumanEndoderm_ch = dataset_names.contains("HumanEndoderm") ?
+        humanEndoderm_ch = dataset_names.contains("humanEndoderm") ?
             DATASET_HUMANENDODERM() :
             Channel.empty()
 
@@ -250,7 +250,7 @@ workflow DATASETS {
                 fetalLiver_ch,
                 reedBreast_ch,
                 scEiaD_ch,
-                HumanEndoderm_ch
+                humanEndoderm_ch
             )
 
         datasets_ch = Channel
