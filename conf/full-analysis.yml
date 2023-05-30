@@ -44,9 +44,11 @@ datasets:
     unseen_labels: "B-Cell,Blood Vessel,Macrophage,Pericyte,Smooth Muscle Cell,T/NK-Cell"
     species: Human
   - name: humanEndoderm
-    batch_col: Sample
+    batch_col: Individual
     label_col: Cell_type
-    query_batches: Sample_HT-184_d85_Duodenum,Sample_HT-236_d132_Duodenum,Sample_HT-232_d100_Stomach-antrum,Sample_HT-232_d100_Stomach-corpus,Sample_HT-187_d103_Lung-airway,Sample_HT-187_d103_Lung-distal,Sample_HT-187_d103_Lung-tracheal-epi
+    query_batches: HT-184,HT-228,HT-232,HT-187
+    unseen_labels: "Basal like,Ciliated,Hepatocyte,Mesenchyme subtype 4,T cell/NK cell 1"
+    species: Human
 methods:
   - name: all
   - name: random
