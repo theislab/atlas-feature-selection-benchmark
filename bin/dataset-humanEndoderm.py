@@ -63,6 +63,10 @@ def get_humanEndoderm():
     adata.var.index = adata.var["name"].values
     adata.var_names_make_unique()
 
+    print("Removing undefined cells...")
+    is_undefined = adata.obs["Cell_type"].isin(["Undefined"])
+    adata = adata[~is_undefined, :]
+
     print("Cleaning up temporary directory...")
     temp_dir.cleanup()
 
