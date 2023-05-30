@@ -152,6 +152,27 @@ process DATASET_SCEIAD {
         """
 }
 
+process DATASET_HUMANENDODERM {
+    conda "envs/scanpy.yml"
+
+    label "process_low"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("humanEndoderm"), path("humanEndoderm.h5ad")
+
+    script:
+        """
+        dataset-humanEndoderm.py --out-file "humanEndoderm.h5ad"
+        """
+
+    stub:
+        """
+        touch humanEndoderm.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -198,7 +219,7 @@ workflow DATASETS {
         dataset_names = params.datasets.collect{dataset -> dataset.name}
 
         tinySim_ch  = dataset_names.contains("tinySim")  ?
-            DATASET_TINYSIM(file(params.bindir + "/functions/io.R"))  :
+            DATASET_TINYSIM(file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         tinySim2_ch = dataset_names.contains("tinySim2") ?
             DATASET_TINYSIM2(file(params.bindir + "/functions/io.R")) :
@@ -215,8 +236,11 @@ workflow DATASETS {
         reedBreast_ch = dataset_names.contains("reedBreast") ?
             DATASET_REEDBREAST() :
             Channel.empty()
-        scEiaD_ch  = dataset_names.contains("scEiaD")  ?
-            DATASET_SCEIAD(file(params.bindir + "/functions/io.R"))  :
+        scEiaD_ch = dataset_names.contains("scEiaD") ?
+            DATASET_SCEIAD(file(params.bindir + "/functions/io.R")) :
+            Channel.empty()
+        humanEndoderm_ch = dataset_names.contains("humanEndoderm") ?
+            DATASET_HUMANENDODERM() :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
@@ -226,7 +250,8 @@ workflow DATASETS {
 				neurips_ch,
                 fetalLiver_ch,
                 reedBreast_ch,
-                scEiaD_ch
+                scEiaD_ch,
+                humanEndoderm_ch
             )
 
         datasets_ch = Channel

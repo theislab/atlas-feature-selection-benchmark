@@ -16,6 +16,7 @@ datasets:
     batch_col: tech
     query_batches: celseq,celseq2
     label_col: celltype
+    query_batches: inDrop3
     unseen_labels: activated_stellate
     species: Human
   - name: neurips
@@ -41,6 +42,12 @@ datasets:
     query_batches: SRP255195_10xv3_H1,SRP218652_10xv3_donor7,SRP218652_10xv3_donor6,SRP218652_10xv3_donor1,SRP218652_10xv3_donor2,SRP218652_10xv3_donor3,SRP218652_10xv3_donor4,SRP218652_10xv3_donor5,SRP257883_10xv3_donor_22,SRP257883_10xv3_donor_23,SRP257883_10xv3_donor_24,SRP257883_10xv3_donor_25,SRP222958_DropSeq_retina8,SRP222958_DropSeq_retina6,SRP222958_DropSeq_retina2,SRP194595_10xv3_Donor1,SRP194595_10xv3_Donor3,SRP194595_10xv3_Donor2,SRP238409_10xv3_Donor4
     label_col: CellType_predict
     unseen_labels: "B-Cell,Blood Vessel,Macrophage,Pericyte,Smooth Muscle Cell,T/NK-Cell"
+    species: Human
+  - name: humanEndoderm
+    batch_col: Individual
+    label_col: Cell_type
+    query_batches: HT-184,HT-228,HT-232,HT-187
+    unseen_labels: "Basal like,Ciliated,Hepatocyte,Mesenchyme subtype 4,T cell/NK cell 1"
     species: Human
 methods:
   - name: all
