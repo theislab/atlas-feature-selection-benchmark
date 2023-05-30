@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
 })
 
 #' Select features using the scSEGIndex method
@@ -28,12 +28,11 @@ suppressMessages({
 #'
 #' @returns DataFrame containing the selected features
 select_scsegindex_features <- function(input) {
-
     message("Selecting scSEGIndex features...")
 
-    exprs_mat = SummarizedExperiment::assay(input)
-    result = scSEGIndex(exprs_mat = exprs_mat)
-    result$Feature = rownames(result)
+    exprs_mat <- SummarizedExperiment::assay(input)
+    result <- scSEGIndex(exprs_mat = exprs_mat)
+    result$Feature <- rownames(result)
 
     return(result)
 }
@@ -46,14 +45,14 @@ main <- function() {
 
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
-            file,
-            X_name = NULL,
-            uns    = FALSE,
-            varm   = FALSE,
-            obsm   = "X_emb",
-            varp   = FALSE,
-            obsp   = FALSE
-        )
+        file,
+        X_name = NULL,
+        uns    = FALSE,
+        varm   = FALSE,
+        obsm   = "X_emb",
+        varp   = FALSE,
+        obsp   = FALSE
+    )
     print(input)
     score <- select_scsegindex_features(input)
     message("Writing output to '", out_file, "'...")

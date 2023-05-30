@@ -69,24 +69,87 @@ tibble::tribble(
     knitr::kable()
 ```
 
-# Integration metrics {.tabset}
+# Integration (batch) metrics {.tabset}
 
-```{r integration-dotplots, results = "hide"}
+```{r batch-dotplots, results = "hide"}
 src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
     src <- c(
         "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
         "",
         "### Unscaled {.unnumbered}",
-        "```{r integration-dotplots-<<.dataset>>-unscaled}",
+        "```{r batch-dotplots-<<.dataset>>-unscaled}",
         "plot_metrics_dotplot(",
-        "metrics, '<<.dataset>>', metric_type = 'Integration', value = 'Value'",
+        "metrics, '<<.dataset>>', metric_type = 'IntegrationBatch', value = 'Value'",
         ")",
         "```",
         "",
         "### Scaled {.unnumbered}",
-        "```{r integration-dotplots-<<.dataset>>-scaled}",
+        "```{r batch-dotplots-<<.dataset>>-scaled}",
         "plot_metrics_dotplot(",
-        "metrics, '<<.dataset>>', metric_type = 'Integration',",
+        "metrics, '<<.dataset>>', metric_type = 'IntegrationBatch',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+# Integration (bio) metrics {.tabset}
+
+```{r bio-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r bio-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'IntegrationBio', value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r bio-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'IntegrationBio',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+# Mapping metrics {.tabset}
+
+```{r mapping-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r mapping-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Mapping',",
+        "value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r mapping-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Mapping',",
         "value = 'ScaledValue'",
         ")",
         "```",
@@ -119,6 +182,38 @@ src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
         "```{r classification-dotplots-<<.dataset>>-scaled}",
         "plot_metrics_dotplot(",
         "metrics, '<<.dataset>>', metric_type = 'Classification',",
+        "value = 'ScaledValue'",
+        ")",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+# Unseen population metrics {.tabset}
+
+```{r unseen-dotplots, results = "hide"}
+src_list <- lapply(unique(metrics$Dataset), function(.dataset) {
+    src <- c(
+        "## <<.dataset>> {.unnumbered .tabset .tabset-fade .tabset-pills}",
+        "",
+        "### Unscaled {.unnumbered}",
+        "```{r unseen-dotplots-<<.dataset>>-unscaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Unseen',",
+        "value = 'Value'",
+        ")",
+        "```",
+        "",
+        "### Scaled {.unnumbered}",
+        "```{r unseen-dotplots-<<.dataset>>-scaled}",
+        "plot_metrics_dotplot(",
+        "metrics, '<<.dataset>>', metric_type = 'Unseen',",
         "value = 'ScaledValue'",
         ")",
         "```",

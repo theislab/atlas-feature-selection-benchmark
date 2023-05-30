@@ -1,0 +1,27 @@
+name: atlas-feature-selection-milopy
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - anndata=0.8.0
+  - bioconductor-biobase=2.58.0
+  - bioconductor-edger=3.40.0
+  - bioconductor-limma=3.54.0
+  - docopt=0.6.2
+  - h5py=3.7.0
+  - hdf5=1.12.2
+  - matplotlib-base=3.6.3
+  - numba=0.55.2
+  - numpy=1.22.4
+  - pandas=1.4.3
+  - pip=22.2.2
+  - python=3.9.13
+  - r-base=4.2.2
+  - r-statmod=1.5.0
+  - rpy2=3.5.10
+  - scanpy=1.9.1
+  - scikit-learn=1.1.2
+  - scipy=1.9.0
+  - pip:
+    - git+https://github.com/emdann/milopy.git@be1a6cc8abcd69f307f3048475c8f9a34b008bb3

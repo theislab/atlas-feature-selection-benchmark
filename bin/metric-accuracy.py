@@ -39,7 +39,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from pandas import read_csv
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -51,6 +51,8 @@ def main():
 
     print(f"Reading data from '{file}'...")
     input = read_csv(file, sep="\t")
+    print("Removing unseen populations...")
+    input = input[~input["Unseen"]]
     print("Read data:")
     print(input)
     score = calculate_accuracy(input)

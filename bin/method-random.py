@@ -10,12 +10,13 @@ Options:
     -h --help            Show this screen.
     --out-file=<path>    Path to output file.
     --n-features=<int>   Number of features to select [default: 1000].
+    --seed=<int>         Random seed to use [default: 1].
 """
 
 
-def select_random_features(adata, n):
+def select_random_features(adata, n, seed):
     """
-    Select random in a dataset
+    Select random features in a dataset
 
     Parameters
     ----------
@@ -39,9 +40,9 @@ def select_random_features(adata, n):
         )
         n = adata.n_vars
 
-    print(f"Selecting {n} random features...")
+    print(f"Selecting {n} random features with seed {seed}...")
     selected_features = DataFrame({"Feature": adata.var_names})
-    selected_features = selected_features.sample(n=n, random_state=1)
+    selected_features = selected_features.sample(n=n, random_state=seed)
 
     return selected_features
 
@@ -55,13 +56,14 @@ def main():
 
     file = args["<file>"]
     n_features = int(args["--n-features"])
+    seed = int(args["--seed"])
     out_file = args["--out-file"]
 
     print(f"Reading data from '{file}'...")
     input = read_h5ad(file)
     print("Read data:")
     print(input)
-    output = select_random_features(input, n_features)
+    output = select_random_features(input, n_features, seed)
     print(f"Writing output to '{out_file}'...")
     output.to_csv(out_file, sep="\t", index=False)
     print("Done!")

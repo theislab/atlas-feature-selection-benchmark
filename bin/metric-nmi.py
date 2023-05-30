@@ -30,13 +30,17 @@ def calculate_nmi(adata):
     -------
     The NMI score [0, 1] where 0 is no mutual information, and 1 a perfect correlation.
     """
-    from scib.metrics import nmi
-    from scib.metrics import opt_louvain
+    from scib.metrics import nmi, cluster_optimal_resolution
+    from scanpy.preprocessing import neighbors
 
+    print("Calculating neighbors...")
+    neighbors(adata, use_rep="X_emb")
     print("Optimising clusters...")
-    opt_louvain(adata, label_key="Label", cluster_key="Cluster", function=nmi)
+    cluster_optimal_resolution(
+        adata, label_key="Label", cluster_key="Cluster", metric=nmi
+    )
     print("Calculating score...")
-    score = nmi(adata, group1="Label", group2="Cluster")
+    score = nmi(adata, label_key="Label", cluster_key="Cluster")
     print(f"Final score: {score}")
 
     return score
@@ -46,7 +50,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -62,7 +66,7 @@ def main():
     print(input)
     score = calculate_nmi(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "NMI", score
+        dataset, method, integration, "IntegrationBio", "NMI", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

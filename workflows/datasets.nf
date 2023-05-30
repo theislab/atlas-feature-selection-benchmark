@@ -9,7 +9,7 @@
 process DATASET_TINYSIM {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -31,7 +31,7 @@ process DATASET_TINYSIM {
 process DATASET_TINYSIM2 {
     conda "envs/splatter.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     input:
         path(functions)
@@ -53,7 +53,7 @@ process DATASET_TINYSIM2 {
 process DATASET_SCIBPANCREAS {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/datasets-raw/", mode: "copy"
+    publishDir "$params.outdir/datasets-raw/"
 
     output:
         tuple val("scIBPancreas"), path("scIBPancreas.h5ad")
@@ -66,6 +66,89 @@ process DATASET_SCIBPANCREAS {
     stub:
         """
         touch scIBPancreas.h5ad
+        """
+}
+
+process DATASET_NEURIPS {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("neurips"), path("neurips.h5ad")
+
+    script:
+        """
+        dataset-neurips.py --out-file "neurips.h5ad"
+        """
+
+    stub:
+        """
+        touch neurips.h5ad
+        """
+}
+
+process DATASET_FETALLIVER {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("fetalLiver"), path("fetalLiver.h5ad")
+
+    script:
+        """
+        dataset-fetalLiver.py --out-file "fetalLiver.h5ad"
+        """
+
+    stub:
+        """
+        touch fetalLiver.h5ad
+        """
+}
+
+process DATASET_REEDBREAST {
+    conda "envs/cellxgene-census.yml"
+
+    label "process_low"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("reedBreast"), path("reedBreast.h5ad")
+
+    script:
+        """
+        dataset-reedBreast.py --out-file "reedBreast.h5ad"
+        """
+
+    stub:
+        """
+        touch reedBreast.h5ad
+        """
+}
+
+process DATASET_SCEIAD {
+    conda "envs/seurat.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    label "process_medium"
+
+    input:
+        path(functions)
+
+    output:
+        tuple val("scEiaD"), path("scEiaD.h5ad")
+
+    script:
+        """
+        dataset-scEiaD.R --out-file "scEiaD.h5ad"
+        """
+
+    stub:
+        """
+        touch scEiaD.h5ad
         """
 }
 
@@ -93,8 +176,10 @@ process PREPARE_DATASET {
 
     publishDir "$params.outdir/datasets-prepped/"
 
+    label "process_medium"
+
     input:
-        tuple val(name), val(batch_col), val(label_col), val(query_batches), path(file)
+        tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)
 
     output:
         tuple val(name), path("${name}-reference.h5ad"), path("${name}-query.h5ad")
@@ -104,8 +189,10 @@ process PREPARE_DATASET {
         prepare-dataset.py \\
             --name "${name}" \\
             --batch-col "${batch_col}" \\
-            --label-col "${label_col}" \\
             --query-batches "${query_batches}" \\
+            --label-col "${label_col}" \\
+            --unseen-labels "${unseen_labels}" \\
+            --species "${species}" \\
             --reference-out "${name}-reference.h5ad" \\
             --query-out "${name}-query.h5ad" \\
             ${file}
@@ -130,13 +217,25 @@ workflow DATASETS {
         dataset_names = params.datasets.collect{dataset -> dataset.name}
 
         tinySim_ch  = dataset_names.contains("tinySim")  ?
-            DATASET_TINYSIM(file(params.bindir + "/_functions.R"))  :
+            DATASET_TINYSIM(file(params.bindir + "/functions/io.R"))  :
             Channel.empty()
         tinySim2_ch = dataset_names.contains("tinySim2") ?
-            DATASET_TINYSIM2(file(params.bindir + "/_functions.R")) :
+            DATASET_TINYSIM2(file(params.bindir + "/functions/io.R")) :
             Channel.empty()
         scIBPancreas_ch = dataset_names.contains("scIBPancreas") ?
             DATASET_SCIBPANCREAS() :
+            Channel.empty()
+		neurips_ch = dataset_names.contains("neurips") ?
+            DATASET_NEURIPS() :
+            Channel.empty()
+        fetalLiver_ch = dataset_names.contains("fetalLiver") ?
+            DATASET_FETALLIVER() :
+            Channel.empty()
+        reedBreast_ch = dataset_names.contains("reedBreast") ?
+            DATASET_REEDBREAST() :
+            Channel.empty()
+        scEiaD_ch  = dataset_names.contains("scEiaD")  ?
+            DATASET_SCEIAD(file(params.bindir + "/functions/io.R"))  :
             Channel.empty()
         HumanEndoderm_ch = dataset_names.contains("HumanEndoderm") ?
             DATASET_HUMANENDODERM() :
@@ -146,6 +245,11 @@ workflow DATASETS {
             .mix(
                 tinySim2_ch,
                 scIBPancreas_ch
+                scIBPancreas_ch,
+				neurips_ch,
+                fetalLiver_ch,
+                reedBreast_ch,
+                scEiaD_ch,
                 HumanEndoderm_ch
             )
 
@@ -155,8 +259,10 @@ workflow DATASETS {
                 tuple(
                     dataset.name,
                     dataset.batch_col,
+                    dataset.query_batches,
                     dataset.label_col,
-                    dataset.query_batches
+                    dataset.unseen_labels,
+                    dataset.species
                 )
             }
             .join(raw_datasets_ch)

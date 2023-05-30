@@ -7,6 +7,7 @@ For more information please refer to the documentation on the [wiki](https://git
 ## Directory structure
 
 * `bin/` - Scripts used in **Nextflow** workflows
+  * `functions/` - Functions used across multiple scripts
 * `conf/` - **Nextflow** configuration files
 * `envs/` - **conda** environment YAML files
 * `output/` - Output from Nexflow workflows (not included in **git**)
