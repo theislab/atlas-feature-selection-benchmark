@@ -19,7 +19,7 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
 })
 
 #' Select features using the NBumi method
@@ -28,12 +28,28 @@ suppressMessages({
 #'
 #' @returns DataFrame containing the selected features
 select_nbumi_features <- function(input) {
-
     message("Selecting NBumi features...")
 
-    count_mat <- NBumiConvertData(SingleCellExperiment::counts(input), is.counts=TRUE)
+    count_mat <- NBumiConvertData(
+        SingleCellExperiment::counts(input),
+        is.counts = TRUE
+    )
     DANB_fit <- NBumiFitModel(count_mat)
-    result <- NBumiFeatureSelectionCombinedDrop(DANB_fit, method="fdr", qval.thres=0.01, suppress.plot=TRUE)
+    result <- NBumiFeatureSelectionCombinedDrop(
+        DANB_fit,
+        qval.thres = 0.01,
+        suppress.plot = TRUE
+    )
+
+    if (nrow(result) <= 500) {
+        warning("Less than 500 significant feature found, using the top 500")
+        result <- NBumiFeatureSelectionCombinedDrop(
+            DANB_fit,
+            ntop = 500,
+            suppress.plot = TRUE
+        )
+    }
+
     result$Feature <- rownames(result)
 
     return(result)
@@ -47,14 +63,14 @@ main <- function() {
 
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
-            file,
-            X_name = "counts",
-            uns    = FALSE,
-            varm   = FALSE,
-            obsm   = "X_emb",
-            varp   = FALSE,
-            obsp   = FALSE
-        )
+        file,
+        X_name = "counts",
+        uns    = FALSE,
+        varm   = FALSE,
+        obsm   = "X_emb",
+        varp   = FALSE,
+        obsp   = FALSE
+    )
     print(input)
     score <- select_nbumi_features(input)
     message("Writing output to '", out_file, "'...")

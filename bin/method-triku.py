@@ -26,19 +26,25 @@ def select_triku_features(adata):
     DataFrame containing the selected features
     """
 
-    from pandas import DataFrame
     import triku as tk
     import scanpy as sc
 
-    sc.pp.filter_genes(adata, min_cells=5)
+    print("Filtering and normalizing data...")
+    sc.pp.filter_cells(adata, min_genes=50)
+    sc.pp.filter_genes(adata, min_cells=10)
+    sc.pp.normalize_total(adata)
+    sc.pp.log1p(adata)
+
+    print("Building neighbourhood graph...")
     sc.pp.pca(adata)
-    sc.pp.neighbors(adata, metric='cosine', n_neighbors=int(0.5 * len(adata) ** 0.5))
-    
-    tk.tl.triku(adata)
-    
-    adata.var['Feature'] = adata.var.index
+    sc.pp.neighbors(adata, metric="cosine", n_neighbors=int(0.5 * len(adata) ** 0.5))
+
+    print("Selecting triku features...")
+    tk.tl.triku(adata, verbose="info")
+
+    adata.var["Feature"] = adata.var.index
     selected_features = adata.var
-    selected_features = selected_features[selected_features['highly_variable']==True]
+    selected_features = selected_features[selected_features["highly_variable"] == True]
 
     return selected_features
 

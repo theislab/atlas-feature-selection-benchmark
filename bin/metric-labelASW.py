@@ -31,7 +31,7 @@ def calculate_label_asw(adata):
     from scib.metrics import silhouette
 
     print("Calculating final score...")
-    score = silhouette(adata, group_key="Label", embed="X_emb")
+    score = silhouette(adata, label_key="Label", embed="X_emb")
     print(f"Final score: {score}")
 
     return score
@@ -41,7 +41,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
-    from _functions import format_metric_results
+    from functions.metrics import format_metric_results
 
     args = docopt(__doc__)
 
@@ -57,7 +57,7 @@ def main():
     print(input)
     score = calculate_label_asw(input)
     output = format_metric_results(
-        dataset, method, integration, "Integration", "labelASW", score
+        dataset, method, integration, "IntegrationBio", "labelASW", score
     )
     print(output)
     print(f"Writing output to '{out_file}'...")

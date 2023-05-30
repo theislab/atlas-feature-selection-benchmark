@@ -1,57 +1,184 @@
+experiment: full-analysis
 datasets:
   - name: tinySim
     batch_col: Batch
-    label_col: Group
     query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
+    species: Simulation
   - name: tinySim2
     batch_col: Batch
-    label_col: Group
     query_batches: Batch4
+    label_col: Group
+    unseen_labels: Group2
+    species: Simulation
   - name: scIBPancreas
     batch_col: tech
+    query_batches: celseq,celseq2
     label_col: celltype
     query_batches: inDrop3
+    unseen_labels: activated_stellate
+    species: Human
+  - name: neurips
+    batch_col: batch
+    query_batches: s4d1,s4d8,s4d9
+    label_col: cell_type
+    unseen_labels: "CD8+ T naive,Proerythroblast"
+    species: Human
+  - name: fetalLiver
+    batch_col: fetal.ids
+    query_batches: "F16_male_8+1PCW,F33_female_9+5PCW,F45_female_13+6PCW"
+    label_col: cell.labels
+    unseen_labels: "Kupffer Cell,NK,ILC precursor,Early lymphoid_T lymphocyte"
+    species: Human
+  - name: reedBreast
+    batch_col: donor_id
+    query_batches: HBCA_Donor_23,HBCA_Donor_24,HBCA_Donor_25,HBCA_Donor_26,HBCA_Donor_27,HBCA_Donor_28,HBCA_Donor_29,HBCA_Donor_30,HBCA_Donor_31,HBCA_Donor_32,HBCA_Donor_33,HBCA_Donor_50,HBCA_Donor_51,HBCA_Donor_52,HBCA_Donor_53,HBCA_Donor_54,HBCA_Donor_55
+    label_col: level2
+    unseen_labels: "BSL2,CD8T 1,CD8T 2,CD8T 3,FB5,LEC1,LEC2"
+    species: Human
+  - name: scEiaD
+    batch_col: batch
+    query_batches: SRP255195_10xv3_H1,SRP218652_10xv3_donor7,SRP218652_10xv3_donor6,SRP218652_10xv3_donor1,SRP218652_10xv3_donor2,SRP218652_10xv3_donor3,SRP218652_10xv3_donor4,SRP218652_10xv3_donor5,SRP257883_10xv3_donor_22,SRP257883_10xv3_donor_23,SRP257883_10xv3_donor_24,SRP257883_10xv3_donor_25,SRP222958_DropSeq_retina8,SRP222958_DropSeq_retina6,SRP222958_DropSeq_retina2,SRP194595_10xv3_Donor1,SRP194595_10xv3_Donor3,SRP194595_10xv3_Donor2,SRP238409_10xv3_Donor4
+    label_col: CellType_predict
+    unseen_labels: "B-Cell,Blood Vessel,Macrophage,Pericyte,Smooth Muscle Cell,T/NK-Cell"
+    species: Human
+  - name: humanEndoderm
+    batch_col: Individual
+    label_col: Cell_type
+    query_batches: HT-184,HT-228,HT-232,HT-187
+    unseen_labels: "Basal like,Ciliated,Hepatocyte,Mesenchyme subtype 4,T cell/NK cell 1"
+    species: Human
   - name: HLCA
     batch_col: sample
     label_col: ann_finest_level
     query_batches: 368C_0h,368C_72h,368C_24h,356C_72h,390C_24h,368C_12h,356C_24h,356C_12h,390C_0h,390C_72h,356C_0h,390C_12h
+    unseen_labels:
+    species: Human
 methods:
   - name: all
-  - name: random-N500
-  - name: random-N1000
-  - name: random-N2000
-  - name: random-N5000
-  - name: scanpy-default
+  - name: random
+    settings:
+      - n_features: 500
+        seed: 1
+      - n_features: 1000
+        seed: 1
+      - n_features: 2000
+        seed: 1
+      - n_features: 5000
+        seed: 1
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 2000
+        batch: "False"
   - name: triku
   - name: hotspot
   - name: scsegindex
+  - name: dubstepr
   - name: nbumi
+  - name: osca
+  - name: seurat
+    settings:
+      - method: vst
+        n_features: 2000
+  - name: scry
+  - name: singleCellHaystack
+  - name: Brennecke
+  - name: wilcoxon
+  - name: statistic
+    settings:
+      - statistic: mean
+        n_features: 2000
+  - name: scPNMF
+  - name: anticor
+integration:
+  seeds:
+    - 1
 metrics:
+  # Integration (batch) metrics
   - name: batchPurity
-    type: Integration
+    type: IntegrationBatch
   - name: mixing
-    type: Integration
-  - name: cLISI
-    type: Integration
-  - name: nmi
-    type: Integration
-  - name: labelASW
-    type: Integration
-  - name: graphConnectivity
-    type: Integration
+    type: IntegrationBatch
+  - name: kBET
+    type: IntegrationBatch
   - name: batchPCR
-    type: Integration
+    type: IntegrationBatch
   - name: iLISI
-    type: Integration
+    type: IntegrationBatch
+  - name: batchASW
+    type: IntegrationBatch
+  - name: graphConnectivity
+    type: IntegrationBatch
+  - name: CMS
+    type: IntegrationBatch
+  # Integration (bio) metrics
+  - name: localStructure
+    type: IntegrationBio
+  - name: cLISI
+    type: IntegrationBio
   - name: ari
-    type: Integration
+    type: IntegrationBio
+  - name: bARI
+    type: IntegrationBio
+  - name: nmi
+    type: IntegrationBio
+  - name: bNMI
+    type: IntegrationBio
+  - name: labelASW
+    type: IntegrationBio
+  - name: isolatedLabelsF1
+    type: IntegrationBio
+  - name: isolatedLabelsASW
+    type: IntegrationBio
+  - name: cellCycle
+    type: IntegrationBio
+  - name: ldfDiff
+    type: IntegrationBio
+  # Mapping metrics
+  - name: mLISI
+    type: Mapping
+  - name: qLISI
+    type: Mapping
+  - name: cellDist
+    type: Mapping
+  - name: labelDist
+    type: Mapping
+  - name: reconstruction
+    type: Mapping
+  - name: kNNcorr
+    type: Mapping
+  # Classification metrics
   - name: accuracy
     type: Classification
   - name: rareAccuracy
     type: Classification
-  - name: MCC
+  - name: f1Micro
+    type: Classification
+  - name: f1Macro
+    type: Classification
+  - name: f1Rarity
     type: Classification
   - name: jaccardIndexMicro
     type: Classification
   - name: jaccardIndexMacro
     type: Classification
+  - name: jaccardIndexRarity
+    type: Classification
+  - name: MCC
+    type: Classification
+  - name: AUPRC
+    type: Classification
+  # Unseen metrics
+  - name: unseenCellDist
+    type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
+  - name: MILO
+    type: Unseen
+  - name: uncertainty
+    type: Unseen
+reports:
+  - name: metrics
+  - name: integration-variation

@@ -21,7 +21,8 @@ suppressPackageStartupMessages({
 
 # Source functions
 suppressMessages({
-    source("_functions.R")
+    source("io.R")
+    source("metrics.R")
 })
 
 #' Calculate the Seurat mixing metric for an integrated dataset
@@ -77,10 +78,8 @@ main <- function() {
         obsp   = FALSE
     )
     message("Converting to Seurat object...")
-    # Store dummy logcounts for Seurat's conversion function
-    SingleCellExperiment::logcounts(input) <- SingleCellExperiment::counts(input)
     SingleCellExperiment::reducedDimNames(input) <- "emb"
-    seurat <- SeuratObject::as.Seurat(input)
+    seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     score <- calculate_mixing(seurat)
@@ -88,7 +87,7 @@ main <- function() {
         dataset,
         method,
         integration,
-        "Integration",
+        "IntegrationBatch",
         "Mixing",
         score
     )

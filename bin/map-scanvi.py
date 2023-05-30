@@ -4,16 +4,17 @@
 Map a query dataset to an scANVI reference model
 
 Usage:
-    map-scanvi.py --reference=<path> --out-dir=<path> [options] <file>
+    map-scanvi.py--reference=<file> --reference-model=<path> --out-dir=<path> [options] <file>
 
 Options:
-    -h --help            Show this screen.
-    --reference=<path>   Path to reference model directory.
-    --out-dir=<path>     Path to output directory.
+    -h --help                  Show this screen.
+    --reference=<file>         Path to reference AnnData file.
+    --reference-model=<path>   Path to reference model directory.
+    --out-dir=<path>           Path to output directory.
 """
 
 import scvi
-from _functions import (
+from functions.integration import (
     add_umap,
     add_integrated_embeddings,
     suffix_embeddings,
@@ -61,27 +62,35 @@ def main():
     from docopt import docopt
     from scanpy import read_h5ad
     from os.path import join
+    from functions.anndata import minimise_anndata
 
     args = docopt(__doc__)
 
     file = args["<file>"]
-    reference_dir = args["--reference"]
+    reference_file = args["--reference"]
+    reference_dir = args["--reference-model"]
     out_dir = args["--out-dir"]
 
+    print(f"Reading reference AnnData from '{reference_file}'...")
+    reference_adata = read_h5ad(reference_file)
+
     print(f"Reading reference model from '{reference_dir}'...")
-    reference = scvi.model.SCANVI.load(reference_dir)
-    del reference.adata.obsm  # Clear the reference embeddings
+    model_adata = read_h5ad(join(reference_dir, "adata.h5ad"))
+    model_adata.X = reference_adata[:, model_adata.var_names].X.copy()
+    reference = scvi.model.SCANVI.load(reference_dir, adata=model_adata)
     print("Read model:")
     print(reference)
+
     print(f"Reading query from '{file}'...")
     input = read_h5ad(file)
     print("Read query:")
     print(input)
-    print("Subsetting query to selected features...")
-    input = input[:, reference.adata.var_names].copy()
-    print(input)
 
-    output = map_query_scANVI(reference, input)
+    print("Subsetting query to selected features...")
+    query = input[:, model_adata.var_names].copy()
+    print(query)
+
+    output = map_query_scANVI(reference, query)
 
     print("Adding embeddings to query...")
     add_umap(output.adata)
@@ -89,9 +98,9 @@ def main():
     add_integrated_embeddings(output, output.adata)
 
     print("Concatenating reference and query...")
-    input.obs["Dataset"] = "Query"
-    reference.adata.obs["Dataset"] = "Reference"
-    full = output.adata.concatenate(reference.adata)
+    output.adata.obs["Dataset"] = "Query"
+    model_adata.obs["Dataset"] = "Reference"
+    full = output.adata.concatenate(model_adata)
 
     print("Adding unintegrated UMAP...")
     add_umap(full)
@@ -99,17 +108,28 @@ def main():
     add_integrated_embeddings(output, full)
 
     print(f"Writing output to '{out_dir}'...")
-    output.save(out_dir, save_anndata=True, overwrite=True)
+    output.save(out_dir, save_anndata=False, overwrite=True)
+    output_min = minimise_anndata(
+        output.adata, obs=["Batch", "Label", "Unseen"], obsm=["X_emb"], uns=["Species"]
+    )
+    output_min.write_h5ad(join(out_dir, "adata.h5ad"))
+
+    # Set unseen labels to string for plotting
+    full.obs["Unseen"] = full.obs["Unseen"].astype(str)
     umap_file = join(out_dir, "umap-unintegrated.png")
     umap = plot_embedding(
-        full, basis="X_umap_unintegrated", groups=["Dataset", "Batch", "Label"]
+        full,
+        basis="X_umap_unintegrated",
+        groups=["Dataset", "Batch", "Label", "Unseen"],
     )
     print(f"Saving unintegrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     umap_file = join(out_dir, "umap-integrated.png")
-    umap = plot_embedding(full, groups=["Dataset", "Batch", "Label"])
+    umap = plot_embedding(full, groups=["Dataset", "Batch", "Label", "Unseen"])
     print(f"Saving integrated UMAP plot to '{umap_file}'...")
     umap.savefig(umap_file, dpi=300, bbox_inches="tight")
+
     print("Done!")
 
 
