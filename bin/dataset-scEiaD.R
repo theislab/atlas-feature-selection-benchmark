@@ -54,6 +54,9 @@ get_scEiaD <- function() {
     message("Selecting Eye cells...")
     is_eye <- sce$Organ == "Eye"
 
+    message("Selecting Tissue cells...")
+    is_tissue <- sce$Source == "Tissue"
+
     message("Selecting cells with labels...")
     has_label <- !is.na(sce$CellType_predict)
 
@@ -61,7 +64,7 @@ get_scEiaD <- function() {
     non_doublet <- sce$Doublet == "FALSE"
 
     message("Subsetting to selected cells...")
-    selected <- is_human & is_eye & has_label & non_doublet
+    selected <- is_human & is_eye & is_tissue & has_label & non_doublet
     sce <- sce[, selected]
 
     return(sce)
