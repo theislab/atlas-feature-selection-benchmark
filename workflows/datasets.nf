@@ -192,6 +192,25 @@ process DATASET_HLCA {
         """
 }
 
+process DATASET_HLCAIMMUNE {
+    conda "envs/cellxgene-census.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("HLCAImmune"), path("HLCAImmune.h5ad")
+
+    script:
+        """
+        dataset-HLCAImmune.py --out-file "HLCAImmune.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCAImmune.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -264,6 +283,9 @@ workflow DATASETS {
         hlca_ch = dataset_names.contains("HLCA") ?
             DATASET_HLCA() :
             Channel.empty()
+        hlcaImmune_ch = dataset_names.contains("HLCAImmune") ?
+            DATASET_HLCAIMMUNE() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
@@ -274,7 +296,8 @@ workflow DATASETS {
                 reedBreast_ch,
                 scEiaD_ch,
                 humanEndoderm_ch,
-                hlca_ch
+                hlca_ch,
+                hlcaImmune_ch
             )
 
         datasets_ch = Channel
