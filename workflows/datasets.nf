@@ -173,6 +173,44 @@ process DATASET_HUMANENDODERM {
         """
 }
 
+process DATASET_HLCA {
+    conda "envs/cellxgene-census.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("HLCA"), path("HLCA.h5ad")
+
+    script:
+        """
+        dataset-HLCA.py --out-file "HLCA.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCA.h5ad
+        """
+}
+
+process DATASET_HLCAIMMUNE {
+    conda "envs/cellxgene-census.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("HLCAImmune"), path("HLCAImmune.h5ad")
+
+    script:
+        """
+        dataset-HLCAImmune.py --out-file "HLCAImmune.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCAImmune.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -242,6 +280,12 @@ workflow DATASETS {
         humanEndoderm_ch = dataset_names.contains("humanEndoderm") ?
             DATASET_HUMANENDODERM() :
             Channel.empty()
+        hlca_ch = dataset_names.contains("HLCA") ?
+            DATASET_HLCA() :
+            Channel.empty()
+        hlcaImmune_ch = dataset_names.contains("HLCAImmune") ?
+            DATASET_HLCAIMMUNE() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
@@ -251,7 +295,9 @@ workflow DATASETS {
                 fetalLiver_ch,
                 reedBreast_ch,
                 scEiaD_ch,
-                humanEndoderm_ch
+                humanEndoderm_ch,
+                hlca_ch,
+                hlcaImmune_ch
             )
 
         datasets_ch = Channel
