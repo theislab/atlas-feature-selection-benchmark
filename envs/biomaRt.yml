@@ -1,0 +1,10 @@
+name: atlas-feature-selection-biomart
+channels:
+  - conda-forge
+  - bioconda
+  - defaults
+dependencies:
+  - bioconductor-biomart=2.54.0
+  - pip=22.2.2
+  - r-base=4.2.2
+  - r-docopt=0.7.1
