@@ -32,6 +32,14 @@ prepared_datasets_ch = Channel
         )
     }
 
+tirosh_genes_ch = Channel
+    .fromList(["tirosh-genes"])
+    .map { dataset ->
+        tuple(
+            file(params.outdir + "/datasets-raw/" + dataset + ".tsv"),
+        )
+    }
+
 features_ch = Channel
     .fromList(params.methods)
     .map { method ->
@@ -140,7 +148,7 @@ workflow WF_INTEGRATION {
 // WORKFLOW: Run metrics
 //
 workflow WF_METRICS {
-    METRICS(reference_ch, query_ch)
+    METRICS(reference_ch, query_ch, labels_ch, tirosh_genes_ch)
 }
 
 //
@@ -160,7 +168,8 @@ workflow WF_ALL {
     METRICS(
         INTEGRATION.out.reference_ch,
         INTEGRATION.out.query_ch,
-        INTEGRATION.out.labels_ch
+        INTEGRATION.out.labels_ch,
+        DATASETS.out.tirosh_genes_ch
     )
     REPORTS(METRICS.out)
 }
