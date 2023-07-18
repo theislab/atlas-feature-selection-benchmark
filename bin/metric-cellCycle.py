@@ -47,6 +47,18 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
         )
         return 1.0
 
+    # Ignore batches with fewer than 50 cells
+    # Necessary to avoid a bug in scIB
+    # Fixed by updated to scIB v1.1.3
+    batch_counts = exprs.obs["Batch"].value_counts()
+    ignore_batches = list(batch_counts.index[batch_counts < 50])
+    if len(ignore_batches) > 0:
+        print(f"Ignoring these batches with fewer than 50 cells: {', '.join(ignore_batches)}")
+        exprs = exprs[~ exprs.obs["Batch"].isin(ignore_batches)].copy()
+        exprs.obs["Batch"] = exprs.obs["Batch"].cat.remove_unused_categories()
+        adata = adata[~ adata.obs["Batch"].isin(ignore_batches)].copy()
+        adata.obs["Batch"] = adata.obs["Batch"].cat.remove_unused_categories()
+
     print("Calculating batch cell cycle scores...")
     batches = exprs.obs["Batch"].unique()
     for batch in batches:
@@ -55,6 +67,8 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
         score_genes_cell_cycle(exprs_batch, s_genes, g2m_genes)
         exprs.obs.loc[exprs_batch.obs_names, 'S_score'] = exprs_batch.obs['S_score']
         exprs.obs.loc[exprs_batch.obs_names, 'G2M_score'] = exprs_batch.obs['G2M_score']
+        adata.obs.loc[exprs_batch.obs_names, 'S_score'] = exprs_batch.obs['S_score']
+        adata.obs.loc[exprs_batch.obs_names, 'G2M_score'] = exprs_batch.obs['G2M_score']
 
     print("Calculating cell cycle conservation score...")
     score = cell_cycle(
