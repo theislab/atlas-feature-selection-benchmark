@@ -18,7 +18,6 @@ Options:
 #'
 #' @returns data.frame with Tirosh cell cycle genes
 get_tirosh_genes <- function() {
-
     # Base URL for the scIB repository
     base_url <- "https://raw.githubusercontent.com/theislab/scib/cce7aaa65ccc18649e141e30464361d1fc67ea77/scib/resources/"
 
@@ -40,11 +39,11 @@ get_tirosh_genes <- function() {
 
     message("Getting human gene annotations...")
     # Get the human mart
-    human_mart <- biomaRt::useEnsembl("ensembl","hsapiens_gene_ensembl")
+    human_mart <- biomaRt::useEnsembl("ensembl", "hsapiens_gene_ensembl")
 
     # Get the annotations for the human genes
     human_annot <- biomaRt::getBM(
-        attributes = c("ensembl_gene_id","hgnc_symbol"),
+        attributes = c("ensembl_gene_id", "hgnc_symbol"),
         filters    = "hgnc_symbol",
         values     = c(gene_sets$human_G2M$Gene, gene_sets$human_S$Gene),
         mart       = human_mart
@@ -59,19 +58,19 @@ get_tirosh_genes <- function() {
     message("Adding human gene annotations...")
     # Alse set phase and species
     gene_sets$human_G2M$ENSEMBL <- human_map[gene_sets$human_G2M$Gene]
-    gene_sets$human_G2M$Phase   <- "G2M"
+    gene_sets$human_G2M$Phase <- "G2M"
     gene_sets$human_G2M$Species <- "Human"
-    gene_sets$human_S$ENSEMBL   <- human_map[gene_sets$human_S$Gene]
-    gene_sets$human_S$Phase     <- "S"
-    gene_sets$human_S$Species   <- "Human"
+    gene_sets$human_S$ENSEMBL <- human_map[gene_sets$human_S$Gene]
+    gene_sets$human_S$Phase <- "S"
+    gene_sets$human_S$Species <- "Human"
 
     message("Getting mouse gene annotations...")
     # Get the human mart
-    mouse_mart <- biomaRt::useEnsembl("ensembl","mmusculus_gene_ensembl")
+    mouse_mart <- biomaRt::useEnsembl("ensembl", "mmusculus_gene_ensembl")
 
     # Get the annotations for the human genes
     mouse_annot <- biomaRt::getBM(
-        attributes = c("ensembl_gene_id","mgi_symbol"),
+        attributes = c("ensembl_gene_id", "mgi_symbol"),
         filters    = "mgi_symbol",
         values     = c(gene_sets$mouse_G2M$Gene, gene_sets$mouse_S$Gene),
         mart       = mouse_mart
@@ -86,11 +85,11 @@ get_tirosh_genes <- function() {
     message("Adding mouse gene annotations...")
     # Alse set phase and species
     gene_sets$mouse_G2M$ENSEMBL <- mouse_map[gene_sets$mouse_G2M$Gene]
-    gene_sets$mouse_G2M$Phase   <- "G2M"
+    gene_sets$mouse_G2M$Phase <- "G2M"
     gene_sets$mouse_G2M$Species <- "Mouse"
-    gene_sets$mouse_S$ENSEMBL   <- mouse_map[gene_sets$mouse_S$Gene]
-    gene_sets$mouse_S$Phase     <- "S"
-    gene_sets$mouse_S$Species   <- "Mouse"
+    gene_sets$mouse_S$ENSEMBL <- mouse_map[gene_sets$mouse_S$Gene]
+    gene_sets$mouse_S$Phase <- "S"
+    gene_sets$mouse_S$Species <- "Mouse"
 
     message("Creating final data.frame...")
     tirosh_genes <- do.call(rbind, gene_sets)

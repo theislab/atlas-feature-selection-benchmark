@@ -57,7 +57,6 @@ def add_integrated_embeddings(model, adata):
 
 
 def suffix_embeddings(adata, suffix="_unintegrated"):
-
     print(f"Adding {suffix} suffix to embeddings...")
     for key in adata.obsm_keys():
         print(f"Storing {key}...")

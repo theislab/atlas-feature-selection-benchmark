@@ -53,22 +53,24 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
     batch_counts = exprs.obs["Batch"].value_counts()
     ignore_batches = list(batch_counts.index[batch_counts < 50])
     if len(ignore_batches) > 0:
-        print(f"Ignoring these batches with fewer than 50 cells: {', '.join(ignore_batches)}")
-        exprs = exprs[~ exprs.obs["Batch"].isin(ignore_batches)].copy()
+        print(
+            f"Ignoring these batches with fewer than 50 cells: {', '.join(ignore_batches)}"
+        )
+        exprs = exprs[~exprs.obs["Batch"].isin(ignore_batches)].copy()
         exprs.obs["Batch"] = exprs.obs["Batch"].cat.remove_unused_categories()
-        adata = adata[~ adata.obs["Batch"].isin(ignore_batches)].copy()
+        adata = adata[~adata.obs["Batch"].isin(ignore_batches)].copy()
         adata.obs["Batch"] = adata.obs["Batch"].cat.remove_unused_categories()
 
     print("Calculating batch cell cycle scores...")
     batches = exprs.obs["Batch"].unique()
     for batch in batches:
         print(f"Batch '{batch}'")
-        exprs_batch = exprs[exprs.obs['Batch'] == batch].copy()
+        exprs_batch = exprs[exprs.obs["Batch"] == batch].copy()
         score_genes_cell_cycle(exprs_batch, s_genes, g2m_genes)
-        exprs.obs.loc[exprs_batch.obs_names, 'S_score'] = exprs_batch.obs['S_score']
-        exprs.obs.loc[exprs_batch.obs_names, 'G2M_score'] = exprs_batch.obs['G2M_score']
-        adata.obs.loc[exprs_batch.obs_names, 'S_score'] = exprs_batch.obs['S_score']
-        adata.obs.loc[exprs_batch.obs_names, 'G2M_score'] = exprs_batch.obs['G2M_score']
+        exprs.obs.loc[exprs_batch.obs_names, "S_score"] = exprs_batch.obs["S_score"]
+        exprs.obs.loc[exprs_batch.obs_names, "G2M_score"] = exprs_batch.obs["G2M_score"]
+        adata.obs.loc[exprs_batch.obs_names, "S_score"] = exprs_batch.obs["S_score"]
+        adata.obs.loc[exprs_batch.obs_names, "G2M_score"] = exprs_batch.obs["G2M_score"]
 
     print("Calculating cell cycle conservation score...")
     score = cell_cycle(
@@ -167,7 +169,9 @@ def main():
     exprs = read_h5ad(exprs_file)
     print("Read expression data:")
     print(exprs)
-    s_genes, g2m_genes = read_cellcycle_genes(cc_file, exprs.var_names, exprs.uns["Species"])
+    s_genes, g2m_genes = read_cellcycle_genes(
+        cc_file, exprs.var_names, exprs.uns["Species"]
+    )
     score = calculate_cellCycleConservation(input, exprs, s_genes, g2m_genes)
     output = format_metric_results(
         dataset, method, integration, "IntegrationBio", "CellCycle", score
