@@ -503,6 +503,7 @@ process METRIC_CELLCYCLE {
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
+        path(tirosh_genes)
         path(functions)
 
     output:
@@ -515,6 +516,7 @@ process METRIC_CELLCYCLE {
             --method "${method}" \\
             --integration "${integration}" \\
             --exprs "${reference_exprs}" \\
+            --cc-genes "${tirosh_genes}" \\
             --out-file "${dataset}-${method}-${integration}-cellCycle.tsv" \\
             ${reference}
         """
@@ -1222,6 +1224,7 @@ workflow METRICS {
         reference_ch
         query_ch
         labels_ch
+        tirosh_genes_ch
 
     main:
 
@@ -1285,7 +1288,7 @@ workflow METRICS {
             METRIC_ISOLATEDLABELSASW(reference_ch, py_metrics_funcs) :
             Channel.empty()
         cellCycle_ch = metric_names.contains("cellCycle") ?
-            METRIC_CELLCYCLE(reference_ch, py_metrics_funcs) :
+            METRIC_CELLCYCLE(reference_ch, tirosh_genes_ch, py_metrics_funcs) :
             Channel.empty()
         ldfDiff_ch = metric_names.contains("ldfDiff") ?
             METRIC_LDFDIFF(reference_ch, r_io_funcs, r_metrics_funcs) :
