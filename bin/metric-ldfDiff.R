@@ -72,6 +72,12 @@ calculate_ldfDiff <- function(input, exprs) {
     message("Calculating final ldfDiff score...")
     # Scores closer to 0 are better so use absolute values
     scores <- abs(SummarizedExperiment::colData(input)$diff_ldf)
+    if (any(is.na(scores))) {
+        message(
+            "Warning: Ignoring ", sum(is.na(scores)), " cells with NA ldfDiff scores"
+        )
+        scores <- scores[!is.na(scores)]
+    }
     # Score are unbounded so we set any scores greater than 1 to 1
     if (any(scores > 1)) {
         warning(

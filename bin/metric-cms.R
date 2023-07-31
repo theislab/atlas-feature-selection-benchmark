@@ -43,7 +43,12 @@ calculate_CMS <- function(sce) {
     message("Calculating final score...")
     # Score is 1 minus the proportion of cells with a CMS p-value < 0.1
     cms_scores <- SummarizedExperiment::colData(sce)$cms
-    score <- 1 - mean(cms_scores < 0.1)
+    if (any(is.na(cms_scores))) {
+        message(
+            "Warning: Ignoring ", sum(is.na(cms_scores)), " cells with NA CMS scores"
+        )
+    }
+    score <- 1 - mean(cms_scores < 0.1, na.rm = TRUE)
 
     return(score)
 }
