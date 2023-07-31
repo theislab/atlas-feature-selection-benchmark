@@ -31,8 +31,9 @@ suppressMessages({
 #' @param method The feature selection method to use
 #'
 #' @returns DataFrame containing the selected features
-select_seurat_features <- function(seurat, n_features,
-    method = c("vst", "mvp", "disp", "sct")) {
+select_seurat_features <- function(
+        seurat, n_features,
+        method = c("vst", "mvp", "disp", "sct")) {
     method <- match.arg(method)
 
     method <- switch(method,

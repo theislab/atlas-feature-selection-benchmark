@@ -25,7 +25,6 @@ suppressMessages({
 #'
 #' @returns SingleCellExperiment with the scEiaD dataset
 get_scEiaD <- function() {
-
     options(timeout = 3600) # Increase download timeout to 1 hour
     temp_file <- tempfile(fileext = ".Rdata")
     on.exit(file.remove(temp_file))

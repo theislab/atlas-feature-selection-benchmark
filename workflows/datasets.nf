@@ -6,6 +6,25 @@
 */
 
 
+process DATASET_TIROSH_GENES {
+    conda "envs/biomaRt.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        path("tirosh-genes.tsv")
+
+    script:
+        """
+        dataset-tirosh-genes.R --out-file "tirosh-genes.tsv"
+        """
+
+    stub:
+        """
+        touch tirosh-genes.tsv
+        """
+}
+
 process DATASET_TINYSIM {
     conda "envs/splatter.yml"
 
@@ -316,8 +335,11 @@ workflow DATASETS {
 
         PREPARE_DATASET(datasets_ch)
 
+        DATASET_TIROSH_GENES()
+
     emit:
         prepared_datasets_ch = PREPARE_DATASET.out
+        tirosh_genes_ch = DATASET_TIROSH_GENES.out
 }
 
 /*

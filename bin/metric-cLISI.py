@@ -68,7 +68,10 @@ def calculate_cLISI(adata):
 
     if n_unconnected > 0:
         from warnings import warn
-        warn(f"Found {n_unconnected} cells with fewer than {k0} neighbours. These cells will be skipped.")
+
+        warn(
+            f"Found {n_unconnected} cells with fewer than {k0} neighbours. These cells will be skipped."
+        )
 
     # Delete the neighbourhood graph so it's not used by the metric
     del adata.uns["neighbors"]
