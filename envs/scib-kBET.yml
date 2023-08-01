@@ -9,9 +9,8 @@ dependencies:
   - docopt=0.6.2
   - h5py=3.7.0
   - hdf5=1.12.2
-  - igraph=0.10.3
-  - leidenalg=0.9.1
-  - louvain=0.8.0
+  - igraph=0.10.6
+  - leidenalg=0.10.1
   - matplotlib-base=3.6.3
   - numba=0.55.2
   - numpy=1.22.4
@@ -30,8 +29,9 @@ dependencies:
   - r-reticulate=1.26
   - scanpy=1.9.1
   - scikit-learn=1.1.2
-  - scikit-misc=0.1.4
   - scipy=1.9.0
   - pip:
     - rpy2==3.5.4
-    - git+https://github.com/theislab/scib.git@v1.1.1
+    - scib==1.1.4
+    - scikit-misc==0.3.0
+
