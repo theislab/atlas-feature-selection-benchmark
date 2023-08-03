@@ -20,5 +20,5 @@ dependencies:
   - scikit-learn=1.1.2
   - scipy=1.9.0
   - pip:
-    - scib==1.1.4
+    - git+https://github.com/theislab/scib.git@v1.1.4
     - scikit-misc==0.3.0
