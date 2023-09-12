@@ -71,6 +71,37 @@ process INTEGRATE_SCANVI {
         """
 }
 
+process INTEGRATE_SYMPHONY {
+    conda "envs/symphonypy.yml"
+
+    publishDir "$params.outdir/integration-models/${dataset}/${method}",
+        pattern: "symphony-reference",
+        saveAs: { pathname -> pathname + "-${seed}" }
+
+    input:
+        tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val("Symphony"), val(seed), path(reference), path("symphony-reference"), path(query)
+
+    script:
+        """
+        integrate-symphony.py \\
+            --features "${features}" \\
+            --out-dir symphony-reference \\
+            --seed "${seed}" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        mkdir symphony-reference
+        touch symphony-reference/adata.h5ad
+        touch symphony-reference/harmony.pkl
+        """
+}
+
 process MAP_SCVI {
     conda "envs/scvi-tools.yml"
 
@@ -204,11 +235,12 @@ workflow INTEGRATION {
 
     main:
 
-        scvi_ch = datasets_features_ch
+        integration_ch = datasets_features_ch
             .combine(Channel.fromList(params.integration.seeds))
 
-        INTEGRATE_SCVI(scvi_ch, file(params.bindir + "/functions/integration.py"))
+        INTEGRATE_SCVI(integration_ch, file(params.bindir + "/functions/integration.py"))
         INTEGRATE_SCANVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/integration.py"))
+        INTEGRATE_SYMPHONY(integration_ch, file(params.bindir + "/functions/integration.py"))
 
         MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/integration.py"))
         MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/functions/integration.py"))
@@ -229,6 +261,7 @@ workflow INTEGRATION {
     emit:
         reference_ch = INTEGRATE_SCVI.out
             .mix(INTEGRATE_SCANVI.out)
+            .mix(INTEGRATE_SYMPHONY.out)
             .map { it ->
                 tuple(
                     it[0],                       // Dataset name
