@@ -36,18 +36,9 @@ def run_symphony(adata, seed):
     AnnData object with integrated embedding in adata.obsm["X_emb"]
     """
 
-    from scanpy.preprocessing import normalize_total, log1p, scale
+    from scanpy.preprocessing import scale
     from scanpy.tools import pca
     from symphonypy.preprocessing import harmony_integrate
-
-    print("Storing counts matrix...")
-    counts = adata.X.copy()
-
-    print("Normalising...")
-    normalize_total(adata, target_sum=1e4)
-
-    print("Log transforming...")
-    log1p(adata)
 
     print("Scaling...")
     scale(adata, max_value=10)
@@ -61,9 +52,6 @@ def run_symphony(adata, seed):
         adata, key="Batch", ref_basis_adjusted="X_emb", verbose=True, random_seed=seed
     )
 
-    print("Restoring counts matrix...")
-    adata.X = counts
-
     return adata
 
 
@@ -71,10 +59,10 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
+    from scanpy.preprocessing import normalize_total, log1p
     from pandas import read_csv
     from os.path import join
     from functions.anndata import minimise_anndata
-    from pickle import dump
     import os
 
     args = docopt(__doc__)
@@ -89,6 +77,15 @@ def main():
     print("Read data:")
     print(input)
 
+    print("Storing counts matrix...")
+    counts = input.X.copy()
+
+    print("Normalising...")
+    normalize_total(input, target_sum=1e4)
+
+    print("Log transforming...")
+    log1p(input)
+
     print(f"Reading selected features from '{features_file}'...")
     features = read_csv(features_file, sep="\t")
     print("Read features:")
@@ -96,9 +93,10 @@ def main():
 
     print(f"Subsetting to {features.shape[0]} selected features...")
     input = input[:, input.var_names.isin(features["Feature"])].copy()
+    counts = counts[:, input.var_names.isin(features["Feature"])].copy()
 
     print("Adding unintegrated UMAP...")
-    add_umap(input)
+    add_umap(input, counts=False)
     suffix_embeddings(input)
 
     output = run_symphony(input, seed)
@@ -106,19 +104,19 @@ def main():
     print("Adding integrated UMAP...")
     add_umap(output, use_rep="X_emb")
 
+    print("Restoring counts matrix...")
+    output.X = counts
+    # Delete the log1p metadata so scanpy doesn't think we have log transformed data
+    del output.uns["log1p"]
+
     print(f"Writing output to '{out_dir}'...")
     if not os.path.exists(out_dir):
         os.makedirs(out_dir)
 
-    harmony_model = output.uns["harmony"].copy()
-    with open(join(out_dir, "harmony.pkl"), "wb") as harmony_file:
-        print(f"Saving Harmony model to '{harmony_file}'...")
-        dump(harmony_model, harmony_file)
-
     adata_file = join(out_dir, "adata.h5ad")
     print(f"Saving minimised AnnData to '{adata_file}'...")
     output_min = minimise_anndata(
-        output, obs=["Batch", "Label", "Unseen"], obsm=["X_emb"], uns=["Species"]
+        output, obs=["Batch", "Label", "Unseen"], obsm=["X_emb", "X_pca"], var=["mean", "std"], varm=["PCs"], uns=["Species", "harmony"]
     )
     output_min.write_h5ad(adata_file)
 

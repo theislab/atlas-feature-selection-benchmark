@@ -24,7 +24,7 @@ def add_umap(adata, use_rep=None, counts=True):
             print("Calculating normalised matrix for PCA...")
             from scanpy.preprocessing import normalize_total, log1p
 
-            counts = adata.X.copy()
+            counts_mat = adata.X.copy()
             normalize_total(adata, target_sum=1e4)
             log1p(adata)
 
@@ -32,7 +32,7 @@ def add_umap(adata, use_rep=None, counts=True):
             pca(adata)
 
             print("Restoring counts matrix...")
-            adata.X = counts
+            adata.X = counts_mat
             # Delete the log1p metadata so scanpy doesn't think we have log transformed data
             del adata.uns["log1p"]
 
@@ -79,7 +79,7 @@ def add_integrated_embeddings(model, adata):
 def suffix_embeddings(adata, suffix="_unintegrated"):
     print(f"Adding '{suffix}' suffix to embeddings...")
     for key in adata.obsm_keys():
-        print(f"Storing {key}...")
+        print(f"Storing '{key}' as '{key + suffix}'...")
         adata.obsm[key + suffix] = adata.obsm[key].copy()
         del adata.obsm[key]
 
