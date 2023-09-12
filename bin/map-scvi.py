@@ -73,6 +73,7 @@ def main():
     print(f"Reading reference model from '{reference_dir}'...")
     model_adata = read_h5ad(join(reference_dir, "adata.h5ad"))
     model_adata.X = reference_adata[:, model_adata.var_names].X.copy()
+    del reference_adata
     reference = scvi.model.SCVI.load(reference_dir, adata=model_adata)
     print("Read model:")
     print(reference)
@@ -84,6 +85,7 @@ def main():
 
     print("Subsetting query to selected features...")
     query = input[:, model_adata.var_names].copy()
+    del input
     print(query)
 
     output = map_query_scVI(reference, query)
