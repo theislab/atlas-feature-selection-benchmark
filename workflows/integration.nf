@@ -98,7 +98,6 @@ process INTEGRATE_SYMPHONY {
         """
         mkdir symphony-reference
         touch symphony-reference/adata.h5ad
-        touch symphony-reference/harmony.pkl
         """
 }
 
@@ -165,6 +164,38 @@ process MAP_SCANVI {
         mkdir scANVI-mapped
         touch scANVI-mapped/adata.h5ad
         touch scANVI-mapped/model.pt
+        """
+}
+
+process MAP_SYMPHONY {
+    conda "envs/symphonypy.yml"
+
+    publishDir "$params.outdir/integration-models/${dataset}/${method}",
+        pattern: "symphony-mapped",
+        saveAs: { pathname -> pathname + "-${seed}" }
+
+    label "process_low"
+
+    input:
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query), path("symphony-mapped")
+
+    script:
+        """
+        map-symphony.py \\
+            --reference "${reference}" \\
+            --reference-model "${reference_model}" \\
+            --out-dir symphony-mapped \\
+            ${query}
+        """
+
+    stub:
+        """
+        mkdir symphony-mapped
+        touch symphony-mapped/adata.h5ad
         """
 }
 
@@ -244,6 +275,7 @@ workflow INTEGRATION {
 
         MAP_SCVI(INTEGRATE_SCVI.out, file(params.bindir + "/functions/integration.py"))
         MAP_SCANVI(INTEGRATE_SCANVI.out, file(params.bindir + "/functions/integration.py"))
+        MAP_SYMPHONY(INTEGRATE_SYMPHONY.out, file(params.bindir + "/functions/integration.py"))
 
         // Use one scVI integration with all features for each dataset to
         // optimise classifier hyperparameters
@@ -253,7 +285,9 @@ workflow INTEGRATION {
 
         // OPTIMISE_CLASSIFIER(scvi_all_ch)
 
-        mapped_ch = MAP_SCVI.out.mix(MAP_SCANVI.out)
+        mapped_ch = MAP_SCVI.out
+            .mix(MAP_SCANVI.out)
+            .mix(MAP_SYMPHONY.out)
             // .combine(OPTIMISE_CLASSIFIER.out, by: 0)
 
         PREDICT_LABELS(mapped_ch)

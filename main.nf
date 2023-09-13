@@ -60,7 +60,7 @@ datasets_features_ch = prepared_datasets_ch
         )
     }
 
-integrations_ch = Channel.fromList(["scVI", "scANVI"])
+integrations_ch = Channel.fromList(["scVI", "scANVI", "Symphony"])
 
 reference_ch = datasets_features_ch
     .combine(integrations_ch)
