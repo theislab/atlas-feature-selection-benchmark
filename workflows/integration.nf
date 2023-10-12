@@ -308,6 +308,7 @@ workflow INTEGRATION {
 
         query_ch = MAP_SCVI.out
             .mix(MAP_SCANVI.out)
+            .mix(MAP_SYMPHONY.out)
             .map { it ->
                 tuple(
                     it[0],                       // Dataset name
