@@ -43,9 +43,9 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
         from warnings import warn
 
         warn(
-            f"'{adata.uns['Species']}' is not a valid species ('human', 'mouse'). A score of 1 will be returned."
+            f"'{adata.uns['Species']}' is not a valid species ('human', 'mouse'). A score of 'NA' will be returned."
         )
-        return 1.0
+        return "NA"
 
     print("Calculating batch cell cycle scores...")
     batches = exprs.obs["Batch"].unique()

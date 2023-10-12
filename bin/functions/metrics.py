@@ -36,8 +36,12 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
             "'metric_type' must be one of 'IntegrationBatch', 'IntegrationBio', 'Classification', 'Mapping' or 'Unseen'"
         )
 
-    if value < 0 or value > 1:
-        raise ValueError("'score' must be between 0 and 1")
+    if metric ==  "NA":
+        from warnings import warn
+        warn(f"Storing missing score for metric '{metric}'")
+    else:
+        if value < 0 or value > 1:
+            raise ValueError("'score' must be between 0 and 1")
 
     print("Formatting metric results...")
     results = DataFrame(
@@ -54,3 +58,4 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
     )
 
     return results
+

@@ -26,8 +26,12 @@ format_metric_results <- function(
         )
     }
 
-    if (value < 0 || value > 1) {
-        stop("'score' must be between 0 and 1")
+    if (value == "NA") {
+        warning("Storing missing score for metric '", metric, "'")
+    } else {
+        if (value < 0 || value > 1) {
+            stop("'score' must be between 0 and 1")
+        }
     }
 
     message("Formatting metric results...")
