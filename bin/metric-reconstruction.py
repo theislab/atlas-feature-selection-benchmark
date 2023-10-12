@@ -111,6 +111,7 @@ def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
+    from scanpy.preprocessing import filter_cells
     from os.path import dirname
     from functions.metrics import format_metric_results
 
@@ -123,6 +124,21 @@ def main():
     exprs_file = args["--exprs"]
     out_file = args["--out-file"]
 
+    if "Symphony" in integration:
+        import sys
+        from warnings import warn
+        
+        warn("Reconstruction metric can not be computed for Symphony integrations. Returning 'NA' score.")
+        score = "NA"
+        output = format_metric_results(
+            dataset, method, integration, "Mapping", "Reconstruction", score
+        )
+        print(output)
+        print(f"Writing output to '{out_file}'...")
+        output.to_csv(out_file, sep="\t", index=False)
+        print("Done!")
+        return
+
     print(f"Reading expression data from '{exprs_file}'...")
     exprs = read_h5ad(exprs_file)
     print("Read data:")
@@ -132,6 +148,12 @@ def main():
     model_adata = read_h5ad(query_file)
     model_adata.X = exprs[:, model_adata.var_names].X.copy()
     del exprs
+    n_cells_pre = model_adata.n_obs
+    filter_cells(model_adata, min_genes=5)
+    filter_cells(model_adata, min_counts=10)
+    if not model_adata.n_obs == n_cells_pre:
+        n_cells_removed = n_cells_pre - model_adata.n_obs
+        print(f"\nRemoved {n_cells_removed} cells with less than 5 genes or 10 counts")
     if "scVI" in integration:
         model = scvi.model.SCVI.load(model_dir, adata=model_adata)
     elif "scANVI" in integration:

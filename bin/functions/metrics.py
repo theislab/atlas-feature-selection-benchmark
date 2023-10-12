@@ -36,7 +36,7 @@ def format_metric_results(dataset, method, integration, metric_type, metric, val
             "'metric_type' must be one of 'IntegrationBatch', 'IntegrationBio', 'Classification', 'Mapping' or 'Unseen'"
         )
 
-    if metric ==  "NA":
+    if value ==  "NA":
         from warnings import warn
         warn(f"Storing missing score for metric '{metric}'")
     else:
