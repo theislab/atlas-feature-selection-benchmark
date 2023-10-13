@@ -44,10 +44,12 @@ def map_query_symphony(reference, query):
         reference,
         key="Batch",
         use_genes_column=None,
-        transferred_adjusted_basis="X_emb"
+        transferred_adjusted_basis="X_emb",
     )
 
     return query
+
+
 def main():
     """The main script function"""
     from docopt import docopt
@@ -111,7 +113,9 @@ def main():
     add_umap(full, counts=False)
     suffix_embeddings(full)
     print("Adding integrated UMAP...")
-    full.obsm["X_emb"] = full.obsm["X_emb_unintegrated"] # Restore the name we just replaced
+    full.obsm["X_emb"] = full.obsm[
+        "X_emb_unintegrated"
+    ]  # Restore the name we just replaced
     add_umap(full, use_rep="X_emb")
 
     print("Restoring query counts matrix...")

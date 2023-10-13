@@ -116,7 +116,12 @@ def main():
     adata_file = join(out_dir, "adata.h5ad")
     print(f"Saving minimised AnnData to '{adata_file}'...")
     output_min = minimise_anndata(
-        output, obs=["Batch", "Label", "Unseen"], obsm=["X_emb", "X_pca"], var=["mean", "std"], varm=["PCs"], uns=["Species", "harmony"]
+        output,
+        obs=["Batch", "Label", "Unseen"],
+        obsm=["X_emb", "X_pca"],
+        var=["mean", "std"],
+        varm=["PCs"],
+        uns=["Species", "harmony"],
     )
     output_min.write_h5ad(adata_file)
 

@@ -127,8 +127,10 @@ def main():
     if "Symphony" in integration:
         import sys
         from warnings import warn
-        
-        warn("Reconstruction metric can not be computed for Symphony integrations. Returning 'NA' score.")
+
+        warn(
+            "Reconstruction metric can not be computed for Symphony integrations. Returning 'NA' score."
+        )
         score = "NA"
         output = format_metric_results(
             dataset, method, integration, "Mapping", "Reconstruction", score
