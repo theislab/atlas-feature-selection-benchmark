@@ -98,6 +98,7 @@ methods:
         n_features: 2000
   - name: scPNMF
   - name: anticor
+  - name: TFs
 integration:
   seeds:
     - 1

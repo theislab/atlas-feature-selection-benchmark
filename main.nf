@@ -40,6 +40,14 @@ tirosh_genes_ch = Channel
         )
     }
 
+human_tfs_ch = Channel
+    .fromList(["human_tfs"])
+    .map { dataset ->
+        tuple(
+            file(params.outdir + "/datasets-raw/" + dataset + ".tsv"),
+        )
+    }
+
 features_ch = Channel
     .fromList(params.methods)
     .map { method ->
@@ -134,7 +142,7 @@ workflow WF_DATASETS {
 // WORKFLOW: Run feature selection methods
 //
 workflow WF_METHODS {
-    METHODS(prepared_datasets_ch)
+    METHODS(prepared_datasets_ch, human_tfs_ch)
 }
 
 //
@@ -163,7 +171,7 @@ workflow WF_REPORTS {
 //
 workflow WF_ALL {
     DATASETS()
-    METHODS(DATASETS.out.prepared_datasets_ch)
+    METHODS(DATASETS.out.prepared_datasets_ch, DATASETS.out.human_tfs_ch)
     INTEGRATION(METHODS.out.datasets_features_ch)
     METRICS(
         INTEGRATION.out.reference_ch,
