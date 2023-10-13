@@ -452,6 +452,7 @@ workflow METHODS {
 
     take:
         prepared_datasets_ch
+        human_tfs_ch
 
     main:
 

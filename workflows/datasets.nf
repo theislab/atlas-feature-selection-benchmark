@@ -25,6 +25,25 @@ process DATASET_TIROSH_GENES {
         """
 }
 
+process DATASET_HUMAN_TFS {
+    conda "envs/biomaRt.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        path("human-tfs.tsv")
+
+    script:
+        """
+        dataset-human-tfs.R --out-file "human-tfs.tsv"
+        """
+
+    stub:
+        """
+        touch human-tfs.tsv
+        """
+}
+
 process DATASET_TINYSIM {
     conda "envs/splatter.yml"
 
@@ -337,9 +356,12 @@ workflow DATASETS {
 
         DATASET_TIROSH_GENES()
 
+        DATASET_HUMAN_TFS()
+
     emit:
         prepared_datasets_ch = PREPARE_DATASET.out
         tirosh_genes_ch = DATASET_TIROSH_GENES.out
+        human_tfs_ch = DATASET_HUMAN_TFS.out
 }
 
 /*
