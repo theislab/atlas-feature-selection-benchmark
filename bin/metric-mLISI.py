@@ -30,8 +30,6 @@ def calculate_mLISI(adata):
     The [0, 1] score for query-reference mixing.
     """
     from scib.metrics import ilisi_graph
-    from scanpy.preprocessing import neighbors
-    from igraph import Graph
 
     print("Calculating mLISI score...")
     # We use the iLISI function but with query/reference as the batch key

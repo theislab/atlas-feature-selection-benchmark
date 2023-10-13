@@ -29,10 +29,8 @@ def calculate_iLISI(adata):
     The [0, 1] score non-cluster to compact cluster structure.
     """
     from scib.metrics import ilisi_graph
-    from scanpy.preprocessing import neighbors
-    from igraph import Graph
 
-    print("Calculating final score...")
+    print("Calculating iLISI score...")
     score = ilisi_graph(
         adata,
         batch_key="Batch",
