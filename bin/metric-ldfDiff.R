@@ -41,7 +41,7 @@ calculate_ldfDiff <- function(input, exprs) {
         batch_sce <- scater::runPCA(
             batch_sce,
             exprs_values = "logcounts",
-            ncomponents  = 10,
+            ncomponents  = n_dim,
             name         = "X_pca" # Use a different name just to make sure it isn't recalculated
         )
     })
