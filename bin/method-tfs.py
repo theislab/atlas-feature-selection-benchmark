@@ -94,6 +94,7 @@ def read_tf_genes(file, var_names, species):
 
     return tfs
 
+
 def main():
     """The main script function"""
     from docopt import docopt
