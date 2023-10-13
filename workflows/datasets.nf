@@ -129,8 +129,6 @@ process DATASET_FETALLIVER {
 process DATASET_REEDBREAST {
     conda "envs/cellxgene-census.yml"
 
-    label "process_low"
-
     publishDir "$params.outdir/datasets-raw/"
 
     output:
@@ -173,8 +171,6 @@ process DATASET_SCEIAD {
 
 process DATASET_HUMANENDODERM {
     conda "envs/scanpy.yml"
-
-    label "process_low"
 
     publishDir "$params.outdir/datasets-raw/"
 
@@ -235,7 +231,7 @@ process PREPARE_DATASET {
 
     publishDir "$params.outdir/datasets-prepped/"
 
-    label "process_medium"
+    memory { get_memory(file.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)
@@ -340,6 +336,29 @@ workflow DATASETS {
     emit:
         prepared_datasets_ch = PREPARE_DATASET.out
         tirosh_genes_ch = DATASET_TIROSH_GENES.out
+}
+
+/*
+========================================================================================
+    FUNCTIONS
+========================================================================================
+*/
+
+def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB") {
+    file_mem = new nextflow.util.MemoryUnit(file_size)
+    mem_per_gb = new nextflow.util.MemoryUnit(mem_per_gb)
+    overhead = new nextflow.util.MemoryUnit(overhead)
+    max_mem = new nextflow.util.MemoryUnit(params.max_memory)
+
+    file_gb = file_mem.toGiga()
+    file_gb = file_gb > 0 ? file_gb : 1
+    mem_use = (mem_per_gb * file_gb * attempt) + overhead
+
+    if (mem_use > max_mem) {
+        mem_use = max_mem
+    }
+
+    return mem_use
 }
 
 /*

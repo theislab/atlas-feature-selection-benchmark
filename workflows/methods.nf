@@ -87,8 +87,7 @@ process METHOD_TRIKU {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_high"
-    label "error_ignore"
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -191,7 +190,7 @@ process METHOD_NBUMI {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_medium"
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -268,7 +267,7 @@ process METHOD_SCRY {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_low"
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -395,8 +394,7 @@ process METHOD_SCPNMF {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
-    label "process_high"
-    label "error_ignore"
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -580,6 +578,29 @@ workflow METHODS {
 
     emit:
         datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
+}
+
+/*
+========================================================================================
+    FUNCTIONS
+========================================================================================
+*/
+
+def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB") {
+    file_mem = new nextflow.util.MemoryUnit(file_size)
+    mem_per_gb = new nextflow.util.MemoryUnit(mem_per_gb)
+    overhead = new nextflow.util.MemoryUnit(overhead)
+    max_mem = new nextflow.util.MemoryUnit(params.max_memory)
+
+    file_gb = file_mem.toGiga()
+    file_gb = file_gb > 0 ? file_gb : 1
+    mem_use = (mem_per_gb * file_gb * attempt) + overhead
+
+    if (mem_use > max_mem) {
+        mem_use = max_mem
+    }
+
+    return mem_use
 }
 
 /*
