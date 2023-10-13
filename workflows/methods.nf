@@ -456,7 +456,7 @@ process METHOD_TFS {
 
     script:
         """
-        method-TFs.R \\
+        method-tfs.py \\
             --out-file "TFs.tsv" \\
             --tfs-file "${human_tfs}" \\
             ${reference}
