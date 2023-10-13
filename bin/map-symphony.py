@@ -1,10 +1,10 @@
 #!/usr/bin/env python
 
 """
-Map a query dataset to an scVI reference model
+Map a query dataset to a Symphony reference model
 
 Usage:
-    map-scvi.py--reference=<file> --reference-model=<path> --out-dir=<path> [options] <file>
+    map-symphony.py--reference=<file> --reference-model=<path> --out-dir=<path> [options] <file>
 
 Options:
     -h --help                  Show this screen.
@@ -13,52 +13,51 @@ Options:
     --out-dir=<path>           Path to output directory.
 """
 
-import scvi
 from functions.integration import (
     add_umap,
-    add_integrated_embeddings,
     suffix_embeddings,
     plot_embedding,
 )
 
 
-def map_query_scVI(reference, query):
+def map_query_symphony(reference, query):
     """
-    Map a query to an scVI reference model
+    Map a query to a Symphony reference model
 
     Parameters
     ----------
     reference
-        The reference model to map to
+        AnnData object containing the reference to map to
     query
         AnnData object containing the query dataset
 
     Returns
     -------
-    Mapped query model
+    AnnData with mapped query dataset
     """
 
-    print("Creating scVI query model...")
-    model = scvi.model.SCVI.load_query_data(
+    from symphonypy.tools import map_embedding
+
+    print("Mapping query using Symphony...")
+    map_embedding(
         query,
         reference,
+        key="Batch",
+        use_genes_column=None,
+        transferred_adjusted_basis="X_emb",
     )
-    print(model)
-    model.view_anndata_setup()
 
-    print("Training scVI query model...")
-    model.train(max_epochs=200, plan_kwargs=dict(weight_decay=0.0))
-    print(model)
-
-    return model
+    return query
 
 
 def main():
     """The main script function"""
     from docopt import docopt
     from scanpy import read_h5ad
+    from scanpy.preprocessing import normalize_total, log1p
     from os.path import join
     from functions.anndata import minimise_anndata
+    import os
 
     args = docopt(__doc__)
 
@@ -72,45 +71,68 @@ def main():
 
     print(f"Reading reference model from '{reference_dir}'...")
     model_adata = read_h5ad(join(reference_dir, "adata.h5ad"))
+    print("Normalising reference...")
+    normalize_total(reference_adata, target_sum=1e4)
+    log1p(reference_adata)
     model_adata.X = reference_adata[:, model_adata.var_names].X.copy()
     del reference_adata
-    reference = scvi.model.SCVI.load(reference_dir, adata=model_adata)
     print("Read model:")
-    print(reference)
+    print(model_adata)
 
     print(f"Reading query from '{file}'...")
     input = read_h5ad(file)
+    print("Storing query counts matrix...")
+    counts = input.X.copy()
+    print("Normalising query...")
+    normalize_total(input, target_sum=1e4)
+    log1p(input)
     print("Read query:")
     print(input)
 
     print("Subsetting query to selected features...")
     query = input[:, model_adata.var_names].copy()
+    counts = counts[:, input.var_names.isin(model_adata.var_names)].copy()
     del input
     print(query)
 
-    output = map_query_scVI(reference, query)
+    print("Adding unintegrated UMAP to query..")
+    add_umap(query, counts=False)
+    suffix_embeddings(query)
 
-    print("Adding embeddings to query...")
-    add_umap(output.adata)
-    suffix_embeddings(output.adata)
-    add_integrated_embeddings(output, output.adata)
+    output = map_query_symphony(model_adata, query)
+
+    print("Adding integrated UMAP to query...")
+    add_umap(output, use_rep="X_emb")
 
     print("Concatenating reference and query...")
-    output.adata.obs["Dataset"] = "Query"
+    output.obs["Dataset"] = "Query"
     model_adata.obs["Dataset"] = "Reference"
-    full = output.adata.concatenate(model_adata)
+    full = output.concatenate(model_adata)
 
     print("Adding unintegrated UMAP...")
-    add_umap(full)
+    add_umap(full, counts=False)
     suffix_embeddings(full)
-    add_integrated_embeddings(output, full)
+    print("Adding integrated UMAP...")
+    full.obsm["X_emb"] = full.obsm[
+        "X_emb_unintegrated"
+    ]  # Restore the name we just replaced
+    add_umap(full, use_rep="X_emb")
+
+    print("Restoring query counts matrix...")
+    output.X = counts
+    # Delete the log1p metadata so scanpy doesn't think we have log transformed data
+    del output.uns["log1p"]
 
     print(f"Writing output to '{out_dir}'...")
-    output.save(out_dir, save_anndata=False, overwrite=True)
+    if not os.path.exists(out_dir):
+        os.makedirs(out_dir)
+
+    adata_file = join(out_dir, "adata.h5ad")
+    print(f"Saving minimised AnnData to '{adata_file}'...")
     output_min = minimise_anndata(
-        output.adata, obs=["Batch", "Label", "Unseen"], obsm=["X_emb"], uns=["Species"]
+        output, obs=["Batch", "Label", "Unseen"], obsm=["X_emb"], uns=["Species"]
     )
-    output_min.write_h5ad(join(out_dir, "adata.h5ad"))
+    output_min.write_h5ad(adata_file)
 
     # Set unseen labels to string for plotting
     full.obs["Unseen"] = full.obs["Unseen"].astype(str)
