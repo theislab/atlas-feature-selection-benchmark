@@ -14,6 +14,8 @@ process INTEGRATE_SCVI {
 
     label "process_medium"
 
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
         path(functions)
@@ -47,6 +49,8 @@ process INTEGRATE_SCANVI {
 
     label "process_low"
 
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(scVI), path(query)
         path(functions)
@@ -77,6 +81,9 @@ process INTEGRATE_SYMPHONY {
     publishDir "$params.outdir/integration-models/${dataset}/${method}",
         pattern: "symphony-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
+
+
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
@@ -109,6 +116,8 @@ process MAP_SCVI {
         saveAs: { pathname -> pathname + "-${seed}" }
 
     label "process_low"
+
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -143,6 +152,8 @@ process MAP_SCANVI {
 
     label "process_low"
 
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
         path(functions)
@@ -175,6 +186,8 @@ process MAP_SYMPHONY {
         saveAs: { pathname -> pathname + "-${seed}" }
 
     label "process_low"
+
+    memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -323,6 +336,29 @@ workflow INTEGRATION {
             }
 
         labels_ch = PREDICT_LABELS.out
+}
+
+/*
+========================================================================================
+    FUNCTIONS
+========================================================================================
+*/
+
+def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB") {
+    file_mem = new nextflow.util.MemoryUnit(file_size)
+    mem_per_gb = new nextflow.util.MemoryUnit(mem_per_gb)
+    overhead = new nextflow.util.MemoryUnit(overhead)
+    max_mem = new nextflow.util.MemoryUnit(params.max_memory)
+
+    file_gb = file_mem.toGiga()
+    file_gb = file_gb > 0 ? file_gb : 1
+    mem_use = (mem_per_gb * file_gb * attempt) + overhead
+
+    if (mem_use > max_mem) {
+        mem_use = max_mem
+    }
+
+    return mem_use
 }
 
 /*
