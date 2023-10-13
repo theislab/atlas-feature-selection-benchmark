@@ -442,6 +442,34 @@ process METHOD_ANTICOR {
         """
 }
 
+process METHOD_TFS {
+    conda "envs/scanpy.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    label "error_ignore"
+
+    input:
+        tuple val(dataset), path(reference), path(query)
+        path(human_tfs)
+
+    output:
+        tuple val(dataset), val("TFs"), path("TFs.tsv")
+
+    script:
+        """
+        method-TFs.R \\
+            --out-file "TFs.tsv" \\
+            --tfs-file "${human_tfs}" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "TFs.tsv"
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -497,6 +525,9 @@ workflow METHODS {
             Channel.empty()
         anticor_ch = method_names.contains("anticor") ?
             METHOD_ANTICOR(prepared_datasets_ch) :
+            Channel.empty()
+        tfs_ch = method_names.contains("TFs") ?
+            METHOD_TFS(prepared_datasets_ch, human_tfs_ch) :
             Channel.empty()
 
         if (method_names.contains("random")) {
@@ -576,7 +607,8 @@ workflow METHODS {
                 wilcoxon_ch,
                 statistic_ch,
                 scpnmf_ch,
-                anticor_ch
+                anticor_ch,
+                tfs_ch
             )
 
     emit:
