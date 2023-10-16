@@ -20,6 +20,19 @@ suppressMessages({
     source("io.R")
 })
 
+#' Install splatter from GitHub using remotes
+install_splatter <- function() {
+    if (!requireNamespace("splatter", quietly = TRUE)) {
+        message("Installing splatter...")
+        remotes::install_github(
+            "Oshlack/splatter@v1.25.1",
+            dependencies = FALSE
+        )
+    } else {
+        message("splatter already installed")
+    }
+}
+
 #' Simulate a tiny dataset
 #'
 #' @returns SingleCellExperiment with simulated data
@@ -154,6 +167,8 @@ main <- function() {
     args <- docopt::docopt(doc)
 
     out_file <- args[["--out-file"]]
+
+    install_splatter()
 
     output <- simulate_dataset()
     print(output)
