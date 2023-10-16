@@ -343,7 +343,7 @@ workflow DATASETS {
             DATASET_HLCAIMMUNE() :
             Channel.empty()
         splat_ch = dataset_names.contains("splat") ?
-            DATASET_SPLAT() :
+            DATASET_SPLAT(file(params.bindir + "/functions/io.R")) :
             Channel.empty()
 
         raw_datasets_ch = tinySim_ch
