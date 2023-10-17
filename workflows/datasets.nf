@@ -284,6 +284,8 @@ process DATASET_SPLAT {
 
     publishDir "$params.outdir/datasets-raw/"
 
+    label "process_high_memory"
+
     input:
         path(functions)
 
