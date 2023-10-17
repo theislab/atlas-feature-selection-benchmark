@@ -245,6 +245,25 @@ process DATASET_HLCAIMMUNE {
         """
 }
 
+process DATASET_HLCAEPITHELIAL {
+    conda "envs/cellxgene-census.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("HLCAEpithelial"), path("HLCAEpithelial.h5ad")
+
+    script:
+        """
+        dataset-HLCAEpithelial.py --out-file "HLCAEpithelial.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCAEpithelial.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -320,6 +339,9 @@ workflow DATASETS {
         hlcaImmune_ch = dataset_names.contains("HLCAImmune") ?
             DATASET_HLCAIMMUNE() :
             Channel.empty()
+        hlcaEpithelial_ch = dataset_names.contains("HLCAEpithelial") ?
+            DATASET_HLCAEPITHELIAL() :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
@@ -331,7 +353,8 @@ workflow DATASETS {
                 scEiaD_ch,
                 humanEndoderm_ch,
                 hlca_ch,
-                hlcaImmune_ch
+                hlcaImmune_ch,
+                hlcaEpithelial_ch
             )
 
         datasets_ch = Channel
