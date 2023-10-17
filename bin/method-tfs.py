@@ -35,7 +35,12 @@ def select_tf_features(adata, tfs):
     tfs = [gene for gene in tfs if gene in adata.var_names]
     selected_features = list(set(tfs))
     if len(selected_features) == 0:
-        raise ValueError("No TF genes found in dataset")
+        from warnings import warn
+        import sys
+
+        warn("No TF genes found in dataset, exiting...")
+        # Exit with error code so can be caught by Nextflow
+        sys.exit(143)
     print(f"Selected {len(selected_features)} TF features")
 
     output = DataFrame(selected_features, columns=["Feature"])
