@@ -61,21 +61,18 @@ datasets:
     query_batches: Krasnow_2020,Nawijn_2021
     unseen_labels: "B cells,DC2,Alveolar Mph CCL3+,Mast cells"
     species: Human
-<<<<<<< HEAD
   - name: HLCAEpithelial
     batch_col: dataset
     label_col: ann_finest_level
     query_batches: Barbry_Leroy_2020,Jain_Misharin_2021_10Xv2,Jain_Misharin_2021_10Xv1,Krasnow_2020,Nawijn_2021
     unseen_labels: "Multiciliated (nasal),Club (nasal),Goblet (subsegmental),SMG serous (nasal),SMG serous (bronchial),SMG mucous"
     species: Human
-=======
   - name: splat
     batch_col: Batch
     label_col: Label
     query_batches: Batch5,Batch6
     unseen_labels: Intermediate,Rare,Perturbed
     species: Simulation
->>>>>>> origin/main
 methods:
   - name: all
   - name: random
