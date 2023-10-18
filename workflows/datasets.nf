@@ -245,6 +245,49 @@ process DATASET_HLCAIMMUNE {
         """
 }
 
+process DATASET_HLCAEPITHELIAL {
+    conda "envs/cellxgene-census.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    output:
+        tuple val("HLCAEpithelial"), path("HLCAEpithelial.h5ad")
+
+    script:
+        """
+        dataset-HLCAEpithelial.py --out-file "HLCAEpithelial.h5ad"
+        """
+
+    stub:
+        """
+        touch HLCAEpithelial.h5ad
+        """
+}
+
+process DATASET_SPLAT {
+    conda "envs/splatter.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    label "process_high_memory"
+
+    input:
+        path(functions)
+
+    output:
+        tuple val("splat"), path("splat.h5ad")
+
+    script:
+        """
+        dataset-splat.R --out-file "splat.h5ad"
+        """
+
+    stub:
+        """
+        touch splat.h5ad
+        """
+}
+
 process PREPARE_DATASET {
     conda "envs/scanpy.yml"
 
@@ -276,30 +319,6 @@ process PREPARE_DATASET {
         """
         touch "${name}-reference.h5ad"
         touch "${name}-query.h5ad"
-        """
-}
-
-process DATASET_SPLAT {
-    conda "envs/splatter.yml"
-
-    publishDir "$params.outdir/datasets-raw/"
-
-    label "process_high_memory"
-
-    input:
-        path(functions)
-
-    output:
-        tuple val("splat"), path("splat.h5ad")
-
-    script:
-        """
-        dataset-splat.R --out-file "splat.h5ad"
-        """
-
-    stub:
-        """
-        touch splat.h5ad
         """
 }
 
@@ -344,6 +363,9 @@ workflow DATASETS {
         hlcaImmune_ch = dataset_names.contains("HLCAImmune") ?
             DATASET_HLCAIMMUNE() :
             Channel.empty()
+        hlcaEpithelial_ch = dataset_names.contains("HLCAEpithelial") ?
+            DATASET_HLCAEPITHELIAL() :
+            Channel.empty()
         splat_ch = dataset_names.contains("splat") ?
             DATASET_SPLAT(file(params.bindir + "/functions/io.R")) :
             Channel.empty()
@@ -359,6 +381,7 @@ workflow DATASETS {
                 humanEndoderm_ch,
                 hlca_ch,
                 hlcaImmune_ch,
+                hlcaEpithelial_ch,
                 splat_ch
             )
 
