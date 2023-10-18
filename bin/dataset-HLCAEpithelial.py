@@ -69,7 +69,7 @@ def main():
 
     temp_dir = TemporaryDirectory()
 
-    output = get_HLCAImmune(temp_dir)
+    output = get_HLCAEpithelial(temp_dir)
     print("Read dataset:")
     print(output)
     print(f"Writing output to '{out_file}'...")
