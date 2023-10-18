@@ -10,9 +10,8 @@
 #' @param value The value of the calculated metric
 #'
 #' @return data.frame containing the formatted results
-format_metric_results <- function(
-        dataset, method, integration, metric_type,
-        metric, value) {
+format_metric_results <- function(dataset, method, integration, metric_type,
+    metric, value) {
     if (!(metric_type %in% c(
         "IntegrationBatch",
         "IntegrationBio",

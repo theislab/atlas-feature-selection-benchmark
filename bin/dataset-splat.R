@@ -37,7 +37,6 @@ install_splatter <- function() {
 #'
 #' @returns SingleCellExperiment with simulated data
 simulate_dataset <- function() {
-
     set.seed(1)
 
     final_cells <- 100000
@@ -47,17 +46,17 @@ simulate_dataset <- function() {
         Batch = c(
             "Batch1", "Batch2", "Batch3", "Batch4", "Batch5", "Batch6"
         ),
-        RelProp      = c(0.90, 1.00, 0.22, 0.20, 2.60, 2.80),
-        FacLoc       = c(0.08, 0.05, 0.12, 0.18, 0.15, 0.25),
-        FacScale     = c(0.06, 0.08, 0.12, 0.10, 0.16, 0.18),
-        RelLibSize   = c(0.22, 0.18, 0.90, 1.05, 0.05, 0.04)
+        RelProp = c(0.90, 1.00, 0.22, 0.20, 2.60, 2.80),
+        FacLoc = c(0.08, 0.05, 0.12, 0.18, 0.15, 0.25),
+        FacScale = c(0.06, 0.08, 0.12, 0.10, 0.16, 0.18),
+        RelLibSize = c(0.22, 0.18, 0.90, 1.05, 0.05, 0.04)
     )
     batch_params$Prop <- batch_params$RelProp / sum(batch_params$RelProp)
     batch_params$Cells <- round(batch_params$Prop * final_cells)
     rownames(batch_params) <- batch_params$Batch
 
     message("Defining groups...")
-    group_params = data.frame(
+    group_params <- data.frame(
         Group = c(
             "Path1", "Path2", "Path3", "Path4", "Path5",
             "Path6", "Path7", "Path8", "Path9", "Path10"
@@ -68,14 +67,14 @@ simulate_dataset <- function() {
             "Rare"
         ),
         #              1     2     3     4     5     6     7     8     9    10
-        DEProb  = c(0.00, 0.05, 0.10, 0.15, 0.05, 0.20, 0.10, 0.05, 0.08, 0.02),
-        DELoc   = c(0.00, 0.40, 1.00, 0.80, 0.60, 0.20, 1.00, 0.60, 1.20, 2.50),
+        DEProb = c(0.00, 0.05, 0.10, 0.15, 0.05, 0.20, 0.10, 0.05, 0.08, 0.02),
+        DELoc = c(0.00, 0.40, 1.00, 0.80, 0.60, 0.20, 1.00, 0.60, 1.20, 2.50),
         DEScale = c(0.00, 0.80, 0.20, 0.40, 0.20, 0.60, 0.40, 0.20, 0.20, 0.20),
-        From    = c(   0,    1,    2,    0,    4,    0,    0,    7,    6,    0),
-        Steps   = c(   1,   20,   20,   60,    2,    2,    2,    2,    2,    2),
-        Skew    = c( 0.5,  0.5,  0.3,  0.7,  0.0,  0.0,  0.0,  0.0,  0.0,  0.0),
-        Dropout = c(  -1, -0.1, -0.5, -0.2,   -2, -0.6,   -3, -0.8, -0.4, -0.9),
-        Noise   = c(0.04, 0.03, 0.04, 0.05, 0.08, 0.15, 0.07, 0.10, 0.11, 0.06)
+        From = c(0, 1, 2, 0, 4, 0, 0, 7, 6, 0),
+        Steps = c(1, 20, 20, 60, 2, 2, 2, 2, 2, 2),
+        Skew = c(0.5, 0.5, 0.3, 0.7, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0),
+        Dropout = c(-1, -0.1, -0.5, -0.2, -2, -0.6, -3, -0.8, -0.4, -0.9),
+        Noise = c(0.04, 0.03, 0.04, 0.05, 0.08, 0.15, 0.07, 0.10, 0.11, 0.06)
     )
 
     message("Defining batch group proportions...")
@@ -135,7 +134,6 @@ simulate_dataset <- function() {
     # Set random seed
     seed <- splatter::getParam(params, "seed")
     withr::with_seed(seed, {
-
         # Get the parameters we are going to use
         nCells <- splatter::getParam(params, "nCells")
         nGenes <- splatter::getParam(params, "nGenes")
@@ -152,7 +150,7 @@ simulate_dataset <- function() {
         group.names <- paste0("Path", seq_len(nGroups))
 
         # Create SingleCellExperiment to store simulation
-        cells <-  data.frame(Cell = cell.names)
+        cells <- data.frame(Cell = cell.names)
         rownames(cells) <- cell.names
         features <- data.frame(Gene = gene.names)
         rownames(features) <- gene.names
@@ -160,13 +158,18 @@ simulate_dataset <- function() {
 
         # Make batches vector which is the index of param$batchCells repeated
         # params$batchCells[index] times
-        batches <- lapply(seq_len(nBatches), function(i, b) {rep(i, b[i])},
-                          b = batch.cells)
+        batches <- lapply(seq_len(nBatches), function(i, b) {
+            rep(i, b[i])
+        },
+        b = batch.cells
+        )
         batches <- unlist(batches)
         colData(sim)$Batch <- batch.names[batches]
 
-        groups <- sample(seq_len(nGroups), nCells, prob = group.prob,
-                         replace = TRUE)
+        groups <- sample(seq_len(nGroups), nCells,
+            prob = group.prob,
+            replace = TRUE
+        )
         colData(sim)$Group <- factor(group.names[groups], levels = group.names)
 
         gc()
@@ -184,7 +187,8 @@ simulate_dataset <- function() {
         sim <- splatter:::splatSimBatchCellMeans(sim, params)
         rowData(sim)$GeneMean <- NULL
         rowData(sim) <- rowData(sim)[
-            , !grepl("BatchFacBatch", colnames(rowData(sim))), drop = FALSE
+            , !grepl("BatchFacBatch", colnames(rowData(sim))),
+            drop = FALSE
         ]
         gc()
         message("Simulating path endpoints...")
@@ -195,13 +199,16 @@ simulate_dataset <- function() {
         colData(sim)$ExpLibSize <- NULL
         assay(sim, "BatchCellMeans") <- NULL
         rowData(sim) <- rowData(sim)[
-            , !grepl("DEFacPath", colnames(rowData(sim))), drop = FALSE
+            , !grepl("DEFacPath", colnames(rowData(sim))),
+            drop = FALSE
         ]
         rowData(sim) <- rowData(sim)[
-            , !grepl("LocalDEFacPath", colnames(rowData(sim))), drop = FALSE
+            , !grepl("LocalDEFacPath", colnames(rowData(sim))),
+            drop = FALSE
         ]
         rowData(sim) <- rowData(sim)[
-            , !grepl("SigmaFacPath", colnames(rowData(sim))), drop = FALSE
+            , !grepl("SigmaFacPath", colnames(rowData(sim))),
+            drop = FALSE
         ]
         colData(sim)$Step <- NULL
         gc()
@@ -243,8 +250,10 @@ simulate_dataset <- function() {
         )
         gc()
     })
-    sim$Label <- factor(sim$Group, levels = group_params$Group,
-                        labels = group_params$Name)
+    sim$Label <- factor(sim$Group,
+        levels = group_params$Group,
+        labels = group_params$Name
+    )
 
     message("Adjusting group proportions for each batch...")
     # Get the current counts of each group in each batch

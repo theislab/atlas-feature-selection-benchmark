@@ -27,16 +27,18 @@ get_human_tfs <- function() {
     is_tf <- database$Is.TF. == "Yes"
     human_tfs <- database[is_tf, c("Ensembl.ID", "HGNC.symbol")]
     colnames(human_tfs) <- c("ENSEMBL", "Gene")
-    human_tfs$Species  <- "Human"
+    human_tfs$Species <- "Human"
 
     message("Getting human mart...")
     human_mart <- biomaRt::useEnsembl(
-        "ensembl", "hsapiens_gene_ensembl", version = "105"
+        "ensembl", "hsapiens_gene_ensembl",
+        version = "105"
     )
 
     message("Getting mouse mart...")
     mouse_mart <- biomaRt::useEnsembl(
-        "ensembl", "mmusculus_gene_ensembl", version = "105"
+        "ensembl", "mmusculus_gene_ensembl",
+        version = "105"
     )
 
     message("Getting mouse genes...")
