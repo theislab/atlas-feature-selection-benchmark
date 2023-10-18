@@ -279,6 +279,30 @@ process PREPARE_DATASET {
         """
 }
 
+process DATASET_SPLAT {
+    conda "envs/splatter.yml"
+
+    publishDir "$params.outdir/datasets-raw/"
+
+    label "process_high_memory"
+
+    input:
+        path(functions)
+
+    output:
+        tuple val("splat"), path("splat.h5ad")
+
+    script:
+        """
+        dataset-splat.R --out-file "splat.h5ad"
+        """
+
+    stub:
+        """
+        touch splat.h5ad
+        """
+}
+
 /*
 ========================================================================================
     WORKFLOW
@@ -320,6 +344,9 @@ workflow DATASETS {
         hlcaImmune_ch = dataset_names.contains("HLCAImmune") ?
             DATASET_HLCAIMMUNE() :
             Channel.empty()
+        splat_ch = dataset_names.contains("splat") ?
+            DATASET_SPLAT(file(params.bindir + "/functions/io.R")) :
+            Channel.empty()
 
         raw_datasets_ch = tinySim_ch
             .mix(
@@ -331,7 +358,8 @@ workflow DATASETS {
                 scEiaD_ch,
                 humanEndoderm_ch,
                 hlca_ch,
-                hlcaImmune_ch
+                hlcaImmune_ch,
+                splat_ch
             )
 
         datasets_ch = Channel
