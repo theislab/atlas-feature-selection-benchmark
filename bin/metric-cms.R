@@ -37,7 +37,13 @@ calculate_CMS <- function(sce) {
         group   = "Batch",
         dim_red = "X_emb",
         n_dim   = ncol(SingleCellExperiment::reducedDim(sce, "X_emb")),
-        BPPARAM = BiocParallel::MulticoreParam(workers = n_cores)
+        BPPARAM = BiocParallel::MulticoreParam(
+            workers = n_cores,
+            tasks = n_cores * 4,
+            progressbar = TRUE,
+            log = TRUE,
+            RNGseed = 1
+        )
     )
 
     message("Calculating final score...")
