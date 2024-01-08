@@ -25,7 +25,7 @@ suppressMessages({
 #'
 #' @returns SingleCellExperiment with the scEiaD dataset
 get_scEiaD <- function() {
-    options(timeout = 3600) # Increase download timeout to 1 hour
+    options(timeout = 3600 * 2) # Increase download timeout to 2 hours
     temp_file <- tempfile(fileext = ".Rdata")
     on.exit(file.remove(temp_file))
 
@@ -65,6 +65,12 @@ get_scEiaD <- function() {
     message("Subsetting to selected cells...")
     selected <- is_human & is_eye & is_tissue & has_label & non_doublet
     sce <- sce[, selected]
+
+    message("Removing batches with less than 500 cells...")
+    batch_sizes <- table(sce$batch)
+    small_batches <- names(batch_sizes)[batch_sizes < 500]
+    is_small_batch <- sce$batch %in% small_batches
+    sce <- sce[, !is_small_batch]
 
     return(sce)
 }
