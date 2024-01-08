@@ -59,7 +59,9 @@ def calculate_reconstruction_error(model):
 
     from scanpy.preprocessing import normalize_total, log1p
     from scipy.sparse import issparse
-    from sklearn.metrics.pairwise import cosine_distances
+    from scipy.spatial.distance import cosine as cosine_dist
+    from tqdm import tqdm
+    from math import ceil
     import numpy as np
 
     print("Calculating ground-truth expression profiles...")
@@ -72,33 +74,56 @@ def calculate_reconstruction_error(model):
     print("Sampling from the posterior...")
     # Get 50 samples to get an average reconstruction
     n_samples = 50
-    post_samples = np.zeros((model.adata.shape[0], model.adata.shape[1]))
-    for i in range(n_samples):
-        print(f"Sample {i + 1} of {n_samples}")
-        # Get the posterior sample
-        post = model.posterior_predictive_sample(n_samples=1)
-        while np.any(post.sum(1) == 0):
-            print("Posterior has cells with zero counts, resampling...")
-            post = model.posterior_predictive_sample(n_samples=1)
-        # Normalise the sample
-        post = ((post.T / post.sum(1)).T) * 10000
-        post = np.log1p(post)
-        # Add it to the sum over samples
-        post_samples = post_samples + post
+    batch_size = 10000
+    n_cells = model.adata.n_obs
+    n_batches = ceil(n_cells / batch_size)
+    cell_scores = np.zeros(0)
 
-    print("Calculating mean reconstructions...")
-    X_pred = post_samples / n_samples
+    for batch in range(n_batches):
+        start = batch * batch_size
+        end = min(start + batch_size, n_cells)
+        print(f"Sampling cells {start + 1} to {end} (batch {batch + 1} of {n_batches})")
+        batch_indices = list(range(start, end))
+        batch_n = len(batch_indices)
+        post_samples = np.zeros((batch_n, model.adata.shape[1]))
 
-    print("Calculating cosine distances...")
-    if issparse(X_true):
-        X_true = X_true.toarray()
-    if issparse(X_pred):
-        X_pred = X_pred.toarray()
-    cosine_dists = cosine_distances(X_true, X_pred)
+        for i in tqdm(range(n_samples), desc="Sampling", leave=False):
+            post = np.zeros((batch_n, model.adata.shape[1]))
+
+            while np.any(post.sum(1) == 0):
+                post = model.posterior_predictive_sample(
+                    indices=batch_indices,
+                    n_samples=1
+                )
+                if np.any(post.sum(1) == 0):
+                    print("Posterior has cells with zero counts, resampling...")
+
+            # Normalise the sample
+            post = ((post.T / post.sum(1)).T) * 10000
+            post = np.log1p(post)
+            # Add it to the sum over samples
+            post_samples = post_samples + post
+
+        print("Calculating mean reconstructions...")
+        X_pred = post_samples / n_samples
+
+        print("Calculating cosine distances...")
+        batch_scores = np.zeros(batch_n)
+        X_true_batch = X_true[batch_indices, :]
+        # Calculate the cosine distance between each cell's true and predicted expression profile
+        for cell in tqdm(range(batch_n), desc="Calculating distances", leave=False):
+
+            true_cell = X_true_batch[cell, :]
+            pred_cell = X_pred[cell, :]
+            if issparse(true_cell):
+                true_cell = true_cell.toarray().ravel()
+            if issparse(pred_cell):
+                pred_cell = pred_cell.toarray().ravel()
+            batch_scores[cell] = cosine_dist(true_cell, pred_cell)
+
+        cell_scores = np.concatenate((cell_scores, batch_scores))
 
     print("Calculating final reconstruction score...")
-    # Take the diagonal as we are only interested in distances between the same cells
-    cell_scores = np.diag(cosine_dists)
     # Take the mean over cells
     # Divide by 2 to get a score in [0, 1] (range of cosine distances is [0, 2])
     # Substract from 1 so that higher is better
@@ -125,7 +150,6 @@ def main():
     out_file = args["--out-file"]
 
     if "Symphony" in integration:
-        import sys
         from warnings import warn
 
         warn(
