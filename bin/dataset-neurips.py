@@ -38,7 +38,13 @@ def get_neurips():
     print("Cleaning up temporary directory...")
     temp_dir.cleanup()
 
+    print("Subsetting to gene expression features...")
     adata = adata[:, adata.var["feature_types"] == "GEX"]
+    adata.var_names_make_unique()
+
+    print("Setting X to counts...")
+    adata.X = adata.layers["counts"]
+
     return adata
 
 
@@ -53,7 +59,7 @@ def main():
     output = get_neurips()
     print("Read dataset:")
     print(output)
-    print("Writing output to '{out_file}'...")
+    print(f"Writing output to '{out_file}'...")
     output.write_h5ad(out_file)
     print("Done!")
 
