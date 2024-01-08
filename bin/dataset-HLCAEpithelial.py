@@ -34,7 +34,7 @@ def get_HLCAEpithelial(temp_dir):
     dataset_id = "066943a2-fdac-4b29-b348-40cede398e4e"
     print(f"Using dataset ID '{dataset_id}'")
     temp_h5ad = join(temp_dir.name, "temp.h5ad")
-    download_source_h5ad(dataset_id, to_path=temp_h5ad)
+    download_source_h5ad(dataset_id, to_path=temp_h5ad, census_version="2023-07-25")
 
     print("Reading downloaded H5AD...")
     adata = read_h5ad(temp_h5ad, backed=True)
