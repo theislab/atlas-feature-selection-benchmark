@@ -14,7 +14,7 @@ process INTEGRATE_SCVI {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "6.GB", task.attempt) }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
@@ -49,7 +49,7 @@ process INTEGRATE_SCANVI {
 
     label "process_low"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "8.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(scVI), path(query)
@@ -82,8 +82,9 @@ process INTEGRATE_SYMPHONY {
         pattern: "symphony-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
 
+    label "process_medium"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
@@ -115,9 +116,9 @@ process MAP_SCVI {
         pattern: "scVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_low"
+    label "process_medium"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "8.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -150,9 +151,9 @@ process MAP_SCANVI {
         pattern: "scANVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_low"
+    label "process_medium"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "8.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -187,7 +188,7 @@ process MAP_SYMPHONY {
 
     label "process_low"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
