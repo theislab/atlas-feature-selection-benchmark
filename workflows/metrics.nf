@@ -79,7 +79,9 @@ process METRIC_KBET {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "kBET.tsv" }
 
-    memory { get_memory(reference.size(), "4.GB", task.attempt) }
+    memory { get_memory(reference.size(), "42.GB", task.attempt, "32.GB") }
+
+    label "error_retry"
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -144,7 +146,7 @@ process METRIC_BATCHPCR {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "batchPCR.tsv" }
 
-    memory { get_memory(reference.size(), "4.GB", task.attempt) }
+    memory { get_memory(reference.size(), "6.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -209,7 +211,7 @@ process METRIC_CMS {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -247,7 +249,7 @@ process METRIC_LOCALSTRUCTURE {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "localStructure.tsv" }
 
-    memory { get_memory(reference_exprs.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference_exprs.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -565,7 +567,7 @@ process METRIC_LDFDIFF {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "ldfDiff.tsv" }
 
-    memory { get_memory(reference_exprs.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference_exprs.size(), "8.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -737,9 +739,9 @@ process METRIC_RECONSTRUCTION {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "reconstruction.tsv" }
 
-    label "process_medium"
+    label "process_high"
 
-    memory { get_memory(query_exprs.size(), "6.GB", task.attempt) }
+    memory { get_memory(query_exprs.size(), "8.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path("reference.h5ad"), path(query), path(query_dir), path(reference_exprs), path(query_exprs)
@@ -1199,7 +1201,7 @@ process METRIC_MILO {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "MILO.tsv" }
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "8.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference, stageAs: "reference.h5ad"), path(query, stageAs: "query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
