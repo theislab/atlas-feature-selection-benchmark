@@ -1273,18 +1273,22 @@ process COMBINE_METRICS {
         path(metrics)
 
     output:
-        path("all-metrics.tsv")
+        path("all-metrics.tsv"), path("missing-summary.tsv"), path("missing-metrics.tsv")
 
     script:
         """
         combine-metrics.py \\
             --out-file "all-metrics.tsv" \\
+            --missing-values "missing-summary.tsv" \\
+            --missing-files "missing-metrics.txt" \\
             ${metrics}
         """
 
     stub:
         """
         touch "all-metrics.tsv"
+        touch "missing-summary.tsv"
+        touch "missing-metrics.txt"
         """
 }
 
