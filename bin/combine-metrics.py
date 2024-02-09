@@ -110,7 +110,6 @@ def combine_metrics(files):
 
 
 def find_metrics_files(metrics_dir):
-
     import subprocess
 
     print("Searching for metrics files...")

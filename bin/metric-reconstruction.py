@@ -92,8 +92,7 @@ def calculate_reconstruction_error(model):
 
             while np.any(post.sum(1) == 0):
                 post = model.posterior_predictive_sample(
-                    indices=batch_indices,
-                    n_samples=1
+                    indices=batch_indices, n_samples=1
                 )
                 if np.any(post.sum(1) == 0):
                     print("Posterior has cells with zero counts, resampling...")
@@ -112,7 +111,6 @@ def calculate_reconstruction_error(model):
         X_true_batch = X_true[batch_indices, :]
         # Calculate the cosine distance between each cell's true and predicted expression profile
         for cell in tqdm(range(batch_n), desc="Calculating distances", leave=False):
-
             true_cell = X_true_batch[cell, :]
             pred_cell = X_pred[cell, :]
             if issparse(true_cell):

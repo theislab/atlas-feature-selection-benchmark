@@ -48,7 +48,9 @@ def calculate_MILO(input):
         print(f"Using {prop * input.n_obs:.0f} cells ({prop * 100:.2f}%)")
         make_nhoods(input, prop=prop, seed=1)
         selected_cells = input.obs["nhood_ixs_refined"] == 1
-        unseen_counts = input[selected_cells & input.obs["Unseen"]].obs["Label"].value_counts()
+        unseen_counts = (
+            input[selected_cells & input.obs["Unseen"]].obs["Label"].value_counts()
+        )
         if (unseen_counts.size != unseen_labels.size) or max(unseen_counts) < 10:
             print("Not enough cells in some unseen labels. Selecting more cells...")
             prop = prop * 1.5

@@ -27,7 +27,9 @@ def get_inverse_covariances(coords, groups):
         if det(covariance) != 0:
             inverse_covariances[group] = inv(covariance)
         else:
-            print("Warning: Determinant is 0. Calculating the pseudo-inverse of the covariance matrix.")
+            print(
+                "Warning: Determinant is 0. Calculating the pseudo-inverse of the covariance matrix."
+            )
             inverse_covariances[group] = pinv(covariance)
 
     return inverse_covariances
