@@ -79,7 +79,9 @@ process METRIC_KBET {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "kBET.tsv" }
 
-    memory { get_memory(reference.size(), "42.GB", task.attempt, "32.GB") }
+    memory { get_memory(reference.size(), "64.GB", task.attempt, "16.GB") }
+
+    time { check_max_time(6.h * task.attempt) }
 
     label "error_retry"
 
@@ -282,7 +284,9 @@ process METRIC_ARI {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "ari.tsv" }
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    label "process_low"
+
+    memory { get_memory(reference.size(), "4.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -313,7 +317,9 @@ process METRIC_BARI {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "bARI.tsv" }
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    label "process_low"
+
+    memory { get_memory(reference.size(), "4.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -343,6 +349,8 @@ process METRIC_NMI {
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "nmi.tsv" }
+
+    label "process_low"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -374,6 +382,8 @@ process METRIC_BNMI {
 
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "bNMI.tsv" }
+
+    label "process_low"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -470,7 +480,9 @@ process METRIC_ISOLATEDLABELSF1 {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "isolatedLabelsF1.tsv" }
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    label "process_low"
+
+    memory { get_memory(reference.size(), "8.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -567,7 +579,9 @@ process METRIC_LDFDIFF {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "ldfDiff.tsv" }
 
-    memory { get_memory(reference_exprs.size(), "8.GB", task.attempt, "12.GB") }
+    label "process_low"
+
+    memory { get_memory(reference_exprs.size(), "12.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
@@ -1201,7 +1215,7 @@ process METRIC_MILO {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "MILO.tsv" }
 
-    memory { get_memory(reference.size(), "8.GB", task.attempt, "12.GB") }
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "12.GB") }
 
     input:
         tuple val(dataset), val(method), val(integration), path(reference, stageAs: "reference.h5ad"), path(query, stageAs: "query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
@@ -1281,7 +1295,7 @@ process COMBINE_METRICS {
             --out-file "all-metrics.tsv" \\
             --missing-values "missing-summary.tsv" \\
             --missing-files "missing-metrics.txt" \\
-            ${metrics}
+            $params.outdir/metrics
         """
 
     stub:
@@ -1517,6 +1531,19 @@ def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB") {
 
     return mem_use
 }
+
+def check_max_time(obj) {
+    try {
+        if (obj.compareTo(params.max_time as nextflow.util.Duration) == 1)
+            return params.max_time as nextflow.util.Duration
+        else
+            return obj
+    } catch (all) {
+        println "   ### ERROR ###   Max time '${params.max_time}' is not valid! Using default value: $obj"
+        return obj
+    }
+}
+
 
 /*
 ========================================================================================

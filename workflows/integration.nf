@@ -84,7 +84,7 @@ process INTEGRATE_SYMPHONY {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt, "12.GB") }
+    memory { get_memory(reference.size(), "16.GB", task.attempt, "16.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), path(features), val(seed)
@@ -118,7 +118,7 @@ process MAP_SCVI {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "8.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -153,7 +153,7 @@ process MAP_SCANVI {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "8.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -188,7 +188,7 @@ process MAP_SYMPHONY {
 
     label "process_low"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt) }
+    memory { get_memory(reference.size(), "16.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
