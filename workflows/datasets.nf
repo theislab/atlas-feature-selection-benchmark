@@ -150,6 +150,8 @@ process DATASET_REEDBREAST {
 
     publishDir "$params.outdir/datasets-raw/"
 
+    memory "24.GB"
+
     output:
         tuple val("reedBreast"), path("reedBreast.h5ad")
 
@@ -167,9 +169,7 @@ process DATASET_REEDBREAST {
 process DATASET_SCEIAD {
     conda "envs/seurat.yml"
 
-    publishDir "$params.outdir/datasets-raw/"
-
-    label "process_medium"
+    memory "48.GB"
 
     input:
         path(functions)
@@ -192,6 +192,8 @@ process DATASET_HUMANENDODERM {
     conda "envs/scanpy.yml"
 
     publishDir "$params.outdir/datasets-raw/"
+
+    memory "32.GB"
 
     output:
         tuple val("humanEndoderm"), path("humanEndoderm.h5ad")
@@ -293,7 +295,7 @@ process PREPARE_DATASET {
 
     publishDir "$params.outdir/datasets-prepped/"
 
-    memory { get_memory(file.size(), "2.GB", task.attempt) }
+    memory { get_memory(file.size(), "4.GB", task.attempt) }
 
     input:
         tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)

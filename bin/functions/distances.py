@@ -15,14 +15,22 @@ def get_inverse_covariances(coords, groups):
     """
 
     from numpy import cov
-    from numpy.linalg import inv
+    from numpy.linalg import inv, pinv, det
 
     inverse_covariances = {}
     for group in set(groups):
         is_group = [g == group for g in groups]
         group_coords = coords[is_group, :]
         covariance = cov(group_coords, rowvar=False)
-        inverse_covariances[group] = inv(covariance)
+        # Check if the covariance matrix is singular (i.e. determinant is 0)
+        # If so, calculate the pseudo-inverse instead of the inverse
+        if det(covariance) != 0:
+            inverse_covariances[group] = inv(covariance)
+        else:
+            print(
+                "Warning: Determinant is 0. Calculating the pseudo-inverse of the covariance matrix."
+            )
+            inverse_covariances[group] = pinv(covariance)
 
     return inverse_covariances
 

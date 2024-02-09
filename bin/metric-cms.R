@@ -33,11 +33,17 @@ calculate_CMS <- function(sce) {
     message("Using ", n_cores, " cores")
     sce <- CellMixS::cms(
         sce,
-        k       = 200,
-        group   = "Batch",
+        k = 200,
+        group = "Batch",
         dim_red = "X_emb",
-        n_dim   = ncol(SingleCellExperiment::reducedDim(sce, "X_emb")),
-        BPPARAM = BiocParallel::MulticoreParam(workers = n_cores)
+        n_dim = ncol(SingleCellExperiment::reducedDim(sce, "X_emb")),
+        BPPARAM = BiocParallel::MulticoreParam(
+            workers = n_cores,
+            tasks = n_cores * 4,
+            progressbar = TRUE,
+            log = TRUE,
+            RNGseed = 1
+        )
     )
 
     message("Calculating final score...")
