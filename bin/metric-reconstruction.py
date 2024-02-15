@@ -87,18 +87,13 @@ def calculate_reconstruction_error(model):
         batch_n = len(batch_indices)
         post_samples = np.zeros((batch_n, model.adata.shape[1]))
 
-        for i in tqdm(range(n_samples), desc="Sampling", leave=False):
-            post = np.zeros((batch_n, model.adata.shape[1]))
+        for _ in tqdm(range(n_samples), desc="Sampling", leave=False):
 
-            while np.any(post.sum(1) == 0):
-                post = model.posterior_predictive_sample(
-                    indices=batch_indices, n_samples=1
-                )
-                if np.any(post.sum(1) == 0):
-                    print("Posterior has cells with zero counts, resampling...")
+            post = model.posterior_predictive_sample(indices=batch_indices, n_samples=1)
 
             # Normalise the sample
             post = ((post.T / post.sum(1)).T) * 10000
+            post[~np.isfinite(post)] = 0  # Reset all zero cells to 0
             post = np.log1p(post)
             # Add it to the sum over samples
             post_samples = post_samples + post
