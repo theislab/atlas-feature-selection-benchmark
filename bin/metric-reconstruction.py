@@ -89,13 +89,11 @@ def calculate_reconstruction_error(model):
 
         for _ in tqdm(range(n_samples), desc="Sampling", leave=False):
 
-            post = model.posterior_predictive_sample(
-                indices=batch_indices, n_samples=1
-            )
+            post = model.posterior_predictive_sample(indices=batch_indices, n_samples=1)
 
             # Normalise the sample
             post = ((post.T / post.sum(1)).T) * 10000
-            post[~ np.isfinite(post)] = 0 # Reset all zero cells to 0
+            post[~np.isfinite(post)] = 0  # Reset all zero cells to 0
             post = np.log1p(post)
             # Add it to the sum over samples
             post_samples = post_samples + post
