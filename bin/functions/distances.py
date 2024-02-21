@@ -14,23 +14,36 @@ def get_inverse_covariances(coords, groups):
     Dictionary where keys are groups and values are inverse covariance matrices
     """
 
-    from numpy import cov
-    from numpy.linalg import inv, pinv, det
+    import numpy
 
     inverse_covariances = {}
     for group in set(groups):
         is_group = [g == group for g in groups]
         group_coords = coords[is_group, :]
-        covariance = cov(group_coords, rowvar=False)
+        covariance = numpy.cov(group_coords, rowvar=False)
+
         # Check if the covariance matrix is singular (i.e. determinant is 0)
         # If so, calculate the pseudo-inverse instead of the inverse
-        if det(covariance) != 0:
-            inverse_covariances[group] = inv(covariance)
+        if numpy.linalg.det(covariance) != 0:
+            inv_covariance = numpy.linalg.inv(covariance)
         else:
             print(
-                "Warning: Determinant is 0. Calculating the pseudo-inverse of the covariance matrix."
+                f"Warning: Determinant of the covariance matrix is 0 for group '{group}'. Calculating the pseudo-inverse."
             )
-            inverse_covariances[group] = pinv(covariance)
+            inv_covariance = numpy.linalg.pinv(covariance)
+
+        # Check if the inverse covariance matrix has negative values in the diagonal
+        # If so, add a correction value to the diagonal
+        # This should only happen in rare cases where coordinates are very close to each other
+        if numpy.any(numpy.diag(inv_covariance) < 0):
+            print(
+                f"Warning: Negative values in the diagonal of the inverse covariance matrix for group '{group}'. Adding correction."
+            )
+            correction = -numpy.min(numpy.diag(inv_covariance)) * 1.1
+            print(f"Correction value: {correction}:")
+            numpy.fill_diagonal(inv_covariance, numpy.diag(inv_covariance) + correction)
+
+        inverse_covariances[group] = inv_covariance
 
     return inverse_covariances
 
