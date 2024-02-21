@@ -1295,7 +1295,7 @@ process COMBINE_METRICS {
             --out-file "all-metrics.tsv" \\
             --missing-values "missing-summary.tsv" \\
             --missing-files "missing-metrics.txt" \\
-            $params.outdir/metrics
+            .
         """
 
     stub:
