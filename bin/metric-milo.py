@@ -36,15 +36,16 @@ def calculate_MILO(input):
     print("Calculating neighbourhood graph...")
     n_batches = input.obs["Batch"].unique().size
     n_neighbours = min([n_batches * 5, 200])
+    print(f"Using {n_neighbours} neighbours")
     neighbors(input, n_neighbors=n_neighbours, use_rep="X_emb")
 
     print("Creating cell neighbourhoods...")
     # Use neighbourhoods for least 10% or up to 20,000 cells
-    prop = max([0.1, min([20000 / input.n_obs, 1])])
+    prop = max([0.1, min([20000 / input.n_obs, 1.0])])
 
     unseen_labels = input.obs["Label"][input.obs["Unseen"]].unique()
     unseen_selected = False
-    while not unseen_selected and prop <= 1:
+    while not unseen_selected:
         print(f"Using {prop * input.n_obs:.0f} cells ({prop * 100:.2f}%)")
         make_nhoods(input, prop=prop, seed=1)
         selected_cells = input.obs["nhood_ixs_refined"] == 1
@@ -52,10 +53,25 @@ def calculate_MILO(input):
             input[selected_cells & input.obs["Unseen"]].obs["Label"].value_counts()
         )
         if (unseen_counts.size != unseen_labels.size) or max(unseen_counts) < 10:
-            print("Not enough cells in some unseen labels. Selecting more cells...")
-            prop = prop * 1.5
+            print("Not enough cells in some unseen labels")
+            print(f"Selected cells: {selected_cells.sum()}")
+            print(unseen_counts)
+            if prop == 1.0:
+                print("Already tried all cells!")
+                break
+            else:
+                print("Selecting more cells...")
+                prop = min([prop * 1.5, 1.0])
         else:
             unseen_selected = True
+
+    if unseen_counts.size == 0:
+        import warnings
+
+        warnings.warn(
+            "Unable to find neighbourhoods for any unseen labels. Returning a score of 0.0"
+        )
+        return 0.0
 
     print("Counting labels in neighborhoods...")
     count_nhoods(input, sample_col="Batch")
