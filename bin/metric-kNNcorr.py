@@ -47,7 +47,10 @@ def calculate_kNNcorr(input, exprs):
     n_neighbors = 100
     batches = input.obs["Batch"].unique()
     batch_scores = []
+    total_skipped = 0
     for batch in batches:
+        skipped_cells = 0
+
         print(f"Calculating kNN correlation for batch '{batch}'...")
         adata_batch = exprs[exprs.obs["Batch"] == batch].copy()
         normalize_total(adata_batch, target_sum=10000)
@@ -65,12 +68,37 @@ def calculate_kNNcorr(input, exprs):
                 neighbours_embedding, cell_embedding.reshape(1, -1)
             )
             batch_distances = batch_distances[:, neighbours].toarray()
-            cor, _ = spearmanr(batch_distances.flatten(), embedding_distances.flatten())
+
+            batch_distances = batch_distances.flatten()
+            embedding_distances = embedding_distances.flatten()
+
+            # Skip the cell if the distances are constant
+            if batch_distances.ptp() == 0.0 or embedding_distances.ptp() == 0.0:
+                skipped_cells += 1
+                cor = -1
+            else:
+                cor, _ = spearmanr(batch_distances, embedding_distances)
+
             cell_scores.append(cor)
+
+        if skipped_cells > 0:
+            print(
+                f"Unable to calculate correlation for {skipped_cells} cells. These are given the worst possible score."
+            )
+            total_skipped += skipped_cells
 
         # Change range from [-1, 1] to [0, 1]
         cell_scores = [(score + 1) / 2 for score in cell_scores]
+        batch_mean = np.mean(cell_scores)
+        print(f"Mean kNN correlation for batch '{batch}': {batch_mean}")
         batch_scores.append(np.mean(cell_scores))
+
+    if total_skipped > 0:
+        import warnings
+
+        warnings.warn(
+            f"Correlation could not be calculated for {total_skipped} cells. These are given the worst possible score and may affect the final result."
+        )
 
     print("Calculating final score...")
     score = np.mean(batch_scores)
