@@ -1,0 +1,161 @@
+experiment: pilot
+datasets:
+  - name: scIBPancreas
+    batch_col: tech
+    query_batches: celseq,celseq2
+    label_col: celltype
+    unseen_labels: activated_stellate
+    species: Human
+methods:
+  - name: all
+  - name: random
+    settings:
+      - n_features: 1000
+        seed: 1
+      - n_features: 1000
+        seed: 2
+      - n_features: 1000
+        seed: 3
+      - n_features: 1000
+        seed: 4
+      - n_features: 1000
+        seed: 5
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "False"
+      - flavor: pearson
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "True"
+      - flavor: pearson
+        n_features: 2000
+        batch: "True"
+  - name: triku
+  - name: hotspot
+  - name: scsegindex
+  - name: dubstepr
+  - name: nbumi
+  - name: osca
+  - name: seurat
+    settings:
+      - method: vst
+        n_features: 2000
+      - method: mvp
+        n_features: 2000
+      - method: disp
+        n_features: 2000
+      - method: sct
+        n_features: 2000
+  - name: scry
+  - name: singleCellHaystack
+  - name: Brennecke
+  - name: wilcoxon
+  - name: statistic
+    settings:
+      - statistic: mean
+        n_features: 2000
+      - statistic: variance
+        n_features: 2000
+  - name: scPNMF
+  - name: anticor
+  - name: TFs
+integration:
+  seeds:
+    - 1
+metrics:
+  # Integration (batch) metrics
+  - name: mixing
+    type: IntegrationBatch
+  - name: kBET
+    type: IntegrationBatch
+  - name: batchPCR
+    type: IntegrationBatch
+  - name: iLISI
+    type: IntegrationBatch
+  - name: batchASW
+    type: IntegrationBatch
+  - name: graphConnectivity
+    type: IntegrationBatch
+  - name: CMS
+    type: IntegrationBatch
+  # Integration (bio) metrics
+  - name: localStructure
+    type: IntegrationBio
+  - name: cLISI
+    type: IntegrationBio
+  - name: ari
+    type: IntegrationBio
+  - name: bARI
+    type: IntegrationBio
+  - name: nmi
+    type: IntegrationBio
+  - name: bNMI
+    type: IntegrationBio
+  - name: labelASW
+    type: IntegrationBio
+  - name: isolatedLabelsF1
+    type: IntegrationBio
+  - name: isolatedLabelsASW
+    type: IntegrationBio
+  - name: cellCycle
+    type: IntegrationBio
+  - name: ldfDiff
+    type: IntegrationBio
+  # Mapping metrics
+  - name: mLISI
+    type: Mapping
+  - name: qLISI
+    type: Mapping
+  - name: cellDist
+    type: Mapping
+  - name: labelDist
+    type: Mapping
+  - name: reconstruction
+    type: Mapping
+  - name: kNNcorr
+    type: Mapping
+  # Classification metrics
+  - name: accuracy
+    type: Classification
+  - name: f1Macro
+    type: Classification
+  - name: f1Rarity
+    type: Classification
+  - name: jaccardIndexMicro
+    type: Classification
+  - name: jaccardIndexMacro
+    type: Classification
+  - name: jaccardIndexRarity
+    type: Classification
+  - name: MCC
+    type: Classification
+  - name: AUPRC
+    type: Classification
+  # Unseen metrics
+  - name: unseenCellDist
+    type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
+  - name: MILO
+    type: Unseen
+  - name: uncertainty
+    type: Unseen
+reports:
+  - name: metrics
+
