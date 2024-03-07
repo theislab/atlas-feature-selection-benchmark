@@ -174,6 +174,37 @@ process METRIC_BATCHPCR {
         """
 }
 
+process METRIC_BATCHASW {
+    conda "envs/scib.yml"
+
+    publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
+        saveAs: { filename -> "batchASW.tsv" }
+
+    memory { get_memory(reference.size(), "6.GB", task.attempt, "12.GB") }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference), path(reference_exprs)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-batchASW.tsv")
+
+    script:
+        """
+        metric-batchASW.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --out-file "${dataset}-${method}-${integration}-batchASW.tsv" \\
+            ${reference}
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-batchASW.tsv"
+        """
+}
+
 process METRIC_GRAPHCONNECTIVITY {
     conda "envs/scib.yml"
 
@@ -1343,7 +1374,10 @@ workflow METRICS {
         batchPCR_ch = metric_names.contains("batchPCR") ?
             METRIC_BATCHPCR(reference_ch, py_metrics_funcs) :
             Channel.empty()
-		iLISI_ch = metric_names.contains("iLISI") ?
+        batchASW_ch = metric_names.contains("batchASW") ?
+            METRIC_BATCHASW(reference_ch, py_metrics_funcs) :
+            Channel.empty()
+        iLISI_ch = metric_names.contains("iLISI") ?
             METRIC_ILISI(reference_ch,py_metrics_funcs) :
             Channel.empty()
         graphConnectivity_ch = metric_names.contains("graphConnectivity") ?
@@ -1461,6 +1495,7 @@ workflow METRICS {
                 mixing_ch,
                 kBET_ch,
                 batchPCR_ch,
+                batchASW_ch,
                 iLISI_ch,
                 graphConnectivity_ch,
                 cms_ch,

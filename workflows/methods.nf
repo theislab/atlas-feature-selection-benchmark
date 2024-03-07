@@ -165,6 +165,8 @@ process METHOD_SCSEGINDEX {
 
     publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
 
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query)
         path(functions)

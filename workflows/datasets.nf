@@ -214,6 +214,8 @@ process DATASET_HLCA {
 
     publishDir "$params.outdir/datasets-raw/"
 
+    memory "24.GB"
+
     output:
         tuple val("HLCA"), path("HLCA.h5ad")
 
@@ -233,6 +235,8 @@ process DATASET_HLCAIMMUNE {
 
     publishDir "$params.outdir/datasets-raw/"
 
+    memory "24.GB"
+
     output:
         tuple val("HLCAImmune"), path("HLCAImmune.h5ad")
 
@@ -251,6 +255,8 @@ process DATASET_HLCAEPITHELIAL {
     conda "envs/cellxgene-census.yml"
 
     publishDir "$params.outdir/datasets-raw/"
+
+    memory "24.GB"
 
     output:
         tuple val("HLCAEpithelial"), path("HLCAEpithelial.h5ad")
@@ -295,7 +301,7 @@ process PREPARE_DATASET {
 
     publishDir "$params.outdir/datasets-prepped/"
 
-    memory { get_memory(file.size(), "4.GB", task.attempt) }
+    memory { get_memory(file.size(), "8.GB", task.attempt) }
 
     input:
         tuple val(name), val(batch_col), val(query_batches), val(label_col), val(unseen_labels), val(species), path(file)
