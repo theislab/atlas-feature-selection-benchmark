@@ -30,11 +30,13 @@ suppressMessages({
 select_scsegindex_features <- function(input) {
     message("Selecting scSEGIndex features...")
 
-    exprs_mat <- SummarizedExperiment::assay(input)
-    result <- scSEGIndex(exprs_mat = exprs_mat)
+    counts <- SingleCellExperiment::counts(input)
+    logcounts <- scuttle::normalizeCounts(counts)
+    result <- scSEGIndex(logcounts)
+    result <- result[order(result$segIdx, decreasing = TRUE), ]
     result$Feature <- rownames(result)
 
-    return(result)
+    return(result[1:1000, ])
 }
 
 #' The main script function
@@ -46,10 +48,10 @@ main <- function() {
     message("Reading data from '", file, "'...")
     input <- read_h5ad(
         file,
-        X_name = NULL,
+        X_name = "counts",
         uns    = FALSE,
         varm   = FALSE,
-        obsm   = "X_emb",
+        obsm   = FALSE,
         varp   = FALSE,
         obsp   = FALSE
     )
