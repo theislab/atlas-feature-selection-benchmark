@@ -32,6 +32,7 @@ def calculate_MILO(input):
 
     from scanpy.preprocessing import neighbors
     from milopy.core import make_nhoods, count_nhoods, DA_nhoods
+    from numpy import isnan
 
     print("Calculating neighbourhood graph...")
     n_batches = input.obs["Batch"].unique().size
@@ -43,7 +44,16 @@ def calculate_MILO(input):
     # Use neighbourhoods for least 10% or up to 20,000 cells
     prop = max([0.1, min([20000 / input.n_obs, 1.0])])
 
+    print("LABELS:")
+    print(input.obs["Label"].unique())
+
     unseen_labels = input.obs["Label"][input.obs["Unseen"]].unique()
+
+    print(input.obs["Label"].value_counts())
+
+    print("UNSEEN:")
+    print(unseen_labels)
+
     unseen_selected = False
     while not unseen_selected:
         print(f"Using {prop * input.n_obs:.0f} cells ({prop * 100:.2f}%)")
@@ -88,7 +98,11 @@ def calculate_MILO(input):
         is_label = neighbourhood_adata.obs["index_cell"].isin(label_ids)
         label_fdrs = neighbourhood_adata[is_label].obs["SpatialFDR"]
         # Score is the proportion of neighborhoods with FDR < 0.1
-        label_scores.append((label_fdrs < 0.1).mean())
+        label_score = (label_fdrs < 0.1).mean()
+        if isnan(label_score):
+            print(f"No score calculated for label '{label}', using a score of 0.0")
+            label_score = 0.0
+        label_scores.append(label_score)
 
     print("Calculating final MILO score...")
     score = sum(label_scores) / len(label_scores)
