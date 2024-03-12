@@ -1542,6 +1542,7 @@ workflow METRICS {
 
     emit:
         combined_metrics_ch = COMBINE_METRICS.out
+            .map {it -> file(it[0])}
 }
 
 /*
