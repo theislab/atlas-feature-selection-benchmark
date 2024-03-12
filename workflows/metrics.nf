@@ -1318,7 +1318,7 @@ process COMBINE_METRICS {
         path(metrics)
 
     output:
-        tuple path("all-metrics.tsv"), path("missing-summary.tsv"), path("missing-metrics.tsv")
+        tuple path("all-metrics.tsv"), path("missing-summary.tsv"), path("missing-metrics.txt")
 
     script:
         """
@@ -1542,6 +1542,7 @@ workflow METRICS {
 
     emit:
         combined_metrics_ch = COMBINE_METRICS.out
+            .map {it -> file(it[0])}
 }
 
 /*

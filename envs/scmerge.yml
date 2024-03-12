@@ -8,6 +8,7 @@ dependencies:
   - bioconductor-basilisk=1.9.12
   - bioconductor-basilisk.utils=1.10.0
   - bioconductor-biobase=2.58.0
+  - bioconductor-scuttle=1.8.0
   - bioconductor-scmerge=1.14.0
   - bioconductor-singlecellexperiment=1.20.0
   - bioconductor-summarizedexperiment=1.28.0
@@ -23,3 +24,4 @@ dependencies:
   - r-docopt=0.7.1
   - r-reticulate=1.26
   - scipy=1.9.0
+

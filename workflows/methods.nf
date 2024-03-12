@@ -8,7 +8,7 @@
 process METHOD_ALL {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -32,7 +32,7 @@ process METHOD_ALL {
 process METHOD_RANDOM {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query), val(n_features), val(seed)
@@ -58,7 +58,7 @@ process METHOD_RANDOM {
 process METHOD_SCANPY {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query), val(flavor), val(n_features), val(batch)
@@ -85,7 +85,7 @@ process METHOD_SCANPY {
 process METHOD_TRIKU {
     conda "envs/triku.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -111,7 +111,7 @@ process METHOD_TRIKU {
 process METHOD_HOTSPOT {
     conda "envs/hotspot.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -136,7 +136,7 @@ process METHOD_HOTSPOT {
 process METHOD_SEURAT {
     conda "envs/seurat.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), val(n_features)
@@ -163,7 +163,7 @@ process METHOD_SEURAT {
 process METHOD_SCSEGINDEX {
     conda "envs/scmerge.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB") }
 
@@ -190,7 +190,7 @@ process METHOD_SCSEGINDEX {
 process METHOD_NBUMI {
     conda "envs/m3drop.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -217,7 +217,7 @@ process METHOD_NBUMI {
 process METHOD_OSCA {
     conda "envs/osca.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -242,7 +242,7 @@ process METHOD_OSCA {
 process METHOD_DUBSTEPR {
     conda "envs/dubstepr.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -267,7 +267,7 @@ process METHOD_DUBSTEPR {
 process METHOD_SCRY {
     conda "envs/scry.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -294,7 +294,7 @@ process METHOD_SCRY {
 process METHOD_SINGLECELLHAYSTACK {
     conda "envs/singleCellHaystack.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -319,7 +319,7 @@ process METHOD_SINGLECELLHAYSTACK {
 process METHOD_BRENNECKE {
     conda "envs/osca.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -344,7 +344,7 @@ process METHOD_BRENNECKE {
 process METHOD_WILCOXON {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -368,7 +368,7 @@ process METHOD_WILCOXON {
 process METHOD_STATISTIC {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query), val(statistic), val(n_features)
@@ -394,7 +394,7 @@ process METHOD_STATISTIC {
 process METHOD_SCPNMF {
     conda "envs/scPNMF.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     memory { get_memory(reference.size(), "2.GB", task.attempt) }
 
@@ -421,7 +421,7 @@ process METHOD_SCPNMF {
 process METHOD_ANTICOR {
     conda "envs/anticor.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -445,7 +445,7 @@ process METHOD_ANTICOR {
 process METHOD_TFS {
     conda "envs/scanpy.yml"
 
-    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+    publishDir "$params.outdir/selected-features/${dataset}"
 
     label "error_ignore"
 
@@ -467,6 +467,30 @@ process METHOD_TFS {
     stub:
         """
         touch "TFs.tsv"
+        """
+}
+
+process COMBINE_FEATURES {
+    conda "envs/sklearn.yml"
+
+    publishDir "$params.outdir/selected-features/${dataset}", mode: "copy"
+
+    input:
+        tuple val(dataset), path(features)
+
+    output:
+        path("all-features.tsv")
+
+    script:
+        """
+        combine-features.py \\
+            --out-file "all-features.tsv" \\
+            .
+        """
+
+    stub:
+        """
+        touch "all-features.tsv"
         """
 }
 
@@ -610,6 +634,17 @@ workflow METHODS {
                 anticor_ch,
                 tfs_ch
             )
+
+        features_grouped_ch = selected_features_ch
+            .map { features ->
+                tuple(
+                    features[0],
+                    features[2]
+                )
+            }
+            .groupTuple(by: 0)
+
+        COMBINE_FEATURES(features_grouped_ch)
 
     emit:
         datasets_features_ch = prepared_datasets_ch.combine(selected_features_ch, by: 0)
