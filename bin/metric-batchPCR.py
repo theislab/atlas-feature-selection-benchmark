@@ -32,8 +32,13 @@ def calculate_batchPCR(adata, exprs):
     The PCR comparison score
     """
     from scib.metrics import pcr_comparison
+    from scanpy.preprocessing import normalize_total, log1p
 
-    print("Calculating final score...")
+    print("Normalizing expression data...")
+    normalize_total(exprs, target_sum=10000)
+    log1p(exprs)
+
+    print("Calculating BatchPCR score...")
     score = pcr_comparison(
         adata_pre=exprs,
         adata_post=adata,
@@ -43,7 +48,7 @@ def calculate_batchPCR(adata, exprs):
         scale=True,
         verbose=True,
     )
-    print("Final score: {score}")
+    print(f"Final score: {score}")
 
     return score
 

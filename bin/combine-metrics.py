@@ -115,7 +115,7 @@ def find_metrics_files(metrics_dir):
     print("Searching for metrics files...")
 
     # Use find because it's much faster than Python os
-    command = f"find {metrics_dir} -name '*.tsv' ! -name 'all-metrics.tsv'"
+    command = f"find {metrics_dir} -name '*.tsv' ! -name 'all-metrics.tsv' ! -name 'missing-summary.tsv'"
     result = subprocess.check_output(command, shell=True, text=True)
 
     metrics_files = result.strip().split("\n")
