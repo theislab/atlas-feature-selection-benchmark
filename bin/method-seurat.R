@@ -53,7 +53,10 @@ select_seurat_features <- function(
         seurat <- SCTransform(
             seurat,
             assay = DefaultAssay(seurat),
-            variable.features.n = n_features
+            variable.features.n = n_features,
+            do.correct.umi = FALSE,
+            conserve.memory = TRUE,
+            verbose = TRUE
         )
     } else {
         seurat <- NormalizeData(seurat)
