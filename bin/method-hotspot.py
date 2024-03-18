@@ -9,7 +9,7 @@ Usage:
 Options:
     -h --help            Show this screen.
     --out-file=<path>    Path to output file.
-    --n-features=<int>   Number of features to select [default: 1000].
+    --n-features=<int>   Number of features to select [default: 2000].
 """
 
 

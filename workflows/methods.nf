@@ -60,6 +60,8 @@ process METHOD_SCANPY {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
+    memory { get_memory(reference.size(), "4.GB", task.attempt, "8.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query), val(flavor), val(n_features), val(batch)
 
@@ -87,7 +89,7 @@ process METHOD_TRIKU {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "40.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -113,6 +115,8 @@ process METHOD_HOTSPOT {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
+    memory { get_memory(reference.size(), "16.GB", task.attempt, "8.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query)
 
@@ -137,6 +141,8 @@ process METHOD_SEURAT {
     conda "envs/seurat.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}"
+
+    memory { get_memory(reference.size(), "16.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), val(n_features)
@@ -165,7 +171,9 @@ process METHOD_SCSEGINDEX {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB") }
+    label "process_long"
+
+    memory { get_memory(reference.size(), "20.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -192,7 +200,9 @@ process METHOD_NBUMI {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    label "process_long"
+
+    memory { get_memory(reference.size(), "8.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -219,6 +229,8 @@ process METHOD_OSCA {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query)
         path(functions)
@@ -243,6 +255,10 @@ process METHOD_DUBSTEPR {
     conda "envs/dubstepr.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}"
+
+    label "process_long"
+
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -269,7 +285,7 @@ process METHOD_SCRY {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    memory { get_memory(reference.size(), "28.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -296,6 +312,8 @@ process METHOD_SINGLECELLHAYSTACK {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query)
         path(functions)
@@ -320,6 +338,8 @@ process METHOD_BRENNECKE {
     conda "envs/osca.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}"
+
+    memory { get_memory(reference.size(), "8.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -346,6 +366,10 @@ process METHOD_WILCOXON {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
+    label "process_long"
+
+    memory { get_memory(reference.size(), "4.GB", task.attempt, "8.GB", "400.GB") }
+
     input:
         tuple val(dataset), path(reference), path(query)
 
@@ -369,6 +393,8 @@ process METHOD_STATISTIC {
     conda "envs/scanpy.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}"
+
+    memory { get_memory(reference.size(), "4.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(statistic), val(n_features)
@@ -396,7 +422,10 @@ process METHOD_SCPNMF {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "2.GB", task.attempt) }
+    label "process_long"
+    label "error_ignore"
+
+    memory { get_memory(reference.size(), "72.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -422,6 +451,8 @@ process METHOD_ANTICOR {
     conda "envs/anticor.yml"
 
     publishDir "$params.outdir/selected-features/${dataset}"
+
+    memory { get_memory(reference.size(), "20.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -656,11 +687,11 @@ workflow METHODS {
 ========================================================================================
 */
 
-def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB") {
+def get_memory(file_size, mem_per_gb = "1.GB", attempt = 1, overhead = "8.GB", max_mem = params.max_memory) {
     file_mem = new nextflow.util.MemoryUnit(file_size)
     mem_per_gb = new nextflow.util.MemoryUnit(mem_per_gb)
     overhead = new nextflow.util.MemoryUnit(overhead)
-    max_mem = new nextflow.util.MemoryUnit(params.max_memory)
+    max_mem = new nextflow.util.MemoryUnit(max_mem)
 
     file_gb = file_mem.toGiga()
     file_gb = file_gb > 0 ? file_gb : 1

@@ -9,7 +9,7 @@ Usage:
 Options:
     -h --help                 Show this screen.
     -o --out-file=<path>      Path to output file.
-    -n --n-features=<int>     Number of features to select [default: 1000].
+    -n --n-features=<int>     Number of features to select [default: 2000].
 " -> doc
 
 # Source functions
@@ -37,7 +37,7 @@ main <- function() {
     args <- docopt::docopt(doc)
     file <- args[["<file>"]]
     out_file <- args[["--out-file"]]
-    n_features <- args[["--n-features"]]
+    n_features <- as.numeric(args[["--n-features"]])
 
     message("Reading data from '", file, "'...")
     input <- read_h5ad(

@@ -31,9 +31,8 @@ suppressMessages({
 #' @param method The feature selection method to use
 #'
 #' @returns DataFrame containing the selected features
-select_seurat_features <- function(
-        seurat, n_features,
-        method = c("vst", "mvp", "disp", "sct")) {
+select_seurat_features <- function(seurat, n_features,
+    method = c("vst", "mvp", "disp", "sct")) {
     method <- match.arg(method)
 
     method <- switch(method,
@@ -53,7 +52,10 @@ select_seurat_features <- function(
         seurat <- SCTransform(
             seurat,
             assay = DefaultAssay(seurat),
-            variable.features.n = n_features
+            variable.features.n = n_features,
+            do.correct.umi = FALSE,
+            conserve.memory = TRUE,
+            verbose = TRUE
         )
     } else {
         seurat <- NormalizeData(seurat)
