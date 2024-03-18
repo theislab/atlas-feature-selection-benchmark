@@ -118,7 +118,7 @@ process MAP_SCVI {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt) }
+    memory { get_memory(reference.size(), "16.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
@@ -153,7 +153,7 @@ process MAP_SCANVI {
 
     label "process_medium"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt) }
+    memory { get_memory(reference.size(), "16.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(reference_model), path(query)
