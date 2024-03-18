@@ -38,6 +38,7 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
     """
     from scib.metrics import cell_cycle
     from scanpy.tools import score_genes_cell_cycle
+    from scanpy.preprocessing import normalize_total, log1p
 
     if adata.uns["Species"].lower() not in ["human", "mouse"]:
         from warnings import warn
@@ -46,6 +47,10 @@ def calculate_cellCycleConservation(adata, exprs, s_genes, g2m_genes):
             f"'{adata.uns['Species']}' is not a valid species ('human', 'mouse'). A score of 'NA' will be returned."
         )
         return "NA"
+
+    print("Normalizing expression data...")
+    normalize_total(exprs, target_sum=10000)
+    log1p(exprs)
 
     print("Calculating batch cell cycle scores...")
     batches = exprs.obs["Batch"].unique()
