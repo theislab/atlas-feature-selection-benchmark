@@ -60,7 +60,7 @@ process METHOD_SCANPY {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "4.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "8.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(flavor), val(n_features), val(batch)
@@ -89,7 +89,7 @@ process METHOD_TRIKU {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "40.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "48.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -115,7 +115,7 @@ process METHOD_HOTSPOT {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "16.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "24.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -142,7 +142,7 @@ process METHOD_SEURAT {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "16.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "40.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query), val(method), val(n_features)
@@ -285,7 +285,7 @@ process METHOD_SCRY {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "28.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "32.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -479,6 +479,8 @@ process METHOD_TFS {
     publishDir "$params.outdir/selected-features/${dataset}"
 
     label "error_ignore"
+
+    memory { get_memory(reference.size(), "8.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)

@@ -1246,6 +1246,8 @@ process METRIC_MILO {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "MILO.tsv" }
 
+    label "process_low"
+
     memory { get_memory(reference.size(), "12.GB", task.attempt, "12.GB") }
 
     input:

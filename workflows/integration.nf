@@ -47,9 +47,9 @@ process INTEGRATE_SCANVI {
         pattern: "scANVI-reference",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_low"
+    label "process_medium"
 
-    memory { get_memory(reference.size(), "8.GB", task.attempt) }
+    memory { get_memory(reference.size(), "12.GB", task.attempt) }
 
     input:
         tuple val(dataset), val(method), val(integration), val(seed), path(reference), path(scVI), path(query)
@@ -116,7 +116,7 @@ process MAP_SCVI {
         pattern: "scVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_medium"
+    label "process_high"
 
     memory { get_memory(reference.size(), "16.GB", task.attempt) }
 
@@ -186,7 +186,7 @@ process MAP_SYMPHONY {
         pattern: "symphony-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_low"
+    label "process_medium"
 
     memory { get_memory(reference.size(), "16.GB", task.attempt) }
 
