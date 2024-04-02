@@ -76,7 +76,7 @@ main <- function() {
     args <- docopt::docopt(doc)
     file <- args[["<file>"]]
     out_file <- args[["--out-file"]]
-    n_features <- args[["--n-features"]]
+    n_features <- as.numeric(args[["--n-features"]])
     method <- args[["--method"]]
 
     message("Reading data from '", file, "'...")
