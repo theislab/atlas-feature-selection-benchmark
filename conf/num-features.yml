@@ -1,0 +1,315 @@
+experiment: num-features
+datasets:
+  - name: scIBPancreas
+    batch_col: tech
+    query_batches: celseq,celseq2
+    label_col: celltype
+    unseen_labels: activated_stellate
+    species: Human
+  - name: neurips
+    batch_col: batch
+    query_batches: s4d1,s4d8,s4d9
+    label_col: cell_type
+    unseen_labels: "CD8+ T naive,Proerythroblast"
+    species: Human
+  - name: fetalLiver
+    batch_col: fetal.ids
+    query_batches: "F16_male_8+1PCW,F33_female_9+5PCW,F45_female_13+6PCW"
+    label_col: cell.labels
+    unseen_labels: "Kupffer Cell,NK,ILC precursor,Early lymphoid_T lymphocyte"
+    species: Human
+  - name: reedBreast
+    batch_col: donor_id
+    query_batches: HBCA_Donor_23,HBCA_Donor_24,HBCA_Donor_25,HBCA_Donor_26,HBCA_Donor_27,HBCA_Donor_28,HBCA_Donor_29,HBCA_Donor_30,HBCA_Donor_31,HBCA_Donor_32,HBCA_Donor_33,HBCA_Donor_50,HBCA_Donor_51,HBCA_Donor_52,HBCA_Donor_53,HBCA_Donor_54,HBCA_Donor_55
+    label_col: level2
+    unseen_labels: "BSL2,CD8T 1,CD8T 2,CD8T 3,FB5,LEC1,LEC2"
+    species: Human
+  - name: scEiaD
+    batch_col: batch
+    query_batches: SRP255195_10xv3_H1,SRP218652_10xv3_donor7,SRP218652_10xv3_donor6,SRP218652_10xv3_donor1,SRP218652_10xv3_donor2,SRP218652_10xv3_donor3,SRP218652_10xv3_donor4,SRP218652_10xv3_donor5,SRP257883_10xv3_donor_22,SRP257883_10xv3_donor_23,SRP257883_10xv3_donor_24,SRP257883_10xv3_donor_25,SRP222958_DropSeq_retina8,SRP222958_DropSeq_retina6,SRP222958_DropSeq_retina2,SRP194595_10xv3_Donor1,SRP194595_10xv3_Donor3,SRP194595_10xv3_Donor2,SRP238409_10xv3_Donor4
+    label_col: CellType_predict
+    unseen_labels: "B-Cell,Blood Vessel,Macrophage,Pericyte,Smooth Muscle Cell,T/NK-Cell"
+    species: Human
+  - name: humanEndoderm
+    batch_col: Individual
+    label_col: Cell_type
+    query_batches: HT-184,HT-228,HT-232,HT-187
+    unseen_labels: "Basal like,Ciliated,Hepatocyte,Mesenchyme subtype 4,T cell/NK cell 1"
+    species: Human
+  - name: HLCA
+    batch_col: dataset
+    label_col: ann_finest_level
+    query_batches: Barbry_Leroy_2020,Jain_Misharin_2021_10Xv2,Jain_Misharin_2021_10Xv1,Krasnow_2020,Nawijn_2021
+    unseen_labels: "Multiciliated (nasal),Club (nasal),Goblet (subsegmental),SMG serous (nasal),SMG serous (bronchial),SMG mucous,EC aerocyte capillary,Peribronchial fibroblasts,Smooth muscle,Smooth muscle FAM83D+,B cells,DC2,Alveolar Mph CCL3+,Mast cells"
+    species: Human
+  - name: HLCAImmune
+    batch_col: dataset
+    label_col: ann_finest_level
+    query_batches: Krasnow_2020,Nawijn_2021
+    unseen_labels: "B cells,DC2,Alveolar Mph CCL3+,Mast cells"
+    species: Human
+  - name: HLCAEpithelial
+    batch_col: dataset
+    label_col: ann_finest_level
+    query_batches: Barbry_Leroy_2020,Jain_Misharin_2021_10Xv2,Jain_Misharin_2021_10Xv1,Krasnow_2020,Nawijn_2021
+    unseen_labels: "Multiciliated (nasal),Club (nasal),Goblet (subsegmental),SMG serous (nasal),SMG serous (bronchial),SMG mucous"
+    species: Human
+  - name: splat
+    batch_col: Batch
+    label_col: Label
+    query_batches: Batch5,Batch6
+    unseen_labels: Intermediate,Rare,Perturbed
+    species: Simulation
+methods:
+  - name: all
+  - name: scanpy
+    settings:
+      - flavor: seurat
+        n_features: 100
+        batch: "False"
+      - flavor: seurat
+        n_features: 200
+        batch: "False"
+      - flavor: seurat
+        n_features: 500
+        batch: "False"
+      - flavor: seurat
+        n_features: 1000
+        batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat
+        n_features: 5000
+        batch: "False"
+      - flavor: seurat
+        n_features: 10000
+        batch: "False"
+      - flavor: seurat
+        n_features: 15000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 100
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 200
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 500
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 1000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 5000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 10000
+        batch: "False"
+      - flavor: seurat_v3
+        n_features: 15000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 100
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 200
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 500
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 1000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 5000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 10000
+        batch: "False"
+      - flavor: cell_ranger
+        n_features: 15000
+        batch: "False"
+      - flavor: pearson
+        n_features: 100
+        batch: "False"
+      - flavor: pearson
+        n_features: 200
+        batch: "False"
+      - flavor: pearson
+        n_features: 500
+        batch: "False"
+      - flavor: pearson
+        n_features: 1000
+        batch: "False"
+      - flavor: pearson
+        n_features: 2000
+        batch: "False"
+      - flavor: pearson
+        n_features: 5000
+        batch: "False"
+      - flavor: pearson
+        n_features: 10000
+        batch: "False"
+      - flavor: pearson
+        n_features: 15000
+        batch: "False"
+  - name: seurat
+    settings:
+      - method: vst
+        n_features: 100
+      - method: vst
+        n_features: 200
+      - method: vst
+        n_features: 500
+      - method: vst
+        n_features: 1000
+      - method: vst
+        n_features: 2000
+      - method: vst
+        n_features: 5000
+      - method: vst
+        n_features: 10000
+      - method: vst
+        n_features: 15000
+      - method: mvp
+        n_features: 100
+      - method: mvp
+        n_features: 200
+      - method: mvp
+        n_features: 500
+      - method: mvp
+        n_features: 1000
+      - method: mvp
+        n_features: 2000
+      - method: mvp
+        n_features: 5000
+      - method: mvp
+        n_features: 10000
+      - method: mvp
+        n_features: 15000
+      - method: disp
+        n_features: 100
+      - method: disp
+        n_features: 200
+      - method: disp
+        n_features: 500
+      - method: disp
+        n_features: 1000
+      - method: disp
+        n_features: 2000
+      - method: disp
+        n_features: 5000
+      - method: disp
+        n_features: 10000
+      - method: disp
+        n_features: 15000
+      - method: sct
+        n_features: 100
+      - method: sct
+        n_features: 200
+      - method: sct
+        n_features: 500
+      - method: sct
+        n_features: 1000
+      - method: sct
+        n_features: 2000
+      - method: sct
+        n_features: 5000
+      - method: sct
+        n_features: 10000
+      - method: sct
+        n_features: 15000
+  - name: statistic
+    settings:
+      - statistic: mean
+        n_features: 100
+      - statistic: mean
+        n_features: 200
+      - statistic: mean
+        n_features: 500
+      - statistic: mean
+        n_features: 1000
+      - statistic: mean
+        n_features: 2000
+      - statistic: mean
+        n_features: 5000
+      - statistic: mean
+        n_features: 10000
+      - statistic: mean
+        n_features: 15000
+      - statistic: variance
+        n_features: 100
+      - statistic: variance
+        n_features: 200
+      - statistic: variance
+        n_features: 500
+      - statistic: variance
+        n_features: 1000
+      - statistic: variance
+        n_features: 2000
+      - statistic: variance
+        n_features: 5000
+      - statistic: variance
+        n_features: 10000
+      - statistic: variance
+        n_features: 15000
+integration:
+  seeds:
+    - 1
+metrics:
+  # Integration (batch) metrics
+  - name: iLISI
+    type: IntegrationBatch
+  - name: batchASW
+    type: IntegrationBatch
+  - name: CMS
+    type: IntegrationBatch
+  - name: graphConnectivity
+    type: IntegrationBatch
+    # Integration (bio) metrics
+  - name: cLISI
+    type: IntegrationBio
+  - name: bARI
+    type: IntegrationBio
+  - name: bNMI
+    type: IntegrationBio
+  - name: labelASW
+    type: IntegrationBio
+  - name: isolatedLabelsF1
+    type: IntegrationBio
+  - name: isolatedLabelsASW
+    type: IntegrationBio
+  - name: ldfDiff
+    type: IntegrationBio
+  # Mapping metrics
+  - name: mLISI
+    type: Mapping
+  - name: qLISI
+    type: Mapping
+  - name: cellDist
+    type: Mapping
+  - name: labelDist
+    type: Mapping
+  # Classification metrics
+  - name: f1Micro
+    type: Classification
+  - name: f1Macro
+    type: Classification
+  - name: f1Rarity
+    type: Classification
+  # Unseen metrics
+  - name: unseenCellDist
+    type: Unseen
+  - name: unseenLabelDist
+    type: Unseen
+  - name: MILO
+    type: Unseen
+reports:
+  - name: metrics
