@@ -4,7 +4,6 @@ datasets:
     batch_col: tech
     query_batches: celseq,celseq2
     label_col: celltype
-    query_batches: inDrop3
     unseen_labels: activated_stellate
     species: Human
   - name: neurips
@@ -256,4 +255,3 @@ metrics:
     type: Unseen
 reports:
   - name: metrics
-
