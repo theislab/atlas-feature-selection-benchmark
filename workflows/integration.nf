@@ -151,7 +151,7 @@ process MAP_SCANVI {
         pattern: "scANVI-mapped",
         saveAs: { pathname -> pathname + "-${seed}" }
 
-    label "process_medium"
+    label "process_high"
 
     memory { get_memory(reference.size(), "16.GB", task.attempt) }
 

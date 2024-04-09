@@ -79,9 +79,9 @@ process METRIC_KBET {
     publishDir "$params.outdir/metrics/${dataset}/${method}/${integration}",
         saveAs: { filename -> "kBET.tsv" }
 
-    memory { get_memory(reference.size(), "64.GB", task.attempt, "16.GB") }
+    memory { get_memory(reference.size(), "96.GB", task.attempt, "12.GB") }
 
-    time { check_max_time(6.h * task.attempt) }
+    time { check_max_time(8.h * task.attempt) }
 
     label "error_retry"
 

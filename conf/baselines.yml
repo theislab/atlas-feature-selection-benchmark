@@ -64,15 +64,15 @@ methods:
   - name: all
   - name: random
     settings:
-      - n_features: 1000
+      - n_features: 500
         seed: 1
-      - n_features: 1000
+      - n_features: 500
         seed: 2
-      - n_features: 1000
+      - n_features: 500
         seed: 3
-      - n_features: 1000
+      - n_features: 500
         seed: 4
-      - n_features: 1000
+      - n_features: 500
         seed: 5
   - name: scanpy
     settings:
@@ -89,40 +89,22 @@ integration:
     - 5
 metrics:
   # Integration (batch) metrics
-  - name: mixing
-    type: IntegrationBatch
-  - name: kBET
-    type: IntegrationBatch
   - name: batchPCR
     type: IntegrationBatch
   - name: iLISI
-    type: IntegrationBatch
-  - name: batchASW
     type: IntegrationBatch
   - name: graphConnectivity
     type: IntegrationBatch
   - name: CMS
     type: IntegrationBatch
   # Integration (bio) metrics
-  - name: localStructure
-    type: IntegrationBio
   - name: cLISI
     type: IntegrationBio
-  - name: ari
-    type: IntegrationBio
-  - name: bARI
-    type: IntegrationBio
-  - name: nmi
-    type: IntegrationBio
   - name: bNMI
-    type: IntegrationBio
-  - name: labelASW
     type: IntegrationBio
   - name: isolatedLabelsF1
     type: IntegrationBio
   - name: isolatedLabelsASW
-    type: IntegrationBio
-  - name: cellCycle
     type: IntegrationBio
   - name: ldfDiff
     type: IntegrationBio
@@ -135,28 +117,12 @@ metrics:
     type: Mapping
   - name: labelDist
     type: Mapping
-  - name: reconstruction
-    type: Mapping
-  - name: kNNcorr
-    type: Mapping
   # Classification metrics
-  - name: accuracy
-    type: Classification
   - name: f1Micro
     type: Classification
   - name: f1Macro
     type: Classification
   - name: f1Rarity
-    type: Classification
-  - name: jaccardIndexMicro
-    type: Classification
-  - name: jaccardIndexMacro
-    type: Classification
-  - name: jaccardIndexRarity
-    type: Classification
-  - name: MCC
-    type: Classification
-  - name: AUPRC
     type: Classification
   # Unseen metrics
   - name: unseenCellDist
@@ -164,8 +130,6 @@ metrics:
   - name: unseenLabelDist
     type: Unseen
   - name: MILO
-    type: Unseen
-  - name: uncertainty
     type: Unseen
 reports:
   - name: metrics

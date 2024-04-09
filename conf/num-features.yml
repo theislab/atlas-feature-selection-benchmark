@@ -265,22 +265,18 @@ integration:
     - 1
 metrics:
   # Integration (batch) metrics
+  - name: batchPCR
+    type: IntegrationBatch
   - name: iLISI
-    type: IntegrationBatch
-  - name: batchASW
-    type: IntegrationBatch
-  - name: CMS
     type: IntegrationBatch
   - name: graphConnectivity
     type: IntegrationBatch
-    # Integration (bio) metrics
+  - name: CMS
+    type: IntegrationBatch
+  # Integration (bio) metrics
   - name: cLISI
     type: IntegrationBio
-  - name: bARI
-    type: IntegrationBio
   - name: bNMI
-    type: IntegrationBio
-  - name: labelASW
     type: IntegrationBio
   - name: isolatedLabelsF1
     type: IntegrationBio
