@@ -33,7 +33,6 @@ def calculate_unseen_label_distance(reference, query):
     """
 
     from scipy.spatial.distance import mahalanobis
-    from scipy.stats import chi2
     from functions.distances import get_inverse_covariances, get_centroids
     from numpy import mean
 
@@ -53,32 +52,49 @@ def calculate_unseen_label_distance(reference, query):
     print("Calculating reference centroid positions...")
     reference_centroids = get_centroids(reference_coords, reference_labels)
 
+    print("Calculating maximum query cell distances...")
+    max_distances = {}
+    for label in set(query_labels):
+        label_distances = []
+        label_query = query[query.obs["Label"] == label].copy()
+
+        for idx in range(label_query.n_obs):
+            label_coord = label_query.obsm["X_emb"][idx, :]
+
+            distance = mahalanobis(
+                label_coord, query_centroids[label], inverse_covariances[label]
+            )
+            label_distances.append(distance)
+
+        max_distances[label] = max(label_distances)
+
     print("Calculating label Mahalonobis distances...")
     distances = []
-    for query_label in set(query_labels):
+    for label in set(query_labels):
+        print(f"Calculating distances for label '{label}'...")
+
         # Skip labels with less than 2 * dim samples
-        if query_labels.count(query_label) < 2 * query_coords.shape[1]:
-            print(f"Label '{query_label}' has less than 2 * dim samples, skipping...")
+        if query_labels.count(label) < 2 * query_coords.shape[1]:
+            print(f"Label '{label}' has less than 2 * dim samples, skipping...")
             continue
 
         label_distances = []
         for ref_label in set(reference_labels):
             distance = mahalanobis(
                 reference_centroids[ref_label],
-                query_centroids[query_label],
-                inverse_covariances[query_label],
+                query_centroids[label],
+                inverse_covariances[label],
             )
             label_distances.append(distance)
 
-        distances.append(min(label_distances))
-
-    print("Calculating p-values...")
-    df = query_coords.shape[1]
-    p_vals = [1 - chi2.cdf(dist, df=df) for dist in distances]
+        scaled_distance = min(label_distances) / max_distances[label]
+        distances.append(scaled_distance)
 
     print("Calculating final score...")
-    # Use 1 - mean as we want further distances to give higher scores
-    score = 1 - mean(p_vals)
+    # Set distances greated then the maximum to 1
+    distances = [1.0 if d > 1.0 else d for d in distances]
+
+    score = mean(distances)
 
     return score
 

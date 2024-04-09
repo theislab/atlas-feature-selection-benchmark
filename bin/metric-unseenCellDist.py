@@ -33,9 +33,8 @@ def calculate_unseen_cell_distance(reference, query):
     """
 
     from scipy.spatial.distance import mahalanobis
-    from scipy.stats import chi2
     from functions.distances import get_inverse_covariances, get_centroids
-    from numpy import mean
+    from numpy import mean, quantile
 
     reference_coords = reference.obsm["X_emb"]
     reference_labels = reference.obs["Label"].tolist()
@@ -45,30 +44,46 @@ def calculate_unseen_cell_distance(reference, query):
     print("Calculating centroid positions...")
     centroids = get_centroids(reference_coords, reference_labels)
 
+    print("Calculating reference cell 90th quantile distances...")
+    ref_quantiles = {}
+    for label in set(reference_labels):
+        label_distances = []
+        label_reference = reference[reference.obs["Label"] == label].copy()
+
+        for idx in range(label_reference.n_obs):
+            label_coord = label_reference.obsm["X_emb"][idx, :]
+
+            distance = mahalanobis(
+                label_coord, centroids[label], inverse_covariances[label]
+            )
+            label_distances.append(distance)
+
+        ref_quantiles[label] = quantile(label_distances, 0.9)
+
     print("Selecting unseen query cells...")
     query = query[query.obs["Unseen"], :].copy()
 
-    print("Calculating cell Mahalonobis distances...")
-    distances = []
+    print("Calculating cells outside 90th quantile...")
+    is_outside = []
     for idx in range(query.n_obs):
+        query_label = query.obs["Label"][idx]
         query_coord = query.obsm["X_emb"][idx, :]
 
-        cell_distances = []
+        min_distance = 1e6
+        min_label = None
         for label in set(reference_labels):
             distance = mahalanobis(
                 query_coord, centroids[label], inverse_covariances[label]
             )
-            cell_distances.append(distance)
+            if distance < min_distance:
+                min_distance = distance
+                min_label = label
 
-        distances.append(min(cell_distances))
-
-    print("Calculating p-values...")
-    df = reference_coords.shape[1]
-    p_vals = [1 - chi2.cdf(dist, df=df) for dist in distances]
+        is_outside.append(min_distance > ref_quantiles[min_label])
 
     print("Calculating final score...")
-    # Use 1 - mean as we want further distances to give higher scores
-    score = 1 - mean(p_vals)
+    # The score is the proportion of unseen cells outside the 90th quantile
+    score = mean(is_outside)
 
     return score
 
