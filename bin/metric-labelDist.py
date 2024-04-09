@@ -33,7 +33,6 @@ def calculate_label_distance(reference, query):
     """
 
     from scipy.spatial.distance import mahalanobis
-    from scipy.stats import chi2
     from functions.distances import get_inverse_covariances, get_centroids
     from numpy import mean
 
@@ -50,16 +49,34 @@ def calculate_label_distance(reference, query):
     print("Calculating reference centroid positions...")
     reference_centroids = get_centroids(reference_coords, reference_labels)
 
+    print("Calculating maximum query cell distances...")
+    max_distances = {}
+    for label in set(query_labels):
+        label_distances = []
+        label_query = query[query.obs["Label"] == label].copy()
+
+        for idx in range(label_query.n_obs):
+            label_coord = label_query.obsm["X_emb"][idx, :]
+
+            distance = mahalanobis(
+                label_coord, query_centroids[label], inverse_covariances[label]
+            )
+            label_distances.append(distance)
+
+        max_distances[label] = max(label_distances)
+
     print("Calculating label Mahalonobis distances...")
     distances = []
     for label in set(query_labels):
+        print(f"Calculating distance for label '{label}'...")
+
         # Skip labels with less than 2 * dim samples
         if query_labels.count(label) < 2 * query_coords.shape[1]:
             print(f"Label '{label}' has less than 2 * dim samples, skipping...")
             continue
 
         # Skip labels that are not in the reference
-        if label not in reference_centroids.keys():
+        if label not in set(reference_labels):
             print(f"Label '{label}' is not in the reference, skipping...")
             continue
 
@@ -68,14 +85,15 @@ def calculate_label_distance(reference, query):
             query_centroids[label],
             inverse_covariances[label],
         )
-        distances.append(distance)
 
-    print("Calculating p-values...")
-    df = query_coords.shape[1]
-    p_vals = [1 - chi2.cdf(dist, df=df) for dist in distances]
+        scaled_distance = distance / max_distances[label]
+        distances.append(scaled_distance)
 
     print("Calculating final score...")
-    score = mean(p_vals)
+    # Set distances greater than the maximum to 1
+    distances = [1.0 if d > 1.0 else d for d in distances]
+    # Subtract from 1 to get a higher score when labels are closer
+    score = 1 - mean(distances)
 
     return score
 
