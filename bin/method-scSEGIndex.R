@@ -36,7 +36,7 @@ select_scsegindex_features <- function(input) {
     result <- result[order(result$segIdx, decreasing = TRUE), ]
     result$Feature <- rownames(result)
 
-    return(result[1:1000, ])
+    return(result[1:200, ])
 }
 
 #' The main script function
