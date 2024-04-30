@@ -178,22 +178,6 @@ methods:
         n_features: 10000
       - method: vst
         n_features: 15000
-      - method: mvp
-        n_features: 100
-      - method: mvp
-        n_features: 200
-      - method: mvp
-        n_features: 500
-      - method: mvp
-        n_features: 1000
-      - method: mvp
-        n_features: 2000
-      - method: mvp
-        n_features: 5000
-      - method: mvp
-        n_features: 10000
-      - method: mvp
-        n_features: 15000
       - method: disp
         n_features: 100
       - method: disp
