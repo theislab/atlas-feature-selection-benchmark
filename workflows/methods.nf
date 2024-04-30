@@ -126,7 +126,6 @@ process METHOD_HOTSPOT {
     script:
         """
         method-hotspot.py \\
-            --n-features 500 \\
             --out-file "hotspot.tsv" \\
             ${reference}
         """
@@ -258,7 +257,7 @@ process METHOD_DUBSTEPR {
 
     label "process_long"
 
-    memory { get_memory(reference.size(), "12.GB", task.attempt, "8.GB", "400.GB") }
+    memory { get_memory(reference.size(), "16.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -425,7 +424,7 @@ process METHOD_SCPNMF {
     label "process_long"
     label "error_ignore"
 
-    memory { get_memory(reference.size(), "72.GB", task.attempt, "8.GB", "400.GB") }
+    memory { get_memory(reference.size(), "216.GB", task.attempt, "8.GB", "400.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
@@ -452,7 +451,7 @@ process METHOD_ANTICOR {
 
     publishDir "$params.outdir/selected-features/${dataset}"
 
-    memory { get_memory(reference.size(), "20.GB", task.attempt, "8.GB") }
+    memory { get_memory(reference.size(), "24.GB", task.attempt, "8.GB") }
 
     input:
         tuple val(dataset), path(reference), path(query)
