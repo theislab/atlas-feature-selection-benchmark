@@ -1,0 +1,562 @@
+---
+title: "Number of features"
+author: "Luke Zappia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.width = 10,
+    fig.height = 8,
+    fig.align = "center"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)
+})
+```
+
+```{r source}
+source(here::here("analysis", "R", "plotting.R"))
+source(here::here("analysis", "R", "summarisation.R"))
+```
+
+# Introduction {.unnumbered}
+
+In this document we are going to perform analysis of the effect of the number of features for some common metric selection methods.
+
+# Overview
+
+First let's get an overview of the metric scores.
+
+```{r load}
+metrics <- read_tsv(
+    here::here("data", "num-features.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_meta <- read_tsv(
+    here::here("data", "metrics-metadata.tsv"),
+    col_types = cols(
+        Metric   = col_character(),
+        Name     = col_character(),
+        Included = col_logical()
+    )
+)
+include <- metrics_meta$Metric[metrics_meta$Included]
+exclude <- metrics_meta$Metric[!metrics_meta$Included]
+
+metric_names <- metrics_meta$Name
+names(metric_names) <- metrics_meta$Metric
+
+datasets_meta <- read_tsv(
+    here::here("data", "datasets-metadata.tsv"),
+    col_types = cols(
+        Dataset  = col_character(),
+        Name     = col_character(),
+    )
+)
+
+dataset_names <- datasets_meta$Name
+names(dataset_names) <- datasets_meta$Dataset
+
+type_names <- c(
+    "IntegrationBatch" = "Integration (Batch)",
+    "IntegrationBio" = "Integration (Bio)",
+    "Mapping" = "Mapping",
+    "Classification" = "Classification",
+    "Unseen" = "Unseen populations"
+)
+
+metrics
+```
+
+## Counts
+
+Check the number of values we have for each metric.
+All metrics should have the same number (known missing values are checked below).
+
+```{r counts}
+plot_metric_counts(metrics)
+```
+
+## Missing values
+
+We expect to have missing values for the `Reconstruction` metric which can't be calculated for the `Symphony` integration and the `CellCycle` metric which can't be calculated for simulated datasets.
+Values should be complete for other metrics.
+
+```{r missing}
+plot_metric_missing(metrics)
+```
+
+# Summarise
+
+Let's compute the summarised metrics using the baseline ranges.
+
+```{r summarise}
+baselines <- read_tsv(
+    here::here("analysis", "output", "baseline-ranges.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Lower    = col_double(),
+        Upper    = col_double(),
+        Range    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_summary <- summarise_metrics(metrics, baselines)
+
+metrics_summary
+```
+
+## Add number of features
+
+For this analysis we are interested in the number of features so we need to split that into a separate column.
+We also remove cases where the number of selected features is less than the number of features in the dataset and add the values for all features to each method.
+
+```{r add-num-features}
+metrics_summary <- metrics_summary |>
+    mutate(
+        SelFeatures = str_extract(Method, "N(\\d+)", group = 1),
+        SelFeatures = as.numeric(SelFeatures),
+        Method = str_remove(Method, "-N\\d+")
+    ) |>
+    left_join(
+        select(datasets_meta, Dataset, Features),
+        by = "Dataset"
+    ) |>
+    mutate(
+        SelFeatures = if_else(Method == "all", Features, SelFeatures)
+    ) |>
+    filter(SelFeatures <= Features)
+
+# Create rows for all features
+metrics_summary_all <- metrics_summary |>
+    filter(Method != "all") |>
+    select(Dataset, Method, Integration) |>
+    distinct() |>
+    left_join(
+        metrics_summary |>
+            filter(Method == "all") |>
+            select(-Method),
+        by = c("Dataset", "Integration")
+    )
+
+metrics_summary <- metrics_summary |>
+    filter(Method != "all") |>
+    bind_rows(metrics_summary_all)
+
+metrics_summary
+```
+
+# Visualisation
+
+Let's visualise the effect of the number of features.
+
+## Heatmap
+
+The main heatmap shows the metric values for the example methods as the number of features increase, with the coloured rectangles highlighting the highest value in each row.
+The bar chart above summarises for each metric type, how often the highest value is associated with each number of features.
+
+```{r heatmap}
+metrics_summary_plotting <- metrics_summary |>
+    filter(Integration == "scVI-1", Method != "all") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Dataset = str_replace(as.character(Dataset), " ", "\n"),
+        Type = factor(
+            Type,
+            levels = c(names(type_names), "Overall"),
+            labels = c(type_names, "Overall")
+        ),
+        Method = factor(
+            Method,
+            levels = c(
+                "scanpy-cell_ranger-BatchFalse",
+                "scanpy-pearson-BatchFalse",
+                "scanpy-seurat-BatchFalse",
+                "scanpy-seurat_v3-BatchFalse",
+                "seurat-disp",
+                "seurat-sct",
+                "seurat-vst",
+                "statistic-mean",
+                "statistic-variance"
+            ),
+            labels = c(
+                "scanpy-CellRanger",
+                "scanpy-Pearson",
+                "scanpy-Seurat",
+                "scanpy-SeuratV3",
+                "seurat-Dispersion",
+                "seurat-scTransform",
+                "seurat-VST",
+                "statistic-Mean",
+                "statistic-Variance"
+            )
+        ),
+        SelFeatures = if_else(
+            SelFeatures == Features,
+            "All",
+            as.character(SelFeatures)
+        ),
+        SelFeatures = factor(
+            SelFeatures,
+            levels = c(
+                "100", "200", "500", "1000", "2000", "5000", "10000", "15000",
+                "All"
+            )
+        )
+    )
+
+metrics_summary_top <- metrics_summary_plotting |>
+    group_by(Dataset, Method, Integration, Type) |>
+    slice_max(Value)
+
+metrics_top_counts <- metrics_summary_top |>
+    group_by(Type, SelFeatures) |>
+    count(name = "Count")
+
+types_palette <- c(RColorBrewer::brewer.pal(5, "Set1"), "#f781bf")
+
+counts_barchart <- ggplot(
+    metrics_top_counts,
+    aes(x = SelFeatures, y = Count, fill = Type)
+) +
+    geom_col() +
+    scale_y_continuous(expand = expansion(mult = c(0, 0.05))) +
+    scale_fill_manual(values = types_palette) +
+    facet_wrap(~ Type, nrow = 1) +
+    labs(
+        y = "Number of\ntop values"
+    ) +
+    theme_features(base_size = 10) +
+    theme(
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid.major.x = element_blank(),
+    )
+
+summary_heatmap <- ggplot(
+    metrics_summary_plotting,
+    aes(x = SelFeatures, y = Method, fill = Value)
+) +
+    geom_tile() +
+    geom_tile(
+        data = metrics_summary_top,
+        aes(colour = Type),
+        fill = NA, linewidth = 1
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green"
+    ) +
+    scale_color_manual(values = types_palette, guide = "none") +
+    facet_grid(Dataset ~ Type) +
+    labs(
+        x = "Number of features"
+    ) +
+    guides(
+        custom = guide_custom(
+            title = "Top\nvalue",
+            grob = grid::rectGrob(
+                height = unit(0.4, "cm"),
+                width = unit(0.6, "cm")
+            )
+        )
+    ) +
+    theme_features(base_size = 10) +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.text.x = element_blank()
+    )
+
+num_features_plot <- wrap_plots(
+    counts_barchart, summary_heatmap,
+    ncol = 1,
+    heights = c(1, 8),
+    guides = "collect"
+)
+
+num_features_plot
+```
+
+## Line plot
+
+To more clearly show the trend with the changing number of features we have standardised the values for each metric type by dataset and method.
+This is visualised as line plots.
+
+```{r line-plot}
+metrics_summary_plotting <- metrics_summary_plotting |>
+    group_by(Dataset, Method, Integration, Type) |>
+    mutate(StandardValue = as.vector(scale(Value))) |>
+    ungroup()
+
+overall_means <- metrics_summary_plotting |>
+    group_by(Type, SelFeatures) |>
+    summarise(
+        Value = mean(Value),
+        StandardValue = mean(StandardValue),
+        .groups = "drop"
+    )
+
+overall_plot <- ggplot(
+    metrics_summary_plotting,
+    aes(x = SelFeatures, y = StandardValue, colour = Type, fill = Type)
+) +
+    geom_hline(yintercept = 0, colour = "red") +
+    ggforce::geom_sina(alpha = 0.2) +
+    geom_line(
+        data = filter(overall_means, SelFeatures != "All"),
+        aes(group = Type),
+        linewidth = 1
+    ) +
+    geom_point(
+        data = overall_means,
+        shape = "diamond filled", size = 3, stroke = 1, fill = "white"
+    ) +
+    scale_color_manual(values = types_palette, guide = "none") +
+    scale_fill_manual(values = types_palette, guide = "none") +
+    facet_grid(. ~ Type) +
+    labs(
+        y = "Standardised value"
+    ) +
+    theme_features() +
+    theme(
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid = element_blank(),
+    )
+
+dataset_means <- metrics_summary_plotting |>
+    group_by(Dataset, Type, SelFeatures) |>
+    summarise(
+        Value = mean(Value),
+        SD = sd(StandardValue),
+        StandardValue = mean(StandardValue),
+        .groups = "drop"
+    )
+
+datasets_plot <- ggplot(
+    metrics_summary_plotting,
+    aes(x = SelFeatures, y = StandardValue, colour = Type, fill = Type)
+) +
+    geom_hline(yintercept = 0, colour = "red") +
+    ggforce::geom_sina(alpha = 0.2) +
+    geom_line(
+        data = filter(dataset_means, SelFeatures != "All"),
+        aes(group = Type),
+        linewidth = 0.5
+    ) +
+    geom_point(
+        data = dataset_means,
+        shape = "diamond filled", size = 2, stroke = 0.5, fill = "white"
+    ) +
+    scale_color_manual(values = types_palette, guide = "none") +
+    scale_fill_manual(values = types_palette, guide = "none") +
+    facet_grid(Dataset ~ Type) +
+    labs(
+        y = "Standardised value"
+    ) +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid = element_blank(),
+        strip.text.x = element_blank()
+    )
+
+wrap_plots(
+    overall_plot, datasets_plot,
+    ncol = 1,
+    heights = c(2, 8),
+    guides = "collect"
+)
+```
+
+# Summary
+
+This figure summarised the effect of the number of selected features on metric values.
+
+```{r summary}
+overall_lineplot <- ggplot(
+    metrics_summary_plotting,
+    aes(x = SelFeatures, y = StandardValue, colour = Type, fill = Type)
+) +
+    geom_hline(yintercept = 0, colour = "red") +
+    ggforce::geom_sina(size = 0.5, alpha = 0.2) +
+    geom_line(
+        data = filter(overall_means, SelFeatures != "All"),
+        aes(group = Type),
+        linewidth = 1
+    ) +
+    geom_point(
+        data = overall_means,
+        shape = "diamond filled", size = 1.6, stroke = 0.6, fill = "white"
+    ) +
+    scale_color_manual(values = types_palette, guide = "none") +
+    scale_fill_manual(values = types_palette, guide = "none") +
+    facet_grid(. ~ Type) +
+    labs(
+        y = "Standardised value"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "none",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        panel.grid = element_blank(),
+    )
+
+method_means <- metrics_summary_plotting |>
+    group_by(Method, Type, SelFeatures) |>
+    summarise(
+        Value = mean(Value),
+        SD = sd(StandardValue),
+        StandardValue = mean(StandardValue),
+        .groups = "drop"
+    )
+mean_limits <- c(
+    min(method_means$StandardValue, dataset_means$StandardValue),
+    max(method_means$StandardValue, dataset_means$StandardValue)
+)
+
+datasets_heatmap <- ggplot(
+    mutate(dataset_means, Dataset = str_replace(Dataset, "\n", " ")),
+    aes(x = SelFeatures, y = Dataset, colour = StandardValue, size = SD)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(dataset_means$SD), 0),
+        range = c(0.1, 2.5)
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Datasets",
+        x = "Number of selected features",
+        colour = "Mean standardised value",
+        size = "Standard deviation of\nstandardised values"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_blank()
+    )
+
+methods_heatmap <- ggplot(
+    method_means,
+    aes(x = SelFeatures, y = Method, colour = StandardValue, size = SD)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(dataset_means$SD), 0),
+        range = c(0.1, 2.5)
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Methods",
+        x = "Number of selected features",
+        colour = "Mean standardised value",
+        size = "Standard deviation of\nstandardised values"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) + 
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid = element_blank(),
+        strip.background = element_blank(),
+        strip.text.x = element_blank()
+    )
+
+summary_plot <- wrap_plots(
+    overall_lineplot, datasets_heatmap, methods_heatmap,
+    ncol = 1,
+    heights = c(1, 0.7, 0.7),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+summary_plot
+```
+
+# Output
+
+Save output files
+
+```{r output}
+save_figure_files(
+    summary_plot,
+    here::here("analysis", "output", "num-features"),
+    height = 5.5
+)
+```
+
+# Session info {.unnumbered}
+
+```{r session-info}
+sessioninfo::session_info()
+```
+
