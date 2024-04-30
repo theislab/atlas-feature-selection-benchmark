@@ -6,6 +6,8 @@ For more information please refer to the documentation on the [wiki](https://git
 
 ## Directory structure
 
+* `analysis/` - Notebooks used to perform analysis of the results
+  * `R/` - R functions used in the analysis notebooks
 * `bin/` - Scripts used in **Nextflow** workflows
   * `functions/` - Functions used across multiple scripts
 * `conf/` - **Nextflow** configuration files
