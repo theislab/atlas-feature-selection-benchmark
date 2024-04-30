@@ -1,0 +1,1585 @@
+---
+title: "Benchmark"
+author: "Luke Zappia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.width = 10,
+    fig.height = 8,
+    fig.align = "center"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)
+})
+```
+
+```{r source}
+source(here::here("analysis", "R", "plotting.R"))
+source(here::here("analysis", "R", "summarisation.R"))
+```
+
+# Introduction {.unnumbered}
+
+In this document we are going to perform analysis of the benchmark study comparing feature selection methods.
+
+# Overview
+
+First let's get an overview of the metric scores.
+
+```{r load}
+metrics <- read_tsv(
+    here::here("data", "benchmark.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_meta <- read_tsv(
+    here::here("data", "metrics-metadata.tsv"),
+    col_types = cols(
+        Metric   = col_character(),
+        Name     = col_character(),
+        Included = col_logical()
+    )
+)
+include <- metrics_meta$Metric[metrics_meta$Included]
+exclude <- metrics_meta$Metric[!metrics_meta$Included]
+
+metric_names <- metrics_meta$Name
+names(metric_names) <- metrics_meta$Metric
+
+datasets_meta <- read_tsv(
+    here::here("data", "datasets-metadata.tsv"),
+    col_types = cols(
+        Dataset  = col_character(),
+        Name     = col_character(),
+    )
+)
+
+dataset_names <- datasets_meta$Name
+names(dataset_names) <- datasets_meta$Dataset
+
+type_names <- c(
+    "IntegrationBatch" = "Integration (Batch)",
+    "IntegrationBio" = "Integration (Bio)",
+    "Mapping" = "Mapping",
+    "Classification" = "Classification",
+    "Unseen" = "Unseen populations"
+)
+
+metrics
+```
+
+## Counts
+
+Check the number of values we have for each metric.
+All metrics should have the same number (known missing values are checked below).
+
+```{r counts}
+plot_metric_counts(metrics)
+```
+
+## Missing values
+
+We expect to have missing values for the `Reconstruction` metric which can't be calculated for the `Symphony` integration and the `CellCycle` metric which can't be calculated for simulated datasets.
+Values should be complete for other metrics.
+
+```{r missing}
+plot_metric_missing(metrics)
+```
+
+# Summarise
+
+Let's compute the summarised metrics using the baseline ranges.
+
+```{r summarise}
+baselines <- read_tsv(
+    here::here("analysis", "output", "baseline-ranges.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Lower    = col_double(),
+        Upper    = col_double(),
+        Range    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_summary <- metrics |>
+    # Calculate average scores for random methods
+    mutate(
+        Method = str_remove(Method, "-S[0-9]+$"),
+    ) |>
+    group_by(Dataset, Method, Integration, Type, Metric) |>
+    summarise(Value = mean(Value), .groups = "drop") |>
+    # Scale and summarise
+    summarise_metrics(baselines)
+
+metrics_summary
+```
+
+# Overall scores
+
+## By dataset
+
+```{r overall-dataset}
+ggplot(metrics_summary, aes(x = Overall, y = Method, colour = Integration)) +
+    geom_point() +
+    facet_grid(. ~ Dataset) +
+    theme_features()
+```
+
+## Summarised
+
+```{r overall-summarised}
+methods_meta <- tribble(
+    ~ Method,                              ~ Name,                                    ~ IsBaseline,
+    "all",                                 "All",                                     TRUE,
+    "anticor",                             "Anticor",                                 FALSE,
+    "Brennecke",                           "Brennecke",                               FALSE,
+    "dubstepr",                            "DUBSstepR",                               FALSE,
+    "hotspot",                             "Hotspot",                                 FALSE,
+    "nbumi",                               "NBumi",                                   FALSE,
+    "osca",                                "OSCA",                                    FALSE,
+    "random-N500",                         "Random (N=500)",                          TRUE,
+    "random-N2000",                        "Random (N=2000)",                         FALSE,
+    "scanpy-cell_ranger-N2000-BatchFalse", "scanpy-CellRanger (N=2000, Batch=False)", FALSE,
+    "scanpy-cell_ranger-N2000-BatchTrue",  "scanpy-CellRanger (N=2000, Batch=True)",  TRUE,
+    "scanpy-pearson-N2000-BatchFalse",     "scanpy-Pearson (N=2000, Batch=False)",    FALSE,
+    "scanpy-pearson-N2000-BatchTrue",      "scanpy-Pearson (N=2000, Batch=True)",     FALSE,
+    "scanpy-seurat_v3-N2000-BatchFalse",   "scanpy-SeuratV3 (N=2000, Batch=False)",   FALSE,
+    "scanpy-seurat_v3-N2000-BatchTrue",    "scanpy-SeuratV3 (N=2000, Batch=True)",    FALSE,
+    "scanpy-seurat-N2000-BatchFalse",      "scanpy-Seurat (N=2000, Batch=False)",     FALSE,
+    "scanpy-seurat-N2000-BatchTrue",       "scanpy-Seurat (N=2000, Batch=True)",      FALSE,
+    "scPNMF",                              "scPNMF",                                  FALSE,
+    "scry",                                "scry",                                    FALSE,
+    "scsegindex",                          "scSEGIndex",                              TRUE,
+    "seurat-disp-N2000",                   "Seurat-Dispersion (N=2000)",              FALSE,
+    "seurat-mvp-N2000",                    "Seurat-MVP",                              FALSE,
+    "seurat-sct-N2000",                    "Seurat-scTransform (N=2000)",             FALSE,
+    "seurat-vst-N2000",                    "Seurat-VST (N=2000)",                     FALSE,
+    "singleCellHaystack",                  "singleCellHaystack",                      FALSE,
+    "statistic-mean-N2000",                "statistic-Mean (N=2000)",                 FALSE,
+    "statistic-variance-N2000",            "statistic-Variance (N=2000)",             FALSE,
+    "TFs",                                 "Transcription factors",                   FALSE,
+    "triku",                               "triku",                                   FALSE,
+    "wilcoxon",                            "Wilcoxon",                                FALSE
+)
+method_names <- methods_meta$Name
+names(method_names) <- methods_meta$Method
+
+metrics_summary_plotting <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+metric_means <- metrics_summary_plotting |>
+    group_by(Method, Type) |>
+    summarise(Value = mean(Value), .groups = "drop")
+
+methods_order <- metric_means |>
+    filter(Type == "Overall") |>
+    arrange(Value) |>
+    pull(Method)
+
+metrics_summary_plotting <- metrics_summary_plotting |>
+    arrange(Method) |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    )
+
+metric_means <- metric_means |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    )
+
+types_palette <- c("#f781bf", RColorBrewer::brewer.pal(5, "Set1"))
+
+ggplot(metrics_summary_plotting, aes(x = Value, y = Method, fill = Type)) +
+    annotate(
+        "rect",
+        xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf,
+        fill = "red", alpha = 0.1
+    ) +
+    annotate(
+        "rect",
+        xmin = 1, xmax = Inf, ymin = -Inf, ymax = Inf,
+        fill = "blue", alpha = 0.1
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = 1, colour = "blue") +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                )
+            ),
+        aes(x = NULL, y = Method, fill = NULL, alpha = IsBaseline),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50",
+    ) + 
+    ggforce::geom_sina(alpha = 0.5, shape = "circle filled", colour  = "white") +
+    geom_point(
+        data = metric_means,
+        aes(fill = Type),
+        shape = "diamond filled", size = 3, colour = "white"
+    ) +
+    scale_colour_manual(values = types_palette) +
+    scale_fill_manual(values = types_palette) +
+    scale_alpha_manual(values = c(0, 0.3)) +
+    facet_grid(. ~ Type, scales = "free_x", space = "free_x") +
+    theme_features()
+```
+
+## Ranks
+
+### Bar chart
+
+```{r ranks-barchart}
+metric_ranks_means <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(Value)) |>
+    group_by(Method, Type) |>
+    summarise(
+        MeanRank = mean(Rank),
+        SDRank = sd(Rank),
+        .groups = "drop"
+    ) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    )
+
+ggplot(metric_ranks_means, aes(x = MeanRank, y = Method, fill = Type)) +
+    geom_col() +
+    scale_fill_manual(values = types_palette) +
+    facet_grid(. ~ Type) +
+    theme_features()
+```
+
+### Heatmap
+
+```{r ranks-heatmap}
+ggplot(metric_ranks_means, aes(x = Type, y = Method, colour = Type)) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                )
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(aes(alpha = MeanRank, size = SDRank), shape = "square") +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette) +
+    scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(metric_ranks_means$SDRank), 0),
+        range = c(0.1, 2.5)
+    ) +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+```
+
+# Relationships
+
+## Batch vs Bio
+
+```{r batch-bio}
+meta_types <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    mutate(
+        Reference = 0.5 * IntegrationBatch + 0.5 * IntegrationBio,
+        Query = Mapping / 3 + Classification / 3 + Unseen / 3,
+        Batch = IntegrationBatch / 2 + Mapping / 2,
+        Bio = IntegrationBio / 3 + Classification / 3 + Unseen / 3
+    ) |>
+    group_by(Dataset) |>
+    mutate(RankOverall = rank(Overall)) |>
+    ungroup()
+
+ggplot(meta_types, aes(x = Batch, y = Bio)) +
+    geom_point(aes(colour = RankOverall)) +
+    geom_smooth(aes(fill = Dataset), method = "lm", formula = "y ~ x") + 
+    scale_colour_viridis_c() +
+    facet_wrap(~ Dataset) +
+    theme_features()
+```
+
+## Query vs References
+
+```{r query-reference}
+ggplot(meta_types, aes(x = Reference, y = Query)) +
+    geom_point(aes(colour = RankOverall)) +
+    geom_smooth(aes(fill = Dataset), method = "lm", formula = "y ~ x") +
+    scale_colour_viridis_c() +
+    facet_wrap(~ Dataset) +
+    theme_features()
+```
+
+# Batch aware
+
+## Line plot
+
+```{r batch-lineplot}
+batch_methods_means <- metric_means |>
+    filter(str_detect(Method, "scanpy")) |>
+    mutate(Batch = str_detect(Method, "Batch=True")) |>
+    mutate(
+        Method = str_remove(Method, "\\s\\(.*\\)")
+    )
+
+ggplot(batch_methods_means, aes(x = Batch, y = Value, colour = Method)) +
+    geom_line(aes(group = Method)) +
+    geom_point(size = 2) +
+    facet_wrap(~ Type, scales = "free_y", nrow = 1) +
+    theme_features()
+```
+
+## Heatmap
+
+```{r batch-heatmap}
+batch_methods_diffs <- metrics_summary_plotting |>
+    filter(str_detect(Method, "scanpy")) |>
+    mutate(Batch = str_detect(Method, "Batch=True")) |>
+    mutate(
+        Method = str_remove(Method, "\\s\\(.*\\)")
+    ) |>
+    pivot_wider(
+        names_from = "Batch", names_prefix = "Batch", values_from = "Value",
+    ) |>
+    mutate(
+        Difference = BatchTRUE - BatchFALSE
+    )
+
+methods_clust <- batch_methods_diffs |>
+    select(Dataset, Type, Method, Difference) |>
+    pivot_wider(
+        id_cols = Method,
+        names_from = c(Dataset, Type),
+        values_from = Difference
+    ) |>
+    column_to_rownames("Method") |>
+    as.matrix() |>
+    dist() |>
+    hclust()
+methods_clust_order <- methods_clust$labels[methods_clust$order]
+
+datasets_clust <- batch_methods_diffs |>
+    select(Dataset, Type, Method, Difference) |>
+    pivot_wider(
+        id_cols = Dataset,
+        names_from = c(Method, Type),
+        values_from = Difference
+    ) |>
+    column_to_rownames("Dataset") |>
+    as.matrix() |>
+    dist() |>
+    hclust()
+datasets_clust_order <- datasets_clust$labels[datasets_clust$order]
+
+batch_methods_diffs |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_clust_order
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = datasets_clust_order
+        )
+    ) |>
+    ggplot(aes(x = Dataset, y = Method, fill = Difference)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        facet_wrap(~ Type) +
+        theme_features() +
+        theme(
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+        )
+```
+
+# Selected features
+
+## Overlap
+
+```{r selected-overlap}
+feature_files <- fs::dir_ls(
+    here::here("data", "selected-features"),
+    glob = "*.tsv"
+)
+
+selected_list <- map(feature_files, function(.file) {
+    read_tsv(
+        .file,
+        col_types = cols(
+            .default = col_logical(),
+            Feature = col_character()
+        )
+    ) |>
+        column_to_rownames("Feature") |>
+        as.matrix()
+})
+names(selected_list) <- fs::path_ext_remove(fs::path_file(names(selected_list)))
+
+overlaps <- map_dfr(names(selected_list), function(.dataset) {
+    selected <- selected_list[[.dataset]]
+    expand_grid(
+        method1 = colnames(selected),
+        method2 = colnames(selected)
+    ) |>
+        filter(
+            str_detect(method1, "random", negate = TRUE),
+            str_detect(method2, "random", negate = TRUE)
+        ) |>
+        pmap_dfr(function(method1, method2) {
+            selected1 <- selected[, method1]
+            selected2 <- selected[, method2]
+            
+            both <- sum(selected1 & selected2)
+            either <- sum(selected1 | selected2)
+            subset <- sum(selected1[selected2])
+            
+            tibble(
+                Dataset = .dataset,
+                Method1 = method1,
+                Method2 = method2,
+                Both = both,
+                Either = either,
+                Jaccard = both / either,
+                Subset = subset,
+                Prop = subset / sum(selected1)
+            )
+        })
+})
+
+overlap_means <- overlaps |>
+    group_by(Method1, Method2) |>
+    summarise(
+        JaccardSD = sd(Jaccard),
+        Jaccard = mean(Jaccard),
+        PropSD = sd(Prop),
+        Prop = mean(Prop),
+        .groups = "drop"
+    )
+
+overlaps_clust <- overlap_means |>
+    select(Method1, Method2, Jaccard) |>
+    pivot_wider(names_from = Method2, values_from = Jaccard) |>
+    column_to_rownames("Method1") |>
+    as.matrix() |>
+    dist() |>
+    hclust()
+overlaps_clust_order <- overlaps_clust$labels[overlaps_clust$order]
+
+overlap_means |>
+    # mutate(
+    #     Method1 = factor(
+    #         str_replace_all(Method1, "_", "-"),
+    #         levels = methods_order
+    #     ),
+    #     Method2 = factor(
+    #         str_replace_all(Method2, "_", "-"),
+    #         levels = methods_order
+    #     )
+    # ) |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order
+        )
+    ) |>
+    ggplot(aes(x = Method1, y = Method2, fill = Jaccard)) +
+        geom_tile() +
+        scale_fill_viridis_c() +
+        theme_features() +
+        theme(
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+            axis.text.y = element_text(angle = 0, hjust = 1, vjust = 0.5)
+        )
+```
+
+## Number
+
+```{r selected-number}
+as.data.frame(colSums(selected_list[[1]]))
+
+num_selected <- map_dfr(names(selected_list), function(.dataset) {
+    selected <- selected_list[[.dataset]]
+    col_sums <- colSums(selected)
+    tibble(
+        Dataset = .dataset,
+        Method = names(col_sums),
+        Selected = col_sums
+    )
+})
+
+num_selected_means <- num_selected |>
+    group_by(Method) |>
+    summarise(
+        MeanSelected = mean(Selected),
+        SDSelected = sd(Selected),
+        .groups = "drop"
+    )
+
+ggplot(num_selected, aes(x = Selected, y = Method)) +
+    geom_vline(xintercept = 2000, colour = "red") +
+    geom_point(
+        aes(colour = Dataset),
+        position = position_jitter(width = 0, height = 0.2, seed = 1),
+        alpha = 0.5
+    ) +
+    geom_point(
+        data = num_selected_means,
+        aes(x = MeanSelected),
+        shape = "|", size = 4
+    ) +
+    scale_x_log10() +
+    theme_features()
+```
+
+## Number of methods
+
+### Count
+
+Number of methods that select each feature
+
+```{r selected-num-methods}
+num_methods <- map_dfr(names(selected_list), function(.dataset) {
+    selected <- selected_list[[.dataset]]
+    row_sums <- rowSums(selected)
+    count_table <- table(row_sums)
+    tibble(
+        Dataset = .dataset,
+        NumMethods = names(count_table),
+        NumFeatures = as.numeric(count_table)
+    )
+}) |>
+    mutate(NumMethods = as.numeric(NumMethods))
+
+ggplot(num_methods, aes(x = NumMethods, y = NumFeatures)) +
+    geom_vline(xintercept = 10, colour = "red") +
+    geom_vline(xintercept = 25, colour = "blue") +
+    geom_point() +
+    facet_wrap(~ Dataset) +
+    scale_y_log10() +
+    theme_features()
+```
+
+### Cumulative
+
+Number of features that are selected by at least a given number of methods
+
+```{r selected-cumulative}
+cum_num_methods <- num_methods |>
+    arrange(Dataset, desc(NumMethods)) |>
+    group_by(Dataset) |>
+    mutate(
+        CumFeatures = cumsum(NumFeatures)
+    )
+
+ggplot(cum_num_methods, aes(x = NumMethods, y = CumFeatures)) +
+    geom_vline(xintercept = 10, colour = "red") +
+    geom_vline(xintercept = 25, colour = "blue") +
+    geom_point() +
+    facet_wrap(~ Dataset) +
+    scale_y_log10() +
+    theme_features()
+```
+
+# Integration methods
+
+## Line plot
+
+```{r integration-lineplot}
+integration_ranks <- metrics_summary |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Integration, Type) |>
+    mutate(Rank = rank(Value))
+
+integration_ranks_means <- integration_ranks |>
+    group_by(Integration, Method, Type) |>
+    summarise(
+        MeanRank = mean(Rank),
+        SDRank = sd(Rank),
+        .groups = "drop"
+    )
+
+ggplot(integration_ranks, aes(x = Integration, y = Rank)) +
+    geom_line(aes(group = Method)) +
+    geom_point() +
+    facet_grid(Dataset ~ Type) +
+    theme_features()
+```
+
+## Heatmap
+
+```{r integration-heatmap}
+integration_ranks |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    ) |>
+    ggplot(aes(x = Method, y = Integration, fill = Rank)) +
+        geom_tile() + 
+        scale_fill_viridis_c() +
+        facet_grid(Dataset ~ Type) +
+        theme_features() +
+        theme(
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+        )
+```
+
+## Scatter plot {.tabset}
+
+### scANVI {.unnumbered}
+
+```{r integration-scatter-scANVI}
+integration_summary <- metrics_summary |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    mutate(
+        Integration = str_remove(Integration, "-[0-9]+$")
+    ) |>
+    pivot_wider(
+        names_from = "Integration",
+        values_from = "Value"
+    )
+
+ggplot(integration_summary, aes(x = scVI, y = scANVI)) +
+    geom_abline(intercept = 0, slope = 1, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+```
+
+### Symphony {.unnumbered}
+
+```{r integration-scatter-Symphony}
+ggplot(integration_summary, aes(x = scVI, y = Symphony)) +
+    geom_abline(intercept = 0, slope = 1, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+```
+
+## Difference scatter {.tabset}
+
+### scANVI {.unnumbered}
+
+```{r integration-scatter-diff-scANVI}
+integration_diffs <- integration_summary |>
+    mutate(
+        scANVIDiff = scANVI - scVI,
+        SymphonyDiff = Symphony - scVI
+    )
+
+ggplot(integration_diffs, aes(x = scVI, y = scANVIDiff)) +
+    geom_hline(yintercept = 0, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+
+```
+
+### Symphony {.unnumbered}
+
+```{r integration-scatter-diff-Symphony}
+ggplot(integration_diffs, aes(x = scVI, y = SymphonyDiff)) +
+    geom_hline(yintercept = 0, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+```
+
+## Difference heatmap {.tabset}
+
+### scANVI {.unnumbered}
+
+```{r integration-heatmap-diff-scANVI}
+integration_diff_means <- integration_diffs |>
+    group_by(Method, Type) |>
+    summarise(
+        scANVIMean = mean(scANVIDiff),
+        scANVISD = sd(scANVIDiff),
+        SymphonyMean = mean(SymphonyDiff),
+        SymphonySD = sd(SymphonyDiff),
+        .groups = "drop"
+    )
+
+integration_diff_means |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    ) |>
+    ggplot(aes(x = Type, y = Method, fill = scANVIMean)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        theme_features()
+```
+
+### Symphony {.unnumbered}
+
+```{r integration-heatmap-diff-Symphony}
+integration_diff_means |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    ) |>
+    ggplot(aes(x = Type, y = Method, fill = SymphonyMean)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        theme_features()
+```
+
+## Rank differences scatter {.tabset}
+
+### scANVI {.unnumbered}
+
+```{r integration-scatter-rank-diff-scANVI}
+integration_rank_diffs <- integration_ranks |>
+    mutate(
+        Integration = str_remove(Integration, "-[0-9]+$")
+    ) |>
+    select(-Value) |>
+    pivot_wider(
+        names_from = "Integration",
+        values_from = "Rank"
+    ) |>
+    mutate(
+        scANVIDiff = scANVI - scVI,
+        SymphonyDiff = Symphony - scVI
+    )
+
+ggplot(integration_rank_diffs, aes(x = scVI, y = scANVIDiff)) +
+    geom_hline(yintercept = 0, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+```
+
+### Symphony {.unnumbered}
+
+```{r integration-scatter-rank-diff-Symphony}
+ggplot(integration_rank_diffs, aes(x = scVI, y = SymphonyDiff)) +
+    geom_hline(yintercept = 0, colour = "red") +
+    geom_point(aes(colour = Dataset)) +
+    facet_grid(Dataset ~ Type, scales = "free") +
+    theme_features()
+```
+
+## Rank differences heatmap {.tabset}
+
+### scANVI {.unnumbered}
+
+```{r integration-heatmap-rank-diff-scANVI}
+integration_ranks_diff_means <- integration_rank_diffs |>
+    group_by(Method, Type) |>
+    summarise(
+        scANVIMean = mean(scANVIDiff),
+        scANVISD = sd(scANVIDiff),
+        SymphonyMean = mean(SymphonyDiff),
+        SymphonySD = sd(SymphonyDiff),
+        .groups = "drop"
+    )
+
+integration_ranks_diff_means |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    ) |>
+    ggplot(aes(x = Type, y = Method, fill = scANVIMean)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        theme_features()
+```
+
+### Symphony {.unnumbered}
+
+```{r integration-heatmap-rank-diff-Symphony}
+integration_ranks_diff_means |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    ) |>
+    ggplot(aes(x = Type, y = Method, fill = SymphonyMean)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        theme_features()
+```
+
+# Figures
+
+## Benchmark
+
+```{r figure-benchmark}
+# Values plot | rankings heatmap
+overall_values_figure <- ggplot(
+    mutate(
+        metrics_summary_plotting,
+        Type = factor(
+            Type,
+            levels = levels(Type),
+            labels = str_replace(levels(Type), " ", "\n")
+        )
+    ),
+    aes(x = Value, y = Method, fill = Type)
+) +
+    annotate(
+        "rect",
+        xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf,
+        fill = "red", alpha = 0.1
+    ) +
+    annotate(
+        "rect",
+        xmin = 1, xmax = Inf, ymin = -Inf, ymax = Inf,
+        fill = "blue", alpha = 0.1
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = 1, colour = "blue") +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                )
+            ),
+        aes(x = NULL, y = Method, fill = NULL, alpha = IsBaseline),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50",
+    ) + 
+    ggforce::geom_sina(
+        alpha = 0.5, shape = "circle filled", colour  = "white"
+    ) +
+    geom_point(
+        data = mutate(
+            metric_means,
+            Type = factor(
+                Type,
+                levels = levels(Type),
+                labels = str_replace(levels(Type), " ", "\n")
+            )
+        ),
+        aes(fill = Type),
+        shape = "diamond filled", size = 1.8, colour = "white"
+    ) +
+    scale_colour_manual(values = types_palette) +
+    scale_fill_manual(values = types_palette) +
+    scale_alpha_manual(values = c(0, 0.3)) +
+    facet_grid(. ~ Type, scales = "free_x") +
+    labs(
+        alpha = "Baseline method"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+
+overall_ranks_figure <- ggplot(
+    metric_ranks_means,
+    aes(x = Type, y = Method, colour = Type)
+) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                )
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  MeanRank, size = SDRank),
+        shape = "square"
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(metric_ranks_means$SDRank), 0),
+        range = c(0.1, 2.5)
+    ) +
+    scale_alpha_continuous(
+        limits = c(length(unique(metric_ranks_means$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse"
+    ) +
+    labs(
+        title = "Mean ranks",
+        alpha = "Mean rank",
+        size = "Rank SD"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title = element_blank(),
+        axis.text.y = element_blank()
+    )
+
+overall_panel <- wrap_plots(
+    overall_values_figure,
+    overall_ranks_figure,
+    nrow = 1,
+    widths = c(5, 0.8)
+)
+
+# Features overlap | Number of methods | Number of features
+
+overlaps_clust_order_formatted <- overlaps_clust_order |>
+    str_replace_all("_", "-") |>
+    str_replace("seurat-v3", "seurat_v3") |>
+    str_replace("cell-ranger", "cell_ranger")
+
+overlaps_plotting <- overlap_means |>
+    # mutate(
+    #     Method1 = factor(
+    #         str_replace_all(Method1, "_", "-"),
+    #         levels = str_replace_all(methods_order, "_", "-")
+    #     ),
+    #     Method2 = factor(
+    #         str_replace_all(Method2, "_", "-"),
+    #         levels = str_replace_all(methods_order, "_", "-")
+    #     )
+    # ) |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        )
+    )
+
+mean_overlaps_plot <- ggplot(
+    overlaps_plotting,
+    aes(
+        x = Method1, y = Method2,
+        fill = Jaccard, colour = Jaccard > 0.5, size = JaccardSD
+    )
+) +
+    geom_point(shape = "square filled", stroke = 0.6) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_colour_manual(values = c("black", "white")) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    coord_equal() +
+    labs(
+        title = "Average overlap",
+        fill = "Mean\nJaccard\nIndex",
+        colour = "JI > 0.5",
+        size = "Standard\ndeviation"
+    ) +
+    guides(
+        fill = guide_colourbar(order = 1),
+        colour = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        ),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 3
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+dataset_overlaps_plot <- overlaps |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = str_replace(dataset_names, " ", "\n")
+        )
+    ) |>
+ggplot(
+    aes(x = Method1, y = Method2, fill = Jaccard)
+) +
+    geom_tile() +
+    facet_wrap(~ Dataset, ncol = 4) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_colour_manual(values = c("black", "white")) +
+    coord_equal() +
+    theme_features_pub() +
+    theme(
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+cum_num_methods_plotting <- cum_num_methods |>
+    filter(NumMethods %in% c(5, 10, 15, 20, 25)) |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = str_replace(dataset_names, " ", "\n")
+        )
+    )
+
+labels <- data.frame(
+    Dataset = levels(cum_num_methods_plotting$Dataset)[[1]],
+    NumMethods = factor(c(5, 10, 15, 20, 25)),
+    Label = c("5", "10", "15", "20", "n methods >= 25")
+) |>
+    mutate(
+        CumFeatures = cum_num_methods_plotting |>
+            arrange(Dataset, NumMethods) |>
+            filter(Dataset == levels(cum_num_methods_plotting$Dataset)[[1]]) |>
+            pull(CumFeatures)
+    )
+
+num_methods_plot <- ggplot(
+    cum_num_methods_plotting,
+    aes(y = Dataset, x = CumFeatures, fill = factor(NumMethods))
+) +
+    geom_point(size = 1.5, shape = "circle filled") +
+    ggrepel::geom_text_repel(
+        data = labels,
+        aes(label = Label),
+        size = 2, vjust = 1.0, direction = "x", label.padding = 0.5,
+        seed = 1
+    ) +
+    scale_fill_viridis_d(option = "plasma", guide = "none") +
+    scale_x_log10(breaks = c(10, 100, 500, 1000, 5000, 10000)) +
+    labs(
+        x = "Number of selected features (log scale)"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.y = element_blank(),
+        panel.grid.minor = element_blank()
+    )
+
+num_selected_means_plotting <- num_selected_means |>
+    filter(SDSelected > 0) |>
+    mutate(
+        Method = str_replace_all(Method, "_", "-"),
+        MethodLabel = factor(
+            Method,
+            levels = names(method_names),
+            labels = str_replace(method_names,  " ", "\n")
+        )
+    ) |>
+    arrange(MeanSelected) |>
+    mutate(MethodLabel = fct_reorder(MethodLabel, MeanSelected))
+
+num_selected_plotting <- num_selected |>
+    mutate(Method = str_replace_all(Method, "_", "-")) |>
+    filter(Method %in% num_selected_means_plotting$Method) |>
+    mutate(
+        MethodLabel = factor(
+            Method,
+            levels = num_selected_means_plotting$Method,
+            labels = num_selected_means_plotting$MethodLabel
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = str_replace(dataset_names, " ", "\n")
+        )
+    )
+
+num_selected_plot <- ggplot(
+    num_selected_plotting,
+    aes(x = Selected, y = MethodLabel)
+) +
+    geom_vline(xintercept = 2000, colour = "red") +
+    geom_point(
+        aes(fill = Dataset),
+        position = position_jitter(width = 0, height = 0.2, seed = 1),
+        shape = "circle filled", alpha = 0.8, colour = "grey20"
+    ) +
+    geom_point(
+        data = num_selected_means_plotting,
+        aes(x = MeanSelected),
+        shape = "|", size = 4, colour = "blue"
+    ) +
+    scale_x_log10(
+        breaks = c(100, 200, 500, 1000, 2000, 5000, 10000, 20000)
+    ) +
+    scale_fill_brewer(palette = "Set3") +
+    labs(
+        x = "Number of selected\nfeatures (log scale)"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid.minor.x = element_blank()
+    )
+
+overlaps_panel <- wrap_plots(
+    mean_overlaps_plot,
+    # dataset_overlaps_plot,
+    num_methods_plot, 
+    num_selected_plot,
+    nrow = 1,
+    widths = c(1.2, 0.5, 0.5)
+)
+
+# Batch aware difference heatmap
+batch_aware_plot <- batch_methods_diffs |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_clust_order
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = datasets_clust_order,
+            labels = dataset_names[datasets_clust_order]
+        )
+    ) |>
+    ggplot(aes(x = Dataset, y = Method, fill = Difference)) +
+        geom_tile() +
+        colorspace::scale_fill_continuous_diverging(
+            palette = "PurpleGreen"
+        ) +
+        scale_y_discrete(expand = c(0, 0)) +
+        facet_wrap(~ Type, nrow = 1) +
+        labs(
+            fill = "Batch aware -\nstandard"
+        ) +
+        theme_features_pub() +
+        theme(
+            axis.title = element_blank(),
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+        )
+
+benchmark_figure <- wrap_plots(
+    overall_panel,
+    overlaps_panel,
+    batch_aware_plot,
+    nrow = 3,
+    heights = c(3.5, 2.2, 0.6)
+)
+
+benchmark_figure
+```
+
+## Integration
+
+```{r figure-integration}
+theme_features_integration <- theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top",
+        panel.grid = element_blank(),
+        panel.spacing.x = unit(0, "cm"),
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.key.width = unit(0.35, "cm"),
+        legend.key.spacing.x = unit(0.0, "cm"),
+        legend.box = "vertical"
+    )
+
+integration_summary_plotting <- integration_summary |>
+    pivot_longer(
+        Symphony:scVI,
+        names_to = "Integration",
+        values_to = "Value"
+    ) |>
+    group_by(Method, Type, Integration) |>
+    summarise(
+        Mean = mean(Value),
+        SD = sd(Value),
+        .groups = "drop"
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_scores_plot <- ggplot(
+    integration_summary_plotting,
+    aes(x = Type, y = Method, colour = Mean, size = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(
+        option = "magma",
+        limits = c(0, max(integration_summary_plotting$Mean))
+    ) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    labs(
+        title = "Mean scores",
+        colour = "Mean score",
+        size = "Standard deviation",
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    theme_features_integration
+
+# Integration difference heatmap
+integration_diff_means_plotting <- integration_diff_means |>
+    pivot_longer(scANVIMean:SymphonySD) |>
+    mutate(
+        Integration = if_else(
+            str_detect(name, "scANVI"),
+            "scANVI",
+            "Symphony"
+        ),
+        Summary = if_else(
+            str_detect(name, "Mean"),
+            "Mean",
+            "SD"
+        )
+    ) |>
+    select(-name) |> 
+    pivot_wider(
+        names_from = Summary,
+        values_from = value
+    ) |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_scores_diffs_plot <- ggplot(
+    integration_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean, size = SD)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "PurpleGreen",
+    ) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in\nmean scores",
+        colour = "Difference to scVI",
+        size = "Standard deviation"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_integration +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_ranks_means_plotting <- integration_ranks_means |>
+    mutate(Integration = str_remove(Integration, "-[0-9]+$")) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_ranks_plot <- ggplot(
+    integration_ranks_means_plotting,
+    aes(x = Type, y = Method, colour = Type)
+) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  MeanRank, size = SDRank),
+        shape = "square"
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(integration_ranks_means$SDRank), 0),
+        range = c(0.1, 2.5)
+    ) +
+    scale_alpha_continuous(
+        limits = c(length(unique(integration_ranks_means$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Mean ranks",
+        alpha = "Mean rank",
+        size = "Standard deviation"
+    ) +
+    guides(
+        alpha = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 1
+        ),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_integration +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+integration_ranks_diff_means_plotting <- integration_ranks_diff_means |>
+    pivot_longer(scANVIMean:SymphonySD) |>
+    mutate(
+        Integration = if_else(
+            str_detect(name, "scANVI"),
+            "scANVI",
+            "Symphony"
+        ),
+        Summary = if_else(
+            str_detect(name, "Mean"),
+            "Mean",
+            "SD"
+        )
+    ) |>
+    select(-name) |> 
+    pivot_wider(
+        names_from = Summary,
+        values_from = value
+    ) |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_diffs_ranks_plot <- ggplot(
+    integration_ranks_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean, size = SD)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Tropic",
+        rev = TRUE
+    ) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in\nmean ranks",
+        colour = "Difference to scVI",
+        size = "Standard deviation"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_integration +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_figure <- wrap_plots(
+    integration_scores_plot,
+    integration_scores_diffs_plot,
+    integration_ranks_plot,
+    integration_diffs_ranks_plot,
+    nrow = 1,
+    widths = c(3, 2, 3, 2)
+)
+
+integration_figure
+```
+
+# Output
+
+Save output files
+
+```{r output}
+save_figure_files(
+    benchmark_figure,
+    here::here("analysis", "output", "benchmark"),
+    height = 11
+)
+
+save_figure_files(
+    integration_figure,
+    here::here("analysis", "output", "integration"),
+    height = 6
+)
+```
+
+# Session info {.unnumbered}
+
+```{r session-info}
+sessioninfo::session_info()
+```
+

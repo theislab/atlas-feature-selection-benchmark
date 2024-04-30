@@ -1,0 +1,1426 @@
+---
+title: "Metric selection"
+author: "Luke Zappia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.width = 10,
+    fig.height = 8,
+    fig.align = "center"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)  
+})
+```
+
+```{r source}
+source(here::here("analysis", "R", "plotting.R"))
+```
+
+# Introduction {.unnumbered}
+
+In this document we are going to perform some analysis of the metric scores from metric selection experiment in order to choose metrics to use for the final benchmark.
+
+# Overview
+
+First let's get an overview of the metric scores.
+
+```{r load}
+metrics_raw <- read_tsv(
+    here::here("data", "metric-selection.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+)
+
+metrics_meta <- read_tsv(
+    here::here("data", "metrics-metadata.tsv"),
+    col_types = cols(
+        Metric   = col_character(),
+        Name     = col_character(),
+        Included = col_logical()
+    )
+)
+include <- metrics_meta$Metric[metrics_meta$Included]
+exclude <- metrics_meta$Metric[!metrics_meta$Included]
+
+types_order <- c(
+    "Integration (Batch)" = "IntegrationBatch",
+    "Integration (Bio)"   = "IntegrationBio",
+    "Mapping"             = "Mapping",
+    "Classification"      = "Classification",
+    "Unseen"              = "Unseen"
+)
+
+metrics_order <- arrange(metrics_meta, Included, desc(Name)) |> pull(Metric)
+names(metrics_order) <- arrange(metrics_meta, Included, desc(Name)) |>
+    pull(Name)
+
+metrics_raw
+```
+
+## Counts
+
+Check the number of values we have for each metric.
+All metrics should have the same number (known missing values are checked below).
+
+```{r counts}
+plot_metric_counts(metrics_raw)
+```
+
+## Missing values
+
+We expect to have missing values for the `Reconstruction` metric which can't be calculated for the `Symphony` integration and the `CellCycle` metric which can't be calculated for simulated datasets.
+Values should be complete for other metrics.
+
+```{r missing}
+plot_metric_missing(metrics_raw)
+```
+
+## Add dataset metadata
+
+We are going to consider various technical aspects of datasets so we add that information now.
+We also remove methods where the number of selected features is greater than the number of features in the dataset as this is equivalent to the "All" method.
+
+```{r datasets-metadata}
+datasets_meta <- read_tsv(
+    here::here("data", "datasets-metadata.tsv"),
+    col_types = cols(
+        Dataset  = col_character(),
+        Name     = col_character(),
+    )
+)
+
+metrics_raw <- metrics_raw |>
+    mutate(
+        SelFeatures = str_extract(Method, "N(\\d+)", group = 1),
+        SelFeatures = as.numeric(SelFeatures)
+    ) |>
+    left_join(datasets_meta, by = "Dataset") |>
+    mutate(
+        SelFeatures = if_else(Method == "all", Features, SelFeatures)
+    ) |>
+    filter(SelFeatures <= Features) |>
+    select(-Name)
+```
+
+## Split
+
+For most analysis we only want the random gene sets so we move the other methods to a separate data frame.
+
+```{r split}
+metrics_nonrandom <- metrics_raw |>
+    filter(Method == "all" | str_detect(Method, "random", negate = TRUE))
+
+metrics <- metrics_raw |>
+    filter(Method == "all" | str_detect(Method, "random"))
+
+metrics
+
+metrics_nonrandom
+```
+
+In what follows we use the results for random gene sets unless otherwise stated.
+
+# Values
+
+Let's see the distribution of scores for each metric across all datasets, integrations etc.
+
+```{r values}
+ggplot(metrics, aes(x = Value, y = Metric)) +
+    ggforce::geom_sina(alpha = 0.5) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_minimal() +
+    theme(
+        panel.border = element_rect(fill = NA),
+        strip.text = element_text(colour = "white", size = 10),
+        strip.background = element_rect(fill = "black"),
+        legend.position = "bottom"
+    )
+```
+
+# Dynamic range
+
+Each metric has a theoretical range between 0 and 1 but in practice the oberved range can be much smaller.
+Here we have calculated the range for each combination of dataset and integration (points).
+The red lines show the mean and standard deviation of the range for each metric.
+
+```{r dynamic-range}
+ranges <- metrics |>
+    filter(!is.na(Value)) |>
+    group_by(Dataset, Integration, Metric, Type) |>
+    summarise(
+        Range = max(Value) - min(Value),
+        .groups = "drop"
+    )
+
+range_means <- ranges |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanRange = mean(Range),
+        SDRange = sd(Range),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanRange))
+
+ranges$Metric <- factor(ranges$Metric, levels = levels(range_means$Metric))
+
+ggplot(range_means, aes(x = MeanRange, y = Metric)) +
+    ggforce::geom_sina(
+        data = ranges,
+        aes(x = Range, colour = Dataset, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanRange - SDRange, xmax = MeanRange + SDRange),
+        colour = "red", shape = "|", size = 1
+    ) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+# Technical features {.tabset}
+
+Here we look at the correlation between metrics scores and various technical features of the datasets.
+
+## Dataset features {.unnumbered}
+
+```{r dataset-features}
+features_corrs <- metrics |>
+    filter(!is.na(Value)) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, log10(Features)),  .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+sel_feature_values <- unique(features_corrs$SelFeatures)
+
+features_corrs_means <- features_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+features_corrs$Metric <- factor(
+    features_corrs$Metric,
+    levels = levels(features_corrs_means$Metric)
+)
+
+ggplot(features_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = features_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Reference cells {.unnnumbered}
+
+```{r reference-cells}
+cells_corrs <- metrics |>
+    filter(!is.na(Value)) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, log10(ReferenceCells)), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+cells_corrs_means <- cells_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+cells_corrs$Metric <- factor(
+    cells_corrs$Metric,
+    levels = levels(cells_corrs_means$Metric)
+)
+
+ggplot(cells_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = cells_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Reference batches {.unnumbered}
+
+```{r reference-batches}
+batches_corrs <- metrics |>
+    filter(!is.na(Value)) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, ReferenceBatches), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+batches_corrs_means <- batches_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+batches_corrs$Metric <- factor(
+    batches_corrs$Metric,
+    levels = levels(batches_corrs_means$Metric)
+)
+
+ggplot(batches_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = batches_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Reference labels {.unnumbered}
+
+```{r reference-labels}
+labels_corrs <- metrics |>
+    filter(!is.na(Value)) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, ReferenceLabels), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+labels_corrs_means <- labels_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+labels_corrs$Metric <- factor(
+    labels_corrs$Metric,
+    levels = levels(labels_corrs_means$Metric)
+)
+
+ggplot(labels_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = labels_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Query cells {.unnumbered}
+
+```{r query-cells}
+query_cells_corrs <- metrics |>
+    filter(
+        !(Type %in% c("IntegrationBatch", "IntegrationBio")),
+        !is.na(Value)
+    ) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, log10(QueryCells)), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+query_cells_corrs_means <- query_cells_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+query_cells_corrs$Metric <- factor(
+    query_cells_corrs$Metric,
+    levels = levels(query_cells_corrs_means$Metric)
+)
+
+ggplot(query_cells_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = query_cells_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Query batches {.unnumbered}
+
+```{r query-batches}
+query_batches_corrs <- metrics |>
+    filter(
+        !(Type %in% c("IntegrationBatch", "IntegrationBio")),
+        !is.na(Value)
+    ) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, QueryBatches), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+query_batches_corrs_means <- query_batches_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+query_batches_corrs$Metric <- factor(
+    query_batches_corrs$Metric,
+    levels = levels(query_batches_corrs_means$Metric)
+)
+
+ggplot(query_batches_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = query_batches_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Unseen labels {.unnumbered}
+
+```{r unseen-labels}
+unseen_labels_corrs <- metrics |>
+    filter(
+        !(Type %in% c("IntegrationBatch", "IntegrationBio")),
+        !is.na(Value)
+    ) |>
+    group_by(Method, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, UnseenLabels), .groups = "drop") |>
+    mutate(
+        SelFeatures = as.numeric(str_extract(Method, "N(\\d+)", group = 1))
+    )
+
+unseen_labels_corrs_means <- unseen_labels_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+unseen_labels_corrs$Metric <- factor(
+    unseen_labels_corrs$Metric,
+    levels = levels(unseen_labels_corrs_means$Metric)
+)
+
+ggplot(unseen_labels_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = unseen_labels_corrs,
+        aes(x = Corr, colour = SelFeatures, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    scale_colour_viridis_b(breaks = sel_feature_values) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+# Number of features
+
+The number of selected features is expected to affect the performance of methods but some metrics may be dominated by this effect.
+For each metric we have calculated the correlation between the scores and the number of selected features (per datasets and integration).
+
+> **NOTE:** In this section we mainly consider non-random gene sets.
+> This is because for a real method we would expect the first N selected features to be the "best" but this is not the case for randomly selected features of difference sizes.
+> This behaviour would affect the relationship between the number of selected features and metric scores.
+
+## Means {.tabset}
+
+Points show the individual correlation scores with red lines showing the mean and standard deviation for each metric.
+
+### Non-random {.unnumbered}
+
+```{r n-features}
+sel_features_corrs <- metrics_nonrandom |>
+    group_by(Dataset, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, SelFeatures), .groups = "drop") |>
+    # Remove NA correlations due to all values being equal
+    filter(!is.na(Corr))
+
+sel_features_corrs_means <- sel_features_corrs |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+sel_features_corrs$Metric <- factor(
+    sel_features_corrs$Metric,
+    levels = levels(sel_features_corrs_means$Metric)
+)
+
+ggplot(sel_features_corrs_means, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = sel_features_corrs,
+        aes(x = Corr, colour = Dataset, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+### Random {.unnumbered}
+
+```{r n-features-random}
+sel_features_corrs_random <- metrics |>
+    group_by(Dataset, Integration, Type, Metric) |>
+    summarise(Corr = cor(Value, SelFeatures), .groups = "drop") |>
+    # Remove NA correlations due to all values being equal
+    filter(!is.na(Corr))
+
+sel_features_corrs_means_random <- sel_features_corrs_random |>
+    group_by(Metric, Type) |>
+    summarise(
+        MeanCorr = mean(Corr),
+        SDCorr = sd(Corr),
+        .groups = "drop"
+    ) |>
+    mutate(Metric = fct_reorder(Metric, MeanCorr))
+
+sel_features_corrs_random$Metric <- factor(
+    sel_features_corrs_random$Metric,
+    levels = levels(sel_features_corrs_means$Metric)
+)
+
+ggplot(sel_features_corrs_means_random, aes(x = MeanCorr, y = Metric)) +
+    ggforce::geom_sina(
+        data = sel_features_corrs_random,
+        aes(x = Corr, colour = Dataset, shape = Integration, group = Metric),
+        alpha = 0.5
+    ) +
+    geom_pointrange(
+        aes(xmin = MeanCorr - SDCorr, xmax = MeanCorr + SDCorr),
+        colour = "red", shape = "|", size = 1
+    ) +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme_features() +
+    theme(
+        legend.position = "bottom"
+    )
+```
+
+## Heatmap {.tabset}
+
+The heatmap below shows the correlation between metric scores and the number of selected features for each dataset and integration.
+
+### Non-random {.unnumbered}
+
+```{r n-features-heatmap, fig.height = 10}
+ggplot(sel_features_corrs, aes(x = Metric, y = Integration, fill = Corr)) +
+    geom_tile() +
+    scale_fill_distiller(breaks = seq(-1, 1, 0.25), palette = "RdBu") +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_grid(Dataset ~ Type, scales = "free", space = "free_x") +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        strip.text.y.right = element_text(angle = 0, hjust = 0),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey40")
+    )
+```
+
+### Random {.unnumbered}
+
+```{r n-features-heatmap-random, fig.height = 10}
+ggplot(sel_features_corrs_random, aes(x = Metric, y = Integration, fill = Corr)) +
+    geom_tile() +
+    scale_fill_distiller(breaks = seq(-1, 1, 0.25), palette = "RdBu") +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_grid(Dataset ~ Type, scales = "free", space = "free_x") +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        strip.text.y.right = element_text(angle = 0, hjust = 0),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey40")
+    )
+```
+
+# Regression model
+
+Another way to quantify the relationship between metric scores and technical factors is to fit a regression model that attempts to predict the score from technical variables.
+
+```{r regression-model}
+metrics_fitting <- metrics |>
+    mutate(
+        SelFeatures = str_extract(Method, "N(\\d+)", group = 1),
+        SelFeatures = as.numeric(SelFeatures)
+    ) |>
+    mutate(
+        SelFeatures = if_else(Method == "all", Features, SelFeatures)
+    ) |>
+    filter(
+        SelFeatures <= Features,
+    ) 
+
+fits_reference <- metrics_fitting |>
+    filter(
+        Type %in% c("IntegrationBatch", "IntegrationBio")
+    ) |>
+    pull(Metric) |>
+    unique() |>
+    map_dfr(function(.metric) {
+        fit <- lm(
+            Value ~ Integration + log10(SelFeatures) + log10(Features) +
+                log10(ReferenceCells) + ReferenceBatches,
+            data = filter(metrics_fitting, Metric == .metric)
+        )
+        
+        jtools::summ(
+            fit,
+            scale = TRUE, transform.response = TRUE
+        )$coeftable |>
+            as.data.frame() |>
+            rownames_to_column("Variable") |>
+            rename(
+                Estimate = `Est.`, SE = `S.E.`, TVal = `t val.`, PValue = `p`
+            ) |>
+            mutate(
+                Metric = .metric,
+                AdjRSquared = summary(fit)$adj.r.squared,
+            ) |>
+            relocate(Metric)
+    })
+
+fits_query <- metrics_fitting |>
+    filter(
+        !(Type %in% c("IntegrationBatch", "IntegrationBio"))
+    ) |>
+    pull(Metric) |>
+    unique() |>
+    map_dfr(function(.metric) {
+        fit <- lm(
+            Value ~ Integration + log10(SelFeatures) + log10(Features) +
+                log10(ReferenceCells) + ReferenceBatches + log10(QueryCells) +
+                QueryBatches + UnseenLabels,
+            data = filter(metrics_fitting, Metric == .metric)
+        )
+        
+        jtools::summ(
+            fit,
+            scale = TRUE, transform.response = TRUE
+        )$coeftable |>
+            as.data.frame() |>
+            rownames_to_column("Variable") |>
+            rename(
+                Estimate = `Est.`, SE = `S.E.`, TVal = `t val.`, PValue = `p`
+            ) |>
+            mutate(
+                Metric = .metric,
+                AdjRSquared = summary(fit)$adj.r.squared,
+            ) |>
+            relocate(Metric)
+    })
+
+fits <- bind_rows(fits_reference, fits_query) |>
+    as_tibble()
+
+fits_plotting <- fits |>
+    left_join(
+        select(metrics_fitting, Metric, Type) |> distinct(),
+        by = "Metric"
+    ) |>
+    mutate(
+        Variable = factor(
+            Variable,
+            levels = c(
+                "(Intercept)",
+                "IntegrationscVI-1",
+                "IntegrationSymphony-1",
+                "`log10(SelFeatures)`",
+                "`log10(Features)`",
+                "`log10(ReferenceCells)`",
+                "ReferenceBatches",
+                "`log10(QueryCells)`",
+                "QueryBatches",
+                "UnseenLabels"
+            ),
+            labels = c(
+                "Intercept",
+                "scVI",
+                "Symphony",
+                "Selected features",
+                "Features",
+                "Reference cells",
+                "Reference batches",
+                "Query cells",
+                "Query batches",
+                "Unseen labels"
+            )
+        ),
+        Metric = factor(
+            Metric,
+            levels = metrics_order,
+            labels = names(metrics_order)
+        ),
+        Type = factor(
+            Type,
+            levels = types_order,
+            labels = names(types_order)
+        )
+    )
+
+coefficients_plot <- ggplot(
+    fits_plotting, aes(x = Variable, y = Metric, fill = Estimate)
+) +
+    geom_tile() +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1),
+        n.breaks = 10
+    ) +
+    theme_features() +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme(
+        legend.position = "bottom",
+        legend.key.width = unit(1, "null"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank()
+    )
+
+r_squared_plot <- ggplot(
+    fits_plotting, aes(x = "Adj R Squared", y = Metric, fill = AdjRSquared)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(limits = c(0, 1)) +
+    theme_features() +
+    facet_grid(Type ~ ., scales = "free_y", space = "free_y") +
+    theme(
+        legend.position = "bottom",
+        legend.key.width = unit(1, "null"),
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        strip.background = element_blank()
+    )
+
+wrap_plots(
+    r_squared_plot, coefficients_plot,
+    widths = c(1, 4)
+)
+```
+
+# Correlations
+
+Metrics from each category should be somewhat correlated with each other, however we do not want metrics that are redundant and would effectively measure the same information.
+Metrics that are correlated with other types could also be undesirable as they blur the distinction between metric types.
+
+## All correlations {.tabset}
+
+These plots show the correlation between pairs of metrics.
+The colour indicates the mean correlation with the length of the line showing plus or minus one standard deviation.
+
+```{r metric-corr, results = "hide"}
+metric_types <- metrics |>
+    select(
+        Metric,
+        Type
+    ) |>
+    distinct()
+
+corr_summary <- metrics |>
+    select(Dataset, Method, Integration, Metric, Value) |>
+    pivot_wider(names_from = "Metric", values_from = "Value") |>
+    group_by(Dataset, Integration) |>
+    group_split() |>
+    map_dfr(\(.metrics) {
+        .metrics |>
+            corrr::correlate(diagonal = 1, quiet = TRUE) |>
+            corrr::stretch()
+    }) |>
+    filter(!is.na(r)) |>
+    group_by(x, y) |>
+    summarise(Mean = mean(r), SD = sd(r), .groups = "drop") |>
+    rename(
+        Metric1 = x,
+        Metric2 = y
+    ) |>
+    left_join(
+        metric_types,
+        by = c(Metric1 = "Metric")
+    ) |>
+    rename(Metric1Type = Type) |>
+    left_join(
+        metric_types,
+        by = c(Metric2 = "Metric")
+    ) |>
+    rename(Metric2Type = Type)
+
+corr_lineplot <- function(corr_data) {
+    ggplot(corr_data, aes(x = Metric2, y = Mean, colour = Mean)) +
+        geom_hline(yintercept = 0, colour = "blue") +
+        geom_hline(yintercept = 1, colour = "red") +
+        geom_hline(yintercept = -1, colour = "red") +
+        geom_linerange(aes(ymin = Mean - SD, ymax = Mean + SD), linewidth = 3) +
+        scale_colour_fermenter(
+            palette = "RdYlBu",
+            limits = c(-1, 1), breaks = seq(-1, 1, 0.2)
+        ) +
+        scale_y_continuous(breaks = c(-1, 0, 1)) +
+        facet_grid(Metric1 ~ Metric2Type, scales = "free_x", space = "free_x") +
+        labs(y = "Correlation") +
+        theme_features() +
+        theme(
+            axis.title.x = element_blank(),
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+            strip.text.y.right = element_text(angle = 0, hjust = 0),
+            panel.grid = element_blank()
+        )
+}
+
+src_list <- lapply(unique(metric_types$Type), function(.type) {
+    src <- c(
+        "### <<.type>> {.unnumbered}",
+        "```{r metric-corr-<<.type>>, fig.height = 10}",
+        "corr_lineplot(filter(corr_summary, Metric1Type == '<<.type>>'))",
+        "```",
+        ""
+    )
+    knitr::knit_expand(text = src, delim = c("<<", ">>"))
+})
+
+out <- knitr::knit_child(text = unlist(src_list), options = list(cache = FALSE))
+```
+
+`r out`
+
+## Top correlations
+
+This plot shows the mean (points) and standard deviation (lines) of each metric and the other metric it has the highest (absolute) correlation with.
+Labels indicate the other metric and colours indicate metric types.
+
+```{r metric-corr-top}
+corr_summary_top <- corr_summary |>
+    filter(Metric1 != Metric2) |>
+    group_by(Metric1) |>
+    slice_max(abs(Mean), with_ties = FALSE) |>
+    ungroup() |>
+    mutate(Metric1 = fct_reorder(Metric1, Mean))
+
+ggplot(
+    corr_summary_top,
+    aes(x = Mean, xmin = Mean - SD, xmax = Mean + SD, y = Metric1)
+) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = c(-1, 1), colour = "blue") +
+    geom_linerange(aes(colour = Metric1Type)) +
+    geom_point(aes(colour = Metric1Type)) +
+    geom_text(
+        aes(x = Mean - SD - 0.02, label = Metric2, colour = Metric2Type),
+        size = 3, hjust = 1
+    ) +
+    scale_x_continuous(
+        limits = c(-1.4, 1.1),
+        breaks = seq(-1, 1, 0.25)
+    ) +
+    labs(
+        x = "Mean correlation",
+        colour = "Metric type"
+    ) +
+    theme_features() +
+    theme(
+        panel.grid.minor.x = element_blank(),
+        axis.title.y = element_blank(),
+        legend.position = "bottom"
+    )
+```
+
+## Global
+
+Above we calculated correlations for each combination of dataset and metric.
+Here we show the global correlations across all scores.
+
+```{r metrics-corr-global}
+global_corr <- metrics |>
+    select(Dataset, Method, Integration, Metric, Value) |>
+    pivot_wider(names_from = "Metric", values_from = "Value") |>
+    group_by(Dataset, Integration) |>
+    corrr::correlate(quiet = TRUE) |>
+    corrr::stretch() |> 
+    rename(
+        Metric1 = x,
+        Metric2 = y,
+        Corr    = r
+    ) |>
+    mutate(Corr = if_else(is.na(Corr), 1, Corr)) |>
+    left_join(
+        metric_types,
+        by = c(Metric1 = "Metric")
+    ) |>
+    rename(Metric1Type = Type) |>
+    left_join(
+        metric_types,
+        by = c(Metric2 = "Metric")
+    ) |>
+    rename(Metric2Type = Type)
+    
+global_corr_mat <- global_corr |>
+    select(Metric1, Metric2, Corr) |>
+    pivot_wider(values_from = "Corr", names_from = "Metric2") |>
+    column_to_rownames("Metric1") |>
+    as.matrix()
+
+corr_hclust <- hclust(as.dist(1 - global_corr_mat))
+corr_order <- corr_hclust$labels[corr_hclust$order]
+    
+global_corr <- global_corr |>
+    mutate(
+        Metric1 = factor(Metric1, levels = corr_order),
+        Metric2 = factor(Metric2, levels = rev(corr_order))
+    )
+
+ggplot(global_corr, aes(x = Metric1, y = Metric2, fill = Corr)) +
+    geom_tile() +
+    scale_fill_distiller(
+        palette = "RdBu",
+        limits = c(-1, 1)
+    ) +
+    facet_grid(
+        Metric2Type ~ Metric1Type,
+        scales = "free", space = "free"
+    ) +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        strip.text.y.right = element_text(angle = 0, hjust = 0),
+        panel.grid = element_blank(),
+        panel.background = element_rect(fill = "grey40")
+    )
+```
+
+# Embedding
+
+To get an overall impression of the metrics let's create some embedding plots.
+
+## PCA
+
+```{r pca}
+metrics_pca <- metrics |>
+    select(Dataset, Method, Integration, Metric, Value) |>
+    replace_na(list(Value = 0)) |>
+    pivot_wider(names_from = "Metric", values_from = "Value") |>
+    select(where(is.numeric)) |>
+    as.matrix() |>
+    t() |>
+    prcomp(scale. = TRUE)
+
+metrics_embedding <- metric_types |>
+    left_join(
+        metrics_pca$x |>
+            as.data.frame() |>
+            rownames_to_column("Metric") |>
+            select(Metric, PC1, PC2),
+        by = "Metric"
+    )
+
+ggplot(metrics_embedding, aes(x = PC1, y = PC2, colour = Type)) +
+    geom_point() +
+    ggrepel::geom_label_repel(aes(label = Metric)) +
+    theme_features()
+```
+
+## UMAP
+
+```{r umap}
+metrics_umap <- uwot::umap(metrics_pca$x[, 1:10])
+
+metrics_embedding <- metrics_embedding |>
+    left_join(
+        metrics_umap |>
+            as.data.frame() |>
+            rownames_to_column("Metric") |>
+            rename(UMAP1 = "V1", UMAP2 = "V2"),
+        by = "Metric"
+    )
+
+ggplot(metrics_embedding, aes(x = UMAP1, y = UMAP2, colour = Type)) +
+    geom_point() +
+    ggrepel::geom_label_repel(aes(label = Metric)) +
+    theme_features()
+```
+
+# Summary
+
+This figure gives an overall summary of the properties considered above.
+
+```{r summary, fig.width = 8, out.width = "100%"}
+theme_features_summary <- theme_features_pub() +
+    theme(
+        panel.grid = element_blank(),
+        panel.spacing.y = unit(0, "cm"),
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        legend.key.width = unit(0.35, "cm")
+    )
+
+included_summary <- metrics_meta |>
+    left_join(
+        distinct(metrics, Metric, Type),
+        by = "Metric"
+    ) |>
+    group_by(Type) |>
+    summarise(
+        Count = n(),
+        Excluded = sum(!Included),
+        Included = sum(Included)
+    ) |>
+    mutate(
+        Type = factor(Type, levels = types_order, labels = names(types_order))
+    )
+
+included_data <- metrics |>
+    select(Metric, Type) |>
+    distinct() |>
+    mutate(
+        Include = as.character(Metric %in% include),
+        Include = if_else(Metric == "GraphConnectivity", "Switched", Include)
+    ) |>
+    mutate(
+        Metric = factor(
+            Metric,
+            levels = metrics_order,
+            labels = names(metrics_order)
+        ),
+        Type = factor(Type, levels = types_order, labels = names(types_order)),
+        Include = factor(
+            Include,
+            levels = c("TRUE", "Switched", "FALSE"),
+            labels = c("Included", "Included as\nother type", "Excluded")
+        )
+    )
+
+included_plot <- ggplot(included_data, aes(x = 1, y = Metric, fill = Include)) +
+    geom_tile(height = 0.9, width = 0.9) +
+    scale_fill_manual(values = c("#1b9e77", "#d95f02", "#7570b3")) +
+    scale_x_continuous(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_grid(
+        Type ~ ., scales = "free_y", space = "free_y"
+    ) +
+    labs(
+        fill = "Included?"
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.x = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+ranges_data <- ranges |>
+    group_by(Metric) |>
+    mutate(Mean = mean(Range)) |>
+    mutate(
+        Metric = factor(Metric, levels = metrics_order),
+        Type = factor(Type, levels = types_order, labels = names(types_order))
+    ) |>
+    ungroup()
+
+ranges_plot <- ggplot(ranges_data) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 1),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_vline(xintercept = c(0.25, 0.5, 0.75), colour = "grey80") +
+    ggridges::geom_density_ridges(
+        aes(
+            x = Range, y = Metric,
+            fill = Mean,
+            group = Metric,
+            height = after_stat(ndensity)
+        ),
+        scale = 1.0, rel_min_height = 0.01,
+        bandwidth = 0.05, from = 0, to = 1,
+        quantile_lines = TRUE, quantiles = 0.5,
+        colour = "white",
+    ) +
+    scale_fill_viridis_c(option = "magma", limits = c(0, 1)) +
+    scale_x_continuous(
+        limits = c(0, 1) ,
+        breaks = c(0, 0.25, 0.5, 0.75, 1.00),
+        expand = c(0, 0)
+    ) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_grid(
+        Type ~ ., scales = "free_y", space = "free_y"
+    ) +
+    labs(
+        title = "Observed\nrange",
+        fill = "Mean range"
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+features_data <- sel_features_corrs |> 
+    group_by(Metric) |>
+    mutate(Mean = mean(Corr)) |>
+    mutate(
+        Metric = factor(Metric, levels = metrics_order),
+        Type = factor(Type, levels = types_order, labels = names(types_order))
+    )
+
+features_plot <- ggplot(features_data) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 1),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_vline(xintercept = c(-0.5, 0, 0.5), colour = "grey80") +
+    ggridges::geom_density_ridges(
+        aes(
+            x = Corr, y = Metric,
+            fill = Mean,
+            group = Metric,
+            height = after_stat(ndensity)
+        ),
+        scale = 1.0, rel_min_height = 0.01,
+        bandwidth = 0.1, from = -1, to = 1,
+        quantile_lines = TRUE, quantiles = 0.5,
+        colour = "white",
+    ) +
+    colorspace::scale_fill_continuous_divergingx(
+        palette = "Zissou 1",
+        limits = c(-1, 1)
+    ) +
+    scale_x_continuous(
+        limits = c(-1, 1) ,
+        breaks = c(-1, -0.5, 0, 0.5, 1),
+        labels = scales::label_number(accuracy = 0.01),
+        expand = c(0, 0)
+    ) +
+    scale_y_discrete(expand = c(0, 0)) +
+    facet_grid(
+        Type ~ ., scales = "free_y", space = "free_y"
+    ) +
+    labs(
+        title = "Correlation\nwith number\nof features",
+        fill = "Mean correlation\nwith num. features"
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+tech_corr_data <- bind_rows(
+    features_corrs_means |> mutate(Feature = "Features"),
+    cells_corrs_means |> mutate(Feature = "ReferenceCells"),
+    batches_corrs_means |> mutate(Feature = "ReferenceBatches"),
+    labels_corrs_means |> mutate(Feature = "ReferenceLabels"),
+    query_cells_corrs_means |> mutate(Feature = "QueryCells"),
+    query_batches_corrs_means |> mutate(Feature = "QueryBatches"),
+    unseen_labels_corrs_means |> mutate(Feature = "UnseenLabels")
+) |>
+    mutate(
+        Metric = factor(Metric, levels = metrics_order),
+        Type = factor(
+            Type,
+            levels = types_order,
+            labels = names(types_order)
+        ),
+        Feature = factor(
+            Feature,
+            levels = c(
+                "Features",
+                "ReferenceCells",
+                "ReferenceBatches",
+                "ReferenceLabels",
+                "QueryCells",
+                "QueryBatches",
+                "UnseenLabels"
+            ),
+            labels = c(
+                "Features",
+                "Reference cells",
+                "Reference batches",
+                "Reference labels",
+                "Query cells",
+                "Query batches",
+                "Unseen labels"
+            )
+        )
+    )
+
+tech_corr_plot <- ggplot(tech_corr_data) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Feature, y = Metric, colour = MeanCorr, size =  SDCorr),
+        shape = "square"
+    ) +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Tropic",
+        limits = c(-1, 1),
+        rev = TRUE
+    ) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    facet_grid(Type ~ ., scales = "free", space = "free") +
+    labs(
+        title = "Correlations\nwith dataset\nfeatures",
+        colour = "Mean feature\ncorrelation",
+        size = "Correlation\nstandard deviation"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+corr_data <- corr_summary |>
+    mutate(
+        Metric1 = factor(Metric1, levels = metrics_order),
+        Metric1Type = factor(
+            Metric1Type,
+            levels = types_order,
+            labels = str_replace(names(types_order), " ", "\n")
+        ),
+        Metric2 = factor(
+            Metric2,
+            levels = rev(metrics_order),
+            labels = rev(names(metrics_order))
+        ),
+        Metric2Type = factor(
+            Metric2Type,
+            levels = types_order,
+            labels = str_replace(names(types_order), " ", "\n")
+        )
+    )
+
+corr_plot <- ggplot(corr_data) +
+    geom_rect(
+        data = included_summary |>
+            mutate(
+                Metric1Type = fct_relabel(Type, ~ str_replace(., " ", "\n"))
+            ),
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Metric2, y = Metric1, colour = Mean, size =  SD),
+        shape = "square"
+    ) +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1)
+    ) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2.5), guide = "none"
+    ) +
+    facet_grid(Metric1Type ~ Metric2Type, scales = "free", space = "free") +
+    labs(
+        title = "Correlations between metrics",
+        colour = "Mean metric\ncorrelation",
+        size = "Metric correlation\nstandard deviation"
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+summary_plot <- wrap_plots(
+    included_plot + theme(legend.direction = "vertical"),
+    ranges_plot, features_plot, tech_corr_plot, corr_plot,
+    nrow = 1,
+    widths = c(0.1, 0.8, 0.8, 0.8, 4),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+summary_plot
+```
+
+# Conclusions
+
+## Summary
+
+Based on the above analysis we will select the following metrics for the final benchmark:
+
+```{r conclusions}
+included_data |>
+    mutate(
+        Include = if_else(Metric == "GraphConnectivity", "Included", Include),
+        Type = if_else(
+            Metric == "GraphConnectivity",
+            "Integration (Bio)",
+            Type
+        ),
+    ) |>
+    group_by(Type, Include) |>
+    summarise(Metrics = paste(Metric, collapse = ", "), .groups = "drop") |>
+    pivot_wider(names_from = "Include", values_from = "Metrics") |>
+    select(Type, Included, Excluded) |>
+    arrange(Type) |>
+    knitr::kable()
+```
+
+## Reasons for exclusion
+
+This table gives more detailed explanations for why individual metrics were excluded:
+
+| Metric(s) | Type | Reasoning |
+|:----------|:-----|:----------|
+| GraphConnectivity | Integration (Batch) | Correlation pattern shows greater similarity to Integration (Bio) metrics rather than the other Integration (Batch) metrics so this metric was included but as a different type |
+| BatchASW | Integration (Batch) | Limited observed effective range |
+| Mixing | Integration (Batch) | More limited effective range, Correlated with both batch and biological metrics |
+| kBET | Integration (Batch) | Correlated with both batch and biological metrics which confuses the signal between the two categories |
+| ARI, NMI, bARI | Integration (Bio) | All ARI and NMI metrics showed high correlation with each other, we selected the bNMI as a representative metric |
+| Cell Cycle | Integration (Bio) | Relies on the presence of cycling cells so is inconsistent between datasets and cannot be calculated for simulated data |
+| labelASW | Integration (Bio) | Limited observed effective range |
+| LocalStructure | Integration (Bio) | Strong positive correlation with the number of features |
+| Reconstruction | Mapping | Limited effective range, negative correlation with the number of features, inconsistent with other mapping metrics |
+| kNNcorr | Mapping | Strong positive correlation with the number of features, strong correlation with metrics from other categories |
+| AUPRC, Accuracy, JaccardIndex-macro, JaccardIndex-micro, JaccardIndex-rarity, MCC | Classification | All classification metrics showed extremely high correlation with each other, we selected variants of F1 scores as representatives of cell-level, label-level and rarity-weighted classification metrics |
+| Uncertainty | Unseen | Negative correlation with the number of features, inconsistent with other unseen metrics |
+
+# Output
+
+Save output files
+
+```{r output}
+save_figure_files(
+    summary_plot,
+    here::here("analysis", "output", "metric-selection-summary"),
+    height = 6.5
+)
+```
+
+# Session info {.unnumbered}
+
+```{r session-info}
+sessioninfo::session_info()
+```
