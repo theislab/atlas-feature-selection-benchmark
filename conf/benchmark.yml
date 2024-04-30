@@ -1,4 +1,4 @@
-experiment: num-features
+experiment: benchmark
 datasets:
   - name: scIBPancreas
     batch_col: tech
@@ -62,193 +62,88 @@ datasets:
     species: Simulation
 methods:
   - name: all
+  - name: random
+    settings:
+      - n_features: 500
+        seed: 1
+      - n_features: 500
+        seed: 2
+      - n_features: 500
+        seed: 3
+      - n_features: 500
+        seed: 4
+      - n_features: 500
+        seed: 5
+      - n_features: 2000
+        seed: 1
+      - n_features: 2000
+        seed: 2
+      - n_features: 2000
+        seed: 3
+      - n_features: 2000
+        seed: 4
+      - n_features: 2000
+        seed: 5
   - name: scanpy
     settings:
       - flavor: seurat
-        n_features: 100
-        batch: "False"
-      - flavor: seurat
-        n_features: 200
-        batch: "False"
-      - flavor: seurat
-        n_features: 500
-        batch: "False"
-      - flavor: seurat
-        n_features: 1000
-        batch: "False"
-      - flavor: seurat
         n_features: 2000
-        batch: "False"
-      - flavor: seurat
-        n_features: 5000
-        batch: "False"
-      - flavor: seurat
-        n_features: 10000
-        batch: "False"
-      - flavor: seurat
-        n_features: 15000
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 100
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 200
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 500
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 1000
         batch: "False"
       - flavor: seurat_v3
         n_features: 2000
         batch: "False"
-      - flavor: seurat_v3
-        n_features: 5000
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 10000
-        batch: "False"
-      - flavor: seurat_v3
-        n_features: 15000
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 100
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 200
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 500
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 1000
-        batch: "False"
       - flavor: cell_ranger
         n_features: 2000
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 5000
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 10000
-        batch: "False"
-      - flavor: cell_ranger
-        n_features: 15000
-        batch: "False"
-      - flavor: pearson
-        n_features: 100
-        batch: "False"
-      - flavor: pearson
-        n_features: 200
-        batch: "False"
-      - flavor: pearson
-        n_features: 500
-        batch: "False"
-      - flavor: pearson
-        n_features: 1000
         batch: "False"
       - flavor: pearson
         n_features: 2000
         batch: "False"
+      - flavor: seurat
+        n_features: 2000
+        batch: "True"
+      - flavor: seurat_v3
+        n_features: 2000
+        batch: "True"
+      - flavor: cell_ranger
+        n_features: 2000
+        batch: "True"
       - flavor: pearson
-        n_features: 5000
-        batch: "False"
-      - flavor: pearson
-        n_features: 10000
-        batch: "False"
-      - flavor: pearson
-        n_features: 15000
-        batch: "False"
+        n_features: 2000
+        batch: "True"
+  - name: triku
+  - name: hotspot
+  - name: scsegindex
+  - name: dubstepr
+  - name: nbumi
+  - name: osca
   - name: seurat
     settings:
       - method: vst
-        n_features: 100
-      - method: vst
-        n_features: 200
-      - method: vst
-        n_features: 500
-      - method: vst
-        n_features: 1000
-      - method: vst
         n_features: 2000
-      - method: vst
-        n_features: 5000
-      - method: vst
-        n_features: 10000
-      - method: vst
-        n_features: 15000
-      - method: disp
-        n_features: 100
-      - method: disp
-        n_features: 200
-      - method: disp
-        n_features: 500
-      - method: disp
-        n_features: 1000
-      - method: disp
+      - method: mvp
         n_features: 2000
       - method: disp
-        n_features: 5000
-      - method: disp
-        n_features: 10000
-      - method: disp
-        n_features: 15000
-      - method: sct
-        n_features: 100
-      - method: sct
-        n_features: 200
-      - method: sct
-        n_features: 500
-      - method: sct
-        n_features: 1000
-      - method: sct
         n_features: 2000
       - method: sct
-        n_features: 5000
-      - method: sct
-        n_features: 10000
-      - method: sct
-        n_features: 15000
+        n_features: 2000
+  - name: scry
+  - name: singleCellHaystack
+  - name: Brennecke
+  - name: wilcoxon
   - name: statistic
     settings:
       - statistic: mean
-        n_features: 100
-      - statistic: mean
-        n_features: 200
-      - statistic: mean
-        n_features: 500
-      - statistic: mean
-        n_features: 1000
-      - statistic: mean
-        n_features: 2000
-      - statistic: mean
-        n_features: 5000
-      - statistic: mean
-        n_features: 10000
-      - statistic: mean
-        n_features: 15000
-      - statistic: variance
-        n_features: 100
-      - statistic: variance
-        n_features: 200
-      - statistic: variance
-        n_features: 500
-      - statistic: variance
-        n_features: 1000
-      - statistic: variance
         n_features: 2000
       - statistic: variance
-        n_features: 5000
-      - statistic: variance
-        n_features: 10000
-      - statistic: variance
-        n_features: 15000
+        n_features: 2000
+  - name: scPNMF
+  - name: anticor
+  - name: TFs
 integration:
   seeds:
     - 1
 metrics:
-  # Integration (batch) metrics
+# Integration (batch) metrics
   - name: batchPCR
     type: IntegrationBatch
   - name: iLISI

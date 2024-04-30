@@ -91,11 +91,14 @@ main <- function() {
     )
 
     message("Converting to Seurat object...")
-    # Store dummy logcounts for Seurat's conversion function
     seurat <- SeuratObject::as.Seurat(input, counts = "counts", data = NULL)
     message("Read data:")
     print(seurat)
     output <- select_seurat_features(seurat, n_features, method)
+    message("Resetting to original feature names...")
+    features_map <- rownames(input)
+    names(features_map) <- rownames(seurat)
+    output$Feature <- features_map[output$Feature]
     message("Writing output to '", out_file, "'...")
     write.table(
         output,
