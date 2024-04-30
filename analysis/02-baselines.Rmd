@@ -1,0 +1,880 @@
+---
+title: "Baselines"
+author: "Luke Zappia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.width = 10,
+    fig.height = 8,
+    fig.align = "center"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)
+})
+```
+
+```{r source}
+source(here::here("analysis", "R", "plotting.R"))
+source(here::here("analysis", "R", "summarisation.R"))
+```
+
+# Introduction {.unnumbered}
+
+In this document we are going to perform some analysis of baseline methods in order to establish baseline ranges to use for the final benchmark.
+
+# Overview
+
+First let's get an overview of the metric scores.
+
+```{r load}
+metrics <- read_tsv(
+    here::here("data", "baselines.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_meta <- read_tsv(
+    here::here("data", "metrics-metadata.tsv"),
+    col_types = cols(
+        Metric   = col_character(),
+        Name     = col_character(),
+        Included = col_logical()
+    )
+)
+include <- metrics_meta$Metric[metrics_meta$Included]
+exclude <- metrics_meta$Metric[!metrics_meta$Included]
+
+metric_names <- metrics_meta$Name
+names(metric_names) <- metrics_meta$Metric
+
+datasets_meta <- read_tsv(
+    here::here("data", "datasets-metadata.tsv"),
+    col_types = cols(
+        Dataset  = col_character(),
+        Name     = col_character(),
+    )
+)
+
+dataset_names <- datasets_meta$Name
+names(dataset_names) <- datasets_meta$Dataset
+
+type_names <- c(
+    "IntegrationBatch" = "Integration (Batch)",
+    "IntegrationBio" = "Integration (Bio)",
+    "Mapping" = "Mapping",
+    "Classification" = "Classification",
+    "Unseen" = "Unseen populations"
+)
+
+metrics
+```
+
+## Counts
+
+Check the number of values we have for each metric.
+All metrics should have the same number (known missing values are checked below).
+
+```{r counts}
+plot_metric_counts(metrics)
+```
+
+## Missing values
+
+We expect to have missing values for the `Reconstruction` metric which can't be calculated for the `Symphony` integration and the `CellCycle` metric which can't be calculated for simulated datasets.
+Values should be complete for other metrics.
+
+```{r missing}
+plot_metric_missing(metrics)
+```
+
+# Baselines
+
+## Baseline scores
+
+First, let's get the baseline scores.
+We use the metric values for the baseline methods, averaged over the scVI integration runs.
+For the random baseline we also average over the random seeds.
+
+```{r baseline-scores}
+baselines <- metrics |>
+    # Select included metrics for the scVI integrations
+    filter(
+        str_detect(Integration, "scVI"),
+        Metric %in% include
+    ) |>
+    # Average over integration runs
+    group_by(Dataset, Method, Metric, Type) |>
+    summarise(MeanValue = mean(Value), .groups = "drop") |>
+    # Average over random seeds for the random baseline
+    mutate(
+        Method = if_else(
+            str_detect(Method, "random-N500"),
+            "random-N500",
+            Method
+        )
+    ) |>
+    group_by(Dataset, Method, Metric, Type) |>
+    summarise(MeanValue = mean(MeanValue), .groups = "drop")
+
+baselines
+```
+
+## Baseline ranges
+
+Now that we have calculated the baseline scores we can get the baseline ranges for each metric.
+There are the minimum and maximum baseline values for each metric on each dataset.
+
+```{r baseline-ranges}
+baseline_ranges <- baselines |>
+    group_by(Dataset, Metric, Type) |>
+    summarise(
+        Lower       = min(MeanValue),
+        LowerMethod = paste(Method[MeanValue == Lower], collapse = ", "),
+        Upper       = max(MeanValue),
+        UpperMethod = paste(Method[MeanValue == Upper], collapse = ", "),
+        .groups = "drop"
+    ) |>
+    mutate(Range = Upper - Lower)
+
+baseline_ranges
+```
+
+## Baselines plot {.tabset}
+
+Let's visualise the baseline scores and ranges.
+We can view this with either grid or wrapped facets.
+
+### Grid {.unnumbered}
+
+```{r baselines-plot}
+# Order metrics by the mean rank of the minimum value
+metrics_order <- baselines |>
+    group_by(Metric, Type, Dataset) |>
+    summarise(MinValue = min(MeanValue), .groups = "drop") |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(MinValue)) |>
+    group_by(Type, Metric) |>
+    summarise(MeanRank = mean(Rank), .groups = "drop") |>
+    arrange(Type, MeanRank)
+
+baselines_plotting <- baselines |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Dataset = str_replace(as.character(Dataset), " ", "\n"),
+        Metric = factor(
+            Metric,
+            levels = as.character(metrics_order$Metric),
+            labels = metric_names[as.character(metrics_order$Metric)]
+        ),
+        Type = factor(
+            Type,
+            levels = names(type_names),
+            labels = type_names
+        ),
+        Method = factor(
+            Method,
+            levels = c(
+                "scanpy-cell_ranger-N2000-BatchTrue",
+                "all",
+                "random-N500",
+                "scsegindex"
+            ),
+            labels = c(
+                "scanpy-CellRanger (N=2000, Batch=True)",
+                "All",
+                "Random (N=500)",
+                "scSEGIndex"
+            )
+        )
+    )
+
+baseline_ranges_plotting <- baseline_ranges |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Dataset = str_replace(as.character(Dataset), " ", "\n"),
+        Type = factor(
+            Type,
+            levels = names(type_names),
+            labels = type_names
+        ),
+        Metric = factor(
+            Metric,
+            levels = as.character(metrics_order$Metric),
+            labels = metric_names[as.character(metrics_order$Metric)]
+        )
+    ) |>
+    arrange(Type, Lower)
+
+baselines_plot <-  ggplot(baseline_ranges_plotting, aes(y = fct_rev(Metric))) +
+    geom_linerange(
+        aes(xmin = Lower, xmax = Upper, colour = Type),
+        linewidth = 4, alpha = 0.5
+    ) +
+    geom_point(
+        data = baselines_plotting,
+        aes(x = MeanValue, shape = Method, fill = Method),
+        size = 2, colour = "white",
+        position = position_dodge(width = 0.3)
+    ) +
+    scale_x_continuous(
+        limits = c(0, 1), breaks = c(0.25, 0.5, 0.75), expand = c(0, 0)
+    ) +
+    scale_shape_manual(
+        values = c(
+            "circle filled",
+            "diamond filled",
+            "square filled",
+            "triangle filled"
+        ),
+        name = "Baseline method"
+    ) +
+    scale_colour_brewer(palette = "Set1", guide = "none") +
+    scale_fill_brewer(palette = "Dark2", name = "Baseline method") +
+    coord_flip() +
+    facet_grid(Dataset ~ Type, scales = "free_x", space = "free") +
+    labs(x = "Metric value") +
+    guides(
+        shape = guide_legend(title.position = "top", nrow = 1)
+    ) +
+    theme_features() +
+    theme(
+        legend.position = "bottom", 
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title.x = element_blank(),
+        axis.title.y = element_blank(),
+    )
+
+baselines_plot
+```
+
+### Wrapped {.unnumbered}
+
+```{r baselines-plot-wrapped}
+baselines_plotting <- baselines |>
+    arrange(Type, Metric) |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Type = factor(
+            Type,
+            levels = names(type_names),
+            labels = type_names
+        ),
+        Metric = factor(
+            Metric,
+            levels = unique(Metric),
+            labels = metric_names[unique(Metric)]
+        ),
+        Method = factor(
+            Method,
+            levels = c(
+                "scanpy-cell_ranger-N2000-BatchTrue",
+                "all",
+                "random-N500",
+                "scsegindex"
+            ),
+            labels = c(
+                "scanpy-CellRanger (N=2000, Batch=True)",
+                "All",
+                "Random (N=500)",
+                "scSEGIndex"
+            )
+        )
+    )
+
+baseline_ranges_plotting <- baseline_ranges |>
+    arrange(Type, Metric) |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Type = factor(
+            Type,
+            levels = names(type_names),
+            labels = type_names
+        ),
+        Metric = factor(
+            Metric,
+            levels = unique(Metric),
+            labels = metric_names[unique(Metric)]
+        )
+    )
+
+baselines_plot <- ggplot(baseline_ranges_plotting, aes(y = fct_rev(Dataset))) +
+    geom_linerange(
+        aes(xmin = Lower, xmax = Upper, colour = Type),
+        linewidth = 2, alpha = 0.5
+    ) +
+    geom_point(
+        data = baselines_plotting,
+        aes(x = MeanValue, shape = Method, fill = Method),
+        size = 1, colour = "white"
+    ) +
+    scale_x_continuous(
+        limits = c(0, 1),
+        breaks = c(0, 0.25, 0.5, 0.75, 1.0),
+        labels = c(0, 0.25, 0.50, 0.75, 1)
+    ) +
+    scale_shape_manual(
+        values = c(
+            "circle filled",
+            "diamond filled",
+            "square filled",
+            "triangle filled"
+        ),
+        name = "Baseline method"
+    ) +
+    scale_colour_brewer(palette = "Set1") +
+    scale_fill_brewer(palette = "Dark2") +
+    labs(
+        x = "Metric value (higher is better)",
+        fill = "Baseline method",
+        colour = "Metric type"
+    ) +
+    facet_wrap(~ Metric) +
+    theme_features() +
+    theme(
+        legend.position  = "bottom", 
+        legend.box       = "vertical",
+        legend.margin    = margin(0, 0, 0, 0),
+        legend.spacing.y = unit(0, "cm"),
+        axis.title.y     = element_blank(),
+    )
+
+baselines_plot
+```
+
+# Scaling and aggregation
+
+In this section we demonstrate the scaling and aggregation process using the baseline methods and theoretical "Good" and "Bad" methods.
+
+```{r scaling-aggregation}
+example_values <- baselines |>
+    filter(Dataset == "scIBPancreas") |>
+    rename(Value = MeanValue)
+
+good_values <- tibble::tribble(
+    ~ Metric,                ~ Value,
+    "iLISI",                   0.473,
+    "CMS",                     0.616,
+    "BatchPCR",                0.983,
+    "IsolatedLabelF1",         0.899,
+    "bNMI",                    0.855,
+    "IsolatedLabelASW",        0.602,
+    "ldfDiff",                 0.647,
+    "GraphConnectivity",       0.921,
+    "cLISI",                   0.969,
+    "mLISI",                   0.473,
+    "qLISI",                   0.419,
+    "labelDist",               0.759,
+    "cellDist",                0.944,
+    "F1-rarity",               0.970,
+    "F1-macro",                0.684,
+    "F1-micro",                0.944,
+    "unseenCellDist",          0.509,
+    "unseenLabelDist",         0.908,
+    "MILO",                    0.726
+) |>
+    mutate(
+        Dataset = "scIBPancreas",
+        Method = "Good"
+    ) |>
+    left_join(
+        select(baseline_ranges, Dataset, Metric, Type) |> distinct(),
+        by = c("Dataset", "Metric")
+    )
+
+bad_values <- tibble::tribble(
+    ~ Metric,               ~ Value, 
+    "iLISI",                  0.349, 
+    "CMS",                    0.282, 
+    "BatchPCR",               0.958,  
+    "IsolatedLabelF1",        0.385, 
+    "bNMI",                   0.447, 
+    "IsolatedLabelASW",       0.563, 
+    "ldfDiff",                0.526, 
+    "GraphConnectivity",      0.756, 
+    "cLISI",                  0.949, 
+    "mLISI",                  0.159, 
+    "qLISI",                  0.139, 
+    "labelDist",              0.586, 
+    "cellDist",               0.939, 
+    "F1-rarity",              0.552, 
+    "F1-macro",               0.378, 
+    "F1-micro",               0.667, 
+    "unseenCellDist",         0.010,     
+    "unseenLabelDist",        0.687, 
+    "MILO",                   0.030
+) |>
+    mutate(
+        Dataset = "scIBPancreas",
+        Method = "Bad"
+    ) |>
+    left_join(
+        select(baseline_ranges, Dataset, Metric, Type) |> distinct(),
+        by = c("Dataset", "Metric")
+    )
+
+example_values <- example_values |>
+    bind_rows(good_values, bad_values)
+
+example_values_plotting <- example_values |>
+    arrange(Type, Metric) |>
+    mutate(
+        Metric = factor(Metric, levels = unique(Metric)),
+        Method = factor(
+            Method,
+            levels = c(
+                "Good",
+                "scanpy-cell_ranger-N2000-BatchTrue",
+                "all",
+                "random-N500",
+                "scsegindex",
+                "Bad"
+            ),
+            labels = c(
+                '"Good"',
+                "scanpy-CellRanger\n(N=2000, Batch=True)",
+                "All",
+                "Random\n(N=500)",
+                "scSEGIndex",
+                '"Bad"'
+            )
+        )
+    )
+
+values_plot <- ggplot(
+    example_values_plotting,
+    aes(y = Method, x = Value, fill = Type, group = Metric)
+) +
+    geom_col(position = "dodge") +
+    geom_vline(xintercept = 0) +
+    scale_x_continuous(
+        limits = c(0, 1), expand = expansion(mult = c(0, 0.05))
+    ) +
+    scale_fill_brewer(palette = "Set1") +
+    facet_grid(Method ~ ., scales = "free_y") +
+    labs(
+        title = "Value",
+        x = "Value",
+        fill = "Metric type"
+    ) +
+    theme_features(base_size = 8) +
+    theme(
+        panel.border = element_blank(),
+        panel.grid.major.y = element_blank(), 
+        axis.title.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+example_scaled <- example_values |>
+    left_join(baseline_ranges, by = c("Dataset", "Metric", "Type")) |>
+    mutate(ScaledValue = (Value - Lower) / (Upper - Lower)) |>
+    arrange(Type, Metric) |>
+    mutate(
+        Metric = factor(Metric, levels = unique(Metric)),
+        Method = factor(
+            Method,
+            levels = c(
+                "Good",
+                "scanpy-cell_ranger-N2000-BatchTrue",
+                "all",
+                "random-N500",
+                "scsegindex",
+                "Bad"
+            ),
+            labels = c(
+                '"Good"',
+                "scanpy-CellRanger\n(N=2000, Batch=True)",
+                "All",
+                "Random\n(N=500)",
+                "scSEGIndex",
+                '"Bad"'
+            )
+        )
+    )
+
+scaled_plot <- ggplot(
+    example_scaled,
+    aes(y = Method, x = ScaledValue, fill = Type, group = Metric)
+) +
+    geom_col(position = "dodge") +
+    geom_vline(xintercept = 0) +
+    scale_x_continuous(
+        breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1.0),
+        expand = expansion(mult = c(0, 0.05))
+    ) +
+    scale_fill_brewer(palette = "Set1") +
+    facet_grid(Method ~ ., scales = "free_y") +
+    labs(
+        title = "Scaled value",
+        x = "Scaled value",
+        fill = "Metric type"
+    ) +
+    theme_features(base_size = 8) +
+    theme(
+        panel.border = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+example_means <- example_scaled |>
+    group_by(Method, Type) |>
+    summarise(TypeMean = mean(ScaledValue), .groups = "drop")
+
+means_plot <- ggplot(
+    example_means, aes(y = Method, x = TypeMean, fill = Type)
+) +
+    geom_col(position = "dodge") +
+    geom_vline(xintercept = 0) +
+    scale_x_continuous(
+        breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1.0),
+        expand = expansion(mult = c(0, 0.05))
+    ) +
+    scale_fill_brewer(palette = "Set1") +
+    facet_grid(Method ~ ., scales = "free_y") +
+    labs(
+        title = "Type mean value",
+        x = "Type mean value",
+        fill = "Metric type"
+    ) +
+    theme_features(base_size = 8) +
+    theme(
+        panel.border = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+example_overall <- example_means |>
+    pivot_wider(names_from = Type, values_from = TypeMean) |>
+    mutate(
+        Overall = 0.5 * (
+            ((1 / 2) * IntegrationBatch) +
+                ((1 / 2) * IntegrationBio)
+        ) +
+        0.5 * (
+            ((1 / 3) * Mapping) +
+                ((1 / 3) * Classification) +
+                ((1 / 3) * Unseen)
+        )
+    )
+
+overall_plot <- ggplot(example_overall, aes(y = Method, x = Overall)) +
+    geom_col(fill = "#f781bf") +
+    geom_vline(xintercept = 0) +
+    scale_x_continuous(
+        limits = c(0, 1),
+        breaks = c(-0.25, 0, 0.25, 0.5, 0.75, 1.0),
+        expand = expansion(mult = c(0, 0.05))
+    ) +
+    facet_grid(Method ~ ., scales = "free_y") +
+    labs(
+        title = "Overall",
+        x = "Overall score"
+    ) +
+    theme_features(base_size = 8) +
+    theme(
+        panel.border = element_blank(),
+        panel.grid.major.y = element_blank(),
+        panel.grid.minor.x = element_blank(),
+        axis.title.y = element_blank(),
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+aggregation_plot <- wrap_plots(
+    values_plot, scaled_plot, means_plot, overall_plot,
+    widths = c(1, 1, 1, 1),
+    nrow = 1,
+    guides = "collect"
+)
+
+aggregation_plot
+```
+
+# Integration variation
+
+When computing the baseline metric scores we completed each integration multiple times with different random seeds.
+Here we look at variation in metrics scores introduced by the integration methods.
+
+```{r integration-variation}
+variant_scores <- metrics |>
+    # Average over random seeds for the random baseline
+    mutate(
+        Method = if_else(
+            str_detect(Method, "random-N500"),
+            "random-N500",
+            Method)
+    ) |>
+    group_by(Dataset, Method, Integration, Metric, Type) |>
+    summarise(Value = mean(Value), .groups = "drop") |>
+    summarise_metrics(baseline_ranges) |>
+    mutate(
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Integration = case_when(
+            str_detect(Integration, "scVI") ~ "scVI",
+            str_detect(Integration, "scANVI") ~ "scANVI",
+            str_detect(Integration, "Symphony") ~ "Symphony",
+        ),
+        Method = factor(
+            Method,
+            levels = c(
+                "scanpy-cell_ranger-N2000-BatchTrue",
+                "all",
+                "random-N500",
+                "scsegindex"
+            ),
+            labels = c(
+                "scanpy-CellRanger\n(N=2000, Batch=True)",
+                "All",
+                "Random\n(N=500)",
+                "scSEGIndex"
+            )
+        )
+    )
+
+variant_means <- variant_scores |>
+    group_by(Integration, Dataset, Method) |>
+    summarise(Overall = mean(Overall), .groups = "drop")
+
+ggplot(variant_scores, aes(x = Overall, y = Method, colour = Method)) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = 1, colour = "blue") +
+    geom_point(position = position_jitter(width = 0.2, seed = 1), alpha = 0.5) +
+    geom_point(data = variant_means, shape = "|", size = 6) +
+    scale_x_continuous() +
+    facet_grid(Integration ~ Dataset) +
+    theme_features() +
+    theme(
+        legend.position = "none"
+    )
+```
+
+## ANOVA
+
+To confirm that variation due to the feature selection method is significant compared to the noise from integration runs we perform a one-way ANOVA test.
+
+> **NOTE:** `NA` values can occur when there is no variation within a group (i.e. a metric scores 0 for one set of features for all integration runs).
+
+### Metrics
+
+```{r anova-metrics}
+metrics_combined <- metrics |>
+    mutate(
+        Method = if_else(
+            str_detect(Method, "random-N500"),
+            "random-N500",
+            Method)
+    ) |>
+    group_by(Dataset, Method, Integration, Metric, Type) |>
+    summarise(Value = mean(Value), .groups = "drop") |>
+    mutate(
+        Seed = str_extract(Integration, "\\d"),
+        Integration = str_remove(Integration, "-\\d"),
+    )
+
+combinations <- metrics_combined |>
+    select(Dataset, Integration, Metric) |>
+    distinct()
+
+anova_results <- pmap_dfr(
+    combinations,
+    function(Dataset, Integration, Metric) {
+        .dataset <- Dataset
+        .integration <- Integration
+        .metric <- Metric
+        
+        test_data <- metrics_combined |>
+            filter(
+                Dataset == .dataset,
+                Integration == .integration,
+                Metric == .metric
+            )
+    
+        test_res <- oneway.test(Value ~ Method, data = test_data)
+        tibble(
+            Dataset = .dataset,
+            Integration = .integration,
+            Metric = .metric,
+            F = test_res$statistic,
+            PVal = test_res$p.value
+        )
+    }
+) |>
+    mutate(
+        FDR = p.adjust(PVal, method = "fdr"),
+        IsSig = FDR < 0.05,
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Metric = factor(
+            Metric,
+            levels = names(metric_names),
+            labels = metric_names
+        )
+    )
+
+ggplot(anova_results, aes(x = Metric, y = Integration, fill = IsSig)) +
+    geom_tile() +
+    facet_wrap(~ Dataset, ncol = 1) +
+    theme_minimal() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "bottom"
+    )
+```
+
+### Types
+
+```{r anova-types}
+metrics_combined_summarised <- metrics_combined |>
+    group_by(Integration, Seed) |>
+    group_split() |>
+    map_dfr(
+        summarise_metrics,
+        baseline_ranges = baseline_ranges,
+        .id = "Seed"
+    ) |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "TypeMean"
+    )
+
+combinations_types <- metrics_combined_summarised |>
+    select(Dataset, Integration, Type) |>
+    distinct()
+
+anova_results_types <- pmap_dfr(
+    combinations_types,
+    function(Dataset, Integration, Type) {
+        .dataset <- Dataset
+        .integration <- Integration
+        .type <- Type
+        
+        test_data <- metrics_combined_summarised |>
+            filter(
+                Dataset == .dataset,
+                Integration == .integration,
+                Type == .type
+            )
+    
+        test_res <- oneway.test(TypeMean ~ Method, data = test_data)
+        tibble(
+            Dataset = .dataset,
+            Integration = .integration,
+            Type = .type,
+            F = test_res$statistic,
+            PVal = test_res$p.value
+        )
+    }
+) |>
+    mutate(
+        FDR = p.adjust(PVal, method = "fdr"),
+        IsSig = FDR < 0.05,
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+        Type = factor(
+            Type,
+            levels = c(names(type_names), "Overall"),
+            labels = c(type_names, "Overall")
+        )
+    )
+
+ggplot(anova_results_types, aes(x = Type, y = Integration, fill = IsSig)) +
+    geom_tile() +
+    facet_wrap(~ Dataset, ncol = 1) +
+    theme_minimal() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1),
+        legend.position = "bottom"
+    )
+```
+
+# Output
+
+Save output files
+
+```{r output}
+write_tsv(
+    baseline_ranges, here::here("analysis", "output", "baseline-ranges.tsv")
+)
+
+save_figure_files(
+    baselines_plot +
+        theme_features_pub() +
+        theme(
+            legend.position  = "bottom", 
+            legend.box       = "vertical",
+            legend.margin    = margin(0, 0, 0, 0),
+            legend.spacing.y = unit(0, "cm"),
+            axis.title.y     = element_blank()
+        ),
+    here::here("analysis", "output", "baseline-ranges"),
+    height = 4.8
+)
+
+save_figure_files(
+    aggregation_plot,
+    here::here("analysis", "output", "aggregation"),
+    height = 2.6
+)
+```
+
+# Session info {.unnumbered}
+
+```{r session-info}
+sessioninfo::session_info()
+```
+
