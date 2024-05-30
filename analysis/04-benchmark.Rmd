@@ -1129,33 +1129,16 @@ cum_num_methods_plotting <- cum_num_methods |>
         )
     )
 
-labels <- data.frame(
-    Dataset = levels(cum_num_methods_plotting$Dataset)[[1]],
-    NumMethods = factor(c(5, 10, 15, 20, 25)),
-    Label = c("5", "10", "15", "20", "n methods >= 25")
-) |>
-    mutate(
-        CumFeatures = cum_num_methods_plotting |>
-            arrange(Dataset, NumMethods) |>
-            filter(Dataset == levels(cum_num_methods_plotting$Dataset)[[1]]) |>
-            pull(CumFeatures)
-    )
-
 num_methods_plot <- ggplot(
     cum_num_methods_plotting,
     aes(y = Dataset, x = CumFeatures, fill = factor(NumMethods))
 ) +
     geom_point(size = 1.5, shape = "circle filled") +
-    ggrepel::geom_text_repel(
-        data = labels,
-        aes(label = Label),
-        size = 2, vjust = 1.0, direction = "x", label.padding = 0.5,
-        seed = 1
-    ) +
-    scale_fill_viridis_d(option = "plasma", guide = "none") +
+    scale_fill_viridis_d(option = "plasma") +
     scale_x_log10(breaks = c(10, 100, 500, 1000, 5000, 10000)) +
     labs(
-        x = "Number of selected features (log scale)"
+        x = "Number of selected features (log scale)",
+        fill = "Number of\nmethods"
     ) +
     theme_features_pub() +
     theme(
@@ -1226,10 +1209,9 @@ num_selected_plot <- ggplot(
 overlaps_panel <- wrap_plots(
     mean_overlaps_plot,
     # dataset_overlaps_plot,
-    num_methods_plot, 
-    num_selected_plot,
+    wrap_plots(num_methods_plot, num_selected_plot, guides = "collect"),
     nrow = 1,
-    widths = c(1.2, 0.5, 0.5)
+    widths = c(1.0, 1.1)
 )
 
 # Batch aware difference heatmap
