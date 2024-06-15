@@ -1,0 +1,38 @@
+Metric	Name	Included
+AUPRC	AUPRC	FALSE
+Accuracy	Accuracy	FALSE
+F1-macro	F1 (Macro)	TRUE
+F1-micro	F1 (Micro)	TRUE
+F1-rarity	F1 (Rarity)	TRUE
+JaccardIndex-macro	Jaccard Index (Macro)	FALSE
+JaccardIndex-micro	Jaccard Index (Micro)	FALSE
+JaccardIndex-rarity	Jaccard Index (Rarity)	FALSE
+MCC	MCC	FALSE
+BatchPCR	Batch PCR	TRUE
+CMS	CMS	TRUE
+GraphConnectivity	Graph connectivity	TRUE
+Mixing	Mixing	FALSE
+batchASW	Batch ASW	FALSE
+iLISI	iLISI	TRUE
+kBET	kBET	FALSE
+ARI	ARI	FALSE
+CellCycle	Cell cycle	FALSE
+IsolatedLabelASW	Isolated label ASW	TRUE
+IsolatedLabelF1	Isolated label F1	TRUE
+LocalStructure	Local structure	FALSE
+NMI	NMI	FALSE
+bARI	bARI	FALSE
+bNMI	bNMI	TRUE
+cLISI	cLISI	TRUE
+labelASW	Label ASW	FALSE
+ldfDiff	ldfDiff	TRUE
+Reconstruction	Reconstruction	FALSE
+cellDist	Cell distance	TRUE
+kNNcorr	kNN correlation	FALSE
+labelDist	Label distance	TRUE
+mLISI	mLISI	TRUE
+qLISI	qLISI	TRUE
+MILO	Milo	TRUE
+Uncertainty	Uncertainty	FALSE
+unseenCellDist	Unseen cell distance	TRUE
+unseenLabelDist	Unseen label distance	TRUE
