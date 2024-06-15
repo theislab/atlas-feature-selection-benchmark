@@ -1274,6 +1274,39 @@ process METRIC_MILO {
         """
 }
 
+process METRIC_MILO_LABEL {
+    conda "envs/milopy.yml"
+
+    publishDir "$params.outdir/milo-label"
+
+    label "process_low"
+
+    memory { get_memory(reference.size(), "12.GB", task.attempt, "12.GB") }
+
+    input:
+        tuple val(dataset), val(method), val(integration), path(reference, stageAs: "reference.h5ad"), path(query, stageAs: "query.h5ad"), path(query_dir), path(reference_exprs), path(query_exprs)
+        path(functions)
+
+    output:
+        tuple val(dataset), val(method), val(integration), path("${dataset}-${method}-${integration}-MILO-label.tsv")
+
+    script:
+        """
+        metric-milo-label.py \\
+            --dataset "${dataset}" \\
+            --method "${method}" \\
+            --integration "${integration}" \\
+            --reference reference.h5ad \\
+            --out-file "${dataset}-${method}-${integration}-MILO-label.tsv" \\
+            query.h5ad
+        """
+
+    stub:
+        """
+        touch "${dataset}-${method}-${integration}-MILO-label.tsv"
+        """
+}
+
 process METRIC_UNCERTAINTY {
     conda "envs/sklearn.yml"
 
@@ -1486,6 +1519,10 @@ workflow METRICS {
         milo_ch = metric_names.contains("MILO") ?
             METRIC_MILO(query_ch, py_metrics_funcs) :
             Channel.empty()
+        milo_label_ch = metric_names.contains("MILOLabel") ?
+            METRIC_MILO_LABEL(query_ch, py_metrics_funcs) :
+            Channel.empty()
+
         uncertainty_ch = metric_names.contains("uncertainty") ?
             METRIC_UNCERTAINTY(labels_ch, py_metrics_funcs) :
             Channel.empty()
