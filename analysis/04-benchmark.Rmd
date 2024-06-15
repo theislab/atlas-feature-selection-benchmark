@@ -151,38 +151,13 @@ ggplot(metrics_summary, aes(x = Overall, y = Method, colour = Integration)) +
 ## Summarised
 
 ```{r overall-summarised}
-methods_meta <- tribble(
-    ~ Method,                              ~ Name,                                    ~ IsBaseline,
-    "all",                                 "All",                                     TRUE,
-    "anticor",                             "Anticor",                                 FALSE,
-    "Brennecke",                           "Brennecke",                               FALSE,
-    "dubstepr",                            "DUBSstepR",                               FALSE,
-    "hotspot",                             "Hotspot",                                 FALSE,
-    "nbumi",                               "NBumi",                                   FALSE,
-    "osca",                                "OSCA",                                    FALSE,
-    "random-N500",                         "Random (N=500)",                          TRUE,
-    "random-N2000",                        "Random (N=2000)",                         FALSE,
-    "scanpy-cell_ranger-N2000-BatchFalse", "scanpy-CellRanger (N=2000, Batch=False)", FALSE,
-    "scanpy-cell_ranger-N2000-BatchTrue",  "scanpy-CellRanger (N=2000, Batch=True)",  TRUE,
-    "scanpy-pearson-N2000-BatchFalse",     "scanpy-Pearson (N=2000, Batch=False)",    FALSE,
-    "scanpy-pearson-N2000-BatchTrue",      "scanpy-Pearson (N=2000, Batch=True)",     FALSE,
-    "scanpy-seurat_v3-N2000-BatchFalse",   "scanpy-SeuratV3 (N=2000, Batch=False)",   FALSE,
-    "scanpy-seurat_v3-N2000-BatchTrue",    "scanpy-SeuratV3 (N=2000, Batch=True)",    FALSE,
-    "scanpy-seurat-N2000-BatchFalse",      "scanpy-Seurat (N=2000, Batch=False)",     FALSE,
-    "scanpy-seurat-N2000-BatchTrue",       "scanpy-Seurat (N=2000, Batch=True)",      FALSE,
-    "scPNMF",                              "scPNMF",                                  FALSE,
-    "scry",                                "scry",                                    FALSE,
-    "scsegindex",                          "scSEGIndex",                              TRUE,
-    "seurat-disp-N2000",                   "Seurat-Dispersion (N=2000)",              FALSE,
-    "seurat-mvp-N2000",                    "Seurat-MVP",                              FALSE,
-    "seurat-sct-N2000",                    "Seurat-scTransform (N=2000)",             FALSE,
-    "seurat-vst-N2000",                    "Seurat-VST (N=2000)",                     FALSE,
-    "singleCellHaystack",                  "singleCellHaystack",                      FALSE,
-    "statistic-mean-N2000",                "statistic-Mean (N=2000)",                 FALSE,
-    "statistic-variance-N2000",            "statistic-Variance (N=2000)",             FALSE,
-    "TFs",                                 "Transcription factors",                   FALSE,
-    "triku",                               "triku",                                   FALSE,
-    "wilcoxon",                            "Wilcoxon",                                FALSE
+methods_meta <- read_tsv(
+    here::here("data", "methods-metadata.tsv"),
+    col_types = cols(
+        Method     = col_character(),
+        Name       = col_character(),
+        IsBaseline = col_logical()
+    )
 )
 method_names <- methods_meta$Name
 names(method_names) <- methods_meta$Method
@@ -1154,33 +1129,16 @@ cum_num_methods_plotting <- cum_num_methods |>
         )
     )
 
-labels <- data.frame(
-    Dataset = levels(cum_num_methods_plotting$Dataset)[[1]],
-    NumMethods = factor(c(5, 10, 15, 20, 25)),
-    Label = c("5", "10", "15", "20", "n methods >= 25")
-) |>
-    mutate(
-        CumFeatures = cum_num_methods_plotting |>
-            arrange(Dataset, NumMethods) |>
-            filter(Dataset == levels(cum_num_methods_plotting$Dataset)[[1]]) |>
-            pull(CumFeatures)
-    )
-
 num_methods_plot <- ggplot(
     cum_num_methods_plotting,
     aes(y = Dataset, x = CumFeatures, fill = factor(NumMethods))
 ) +
     geom_point(size = 1.5, shape = "circle filled") +
-    ggrepel::geom_text_repel(
-        data = labels,
-        aes(label = Label),
-        size = 2, vjust = 1.0, direction = "x", label.padding = 0.5,
-        seed = 1
-    ) +
-    scale_fill_viridis_d(option = "plasma", guide = "none") +
+    scale_fill_viridis_d(option = "plasma") +
     scale_x_log10(breaks = c(10, 100, 500, 1000, 5000, 10000)) +
     labs(
-        x = "Number of selected features (log scale)"
+        x = "Number of selected features (log scale)",
+        fill = "Number of\nmethods"
     ) +
     theme_features_pub() +
     theme(
@@ -1251,10 +1209,9 @@ num_selected_plot <- ggplot(
 overlaps_panel <- wrap_plots(
     mean_overlaps_plot,
     # dataset_overlaps_plot,
-    num_methods_plot, 
-    num_selected_plot,
+    wrap_plots(num_methods_plot, num_selected_plot, guides = "collect"),
     nrow = 1,
-    widths = c(1.2, 0.5, 0.5)
+    widths = c(1.0, 1.1)
 )
 
 # Batch aware difference heatmap

@@ -862,7 +862,7 @@ save_figure_files(
             axis.title.y     = element_blank()
         ),
     here::here("analysis", "output", "baseline-ranges"),
-    height = 4.8
+    height = 5.0
 )
 
 save_figure_files(

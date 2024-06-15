@@ -1,0 +1,722 @@
+---
+title: "HLCA lineages"
+author: "Luke Zappia"
+date: "`r Sys.Date()`"
+output:
+  html_document:
+    toc: true
+    toc_depth: 2
+    toc_float: true
+    number_sections: true
+    code_folding: hide
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(
+    echo = TRUE,
+    fig.width = 10,
+    fig.height = 8,
+    fig.align = "center"
+)
+```
+
+```{r libraries}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(patchwork)
+})
+```
+
+```{r source}
+source(here::here("analysis", "R", "plotting.R"))
+source(here::here("analysis", "R", "summarisation.R"))
+```
+
+# Introduction {.unnumbered}
+
+In this document we are going to perform analysis of three versions of the HLCA dataset.
+
+# Overview
+
+First let's get an overview of the metric scores.
+
+```{r load}
+metrics <- read_tsv(
+    here::here("data", "benchmark.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Value    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_meta <- read_tsv(
+    here::here("data", "metrics-metadata.tsv"),
+    col_types = cols(
+        Metric   = col_character(),
+        Name     = col_character(),
+        Included = col_logical()
+    )
+)
+include <- metrics_meta$Metric[metrics_meta$Included]
+exclude <- metrics_meta$Metric[!metrics_meta$Included]
+
+metric_names <- metrics_meta$Name
+names(metric_names) <- metrics_meta$Metric
+
+datasets_meta <- read_tsv(
+    here::here("data", "datasets-metadata.tsv"),
+    col_types = cols(
+        Dataset  = col_character(),
+        Name     = col_character(),
+    )
+)
+
+dataset_names <- datasets_meta$Name
+names(dataset_names) <- datasets_meta$Dataset
+
+type_names <- c(
+    "IntegrationBatch" = "Integration (Batch)",
+    "IntegrationBio" = "Integration (Bio)",
+    "Mapping" = "Mapping",
+    "Classification" = "Classification",
+    "Unseen" = "Unseen populations"
+)
+
+metrics
+```
+
+## Counts
+
+Check the number of values we have for each metric.
+All metrics should have the same number (known missing values are checked below).
+
+```{r counts}
+plot_metric_counts(metrics)
+```
+
+## Missing values
+
+We expect to have missing values for the `Reconstruction` metric which can't be calculated for the `Symphony` integration and the `CellCycle` metric which can't be calculated for simulated datasets.
+Values should be complete for other metrics.
+
+```{r missing}
+plot_metric_missing(metrics)
+```
+
+# Summarise
+
+Let's compute the summarised metrics using the baseline ranges.
+
+```{r summarise}
+baselines <- read_tsv(
+    here::here("analysis", "output", "baseline-ranges.tsv"),
+    col_types = cols(
+        .default = col_character(),
+        Lower    = col_double(),
+        Upper    = col_double(),
+        Range    = col_double()
+    )
+) |>
+    mutate(
+        Type = if_else(Metric == "GraphConnectivity", "IntegrationBio", Type)
+    )
+
+metrics_summary <- metrics |>
+    # Calculate average scores for random methods
+    mutate(
+        Method = str_remove(Method, "-S[0-9]+$"),
+    ) |>
+    group_by(Dataset, Method, Integration, Type, Metric) |>
+    summarise(Value = mean(Value), .groups = "drop") |>
+    # Scale and summarise
+    summarise_metrics(baselines)
+
+metrics_summary
+```
+
+## Filter
+
+For this analysis we are only interested in the HLCA datasets so we will filter to keep only those datasets and only the scVI integration.
+
+```{r filter}
+metrics_summary_all <- metrics_summary
+
+metrics_summary <- metrics_summary |>
+    filter(
+        Dataset %in% c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+        Integration == "scVI-1"
+    )
+```
+
+# Ranks
+
+Let's compute the method ranks for each dataset and compare them.
+
+```{r ranks}
+metrics_ranks <- metrics_summary |>
+    pivot_longer(
+        Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(
+        Rank = rank(Value)
+    )
+
+ggplot(metrics_ranks, aes(x = Dataset, y = Method, fill = Rank)) +
+    geom_tile() +
+    facet_wrap(~ Type, nrow = 1) +
+    scale_fill_viridis_c() +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+```
+
+# Overlap
+
+Here we compare the overlap in selected features between the dataset subsets.
+
+```{r overlaps}
+feature_files <- fs::dir_ls(
+    here::here("data", "selected-features"),
+    glob = "*HLCA*.tsv"
+)
+
+selected_list <- map(feature_files, function(.file) {
+    read_tsv(
+        .file,
+        col_types = cols(
+            .default = col_logical(),
+            Feature = col_character()
+        )
+    ) |>
+        column_to_rownames("Feature") |>
+        as.matrix()
+})
+names(selected_list) <- fs::path_ext_remove(fs::path_file(names(selected_list)))
+
+datasets_grid <- expand_grid(
+    dataset1 = factor(names(selected_list)),
+    dataset2 = factor(names(selected_list))
+) |>
+    filter(as.numeric(dataset1) < as.numeric(dataset2))
+
+overlaps <- map_dfr(colnames(selected_list[[1]]), function(.method) {
+    pmap_dfr(datasets_grid, function(dataset1, dataset2) {
+        
+        selected1 <- selected_list[[dataset1]][, .method]
+        selected2 <- selected_list[[dataset2]][, .method]
+        
+        selected_names1 <- rownames(selected_list[[dataset1]])[selected1]
+        selected_names2 <- rownames(selected_list[[dataset2]])[selected2]
+        
+        both <- length(intersect(selected_names1, selected_names2))
+        either <- length(union(selected_names1, selected_names2))
+        
+        tibble(
+            Method = .method,
+            Dataset1 = dataset1,
+            Dataset2 = dataset2,
+            Both = both,
+            Either = either,
+            Jaccard = both / either,
+        )
+    })
+})
+
+overlaps |>
+    filter(str_detect(Method, "random", negate = TRUE)) |>
+    mutate(Combination = paste(Dataset1, Dataset2, sep = " - ")) |>
+    ggplot(aes(x = Combination, y = Method, fill = Jaccard)) +
+        geom_tile() +
+        scale_fill_viridis_c() +
+        theme_features() +
+        theme(
+            axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+        )
+```
+
+# Markers overlap
+
+Now we will look at the overlap between selected features and marker gene sets.
+
+```{r markers-overlap}
+marker_overlaps <- read_tsv(
+    here::here("data", "hlca-marker-overlaps.tsv"),
+    col_types = cols(
+        method = col_character(),
+        dataset = col_character(),
+        cell_type = col_character(),
+        lineage = col_character(),
+        score = col_double()
+    )
+) |>
+    rename(
+        Method = method,
+        Dataset = dataset,
+        Label = cell_type,
+        Lineage = lineage,
+        Prop = score
+    )
+
+marker_overlap_means <- marker_overlaps |>
+    group_by(Method, Dataset, Lineage) |>
+    summarise(
+        MeanProp = mean(Prop),
+        SDProp = sd(Prop),
+        .groups = "drop"
+    )
+
+ggplot(
+    filter(marker_overlap_means, str_detect(Method, "random", negate = TRUE)),
+    aes(x = Dataset, y = Method, colour = MeanProp, size = SDProp)
+) +
+    geom_point(shape = "square") +
+    facet_wrap(~ Lineage, nrow = 1) +
+    scale_colour_viridis_c() +
+    scale_size_continuous(trans = "reverse") +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+```
+
+# Label Milo
+
+To directly compare the different datasets we consider Milo scores calculated for each unseen label.
+
+## Scores
+
+Milo scores for each unseen label.
+
+```{r label-Milo}
+label_milo <- read_tsv(
+    here::here("data", "hlca-label-MILO.tsv"),
+    col_types = cols(
+        Method = col_character(),
+        Dataset = col_character(),
+        Integration = col_character(),
+        Type = col_character(),
+        Metric = col_character(),
+        Label = col_character(),
+        Value = col_double()
+    )
+) |>
+    filter(Integration == "scVI-1") |>
+    # Calculate average scores for random methods
+    mutate(
+        Method = str_remove(Method, "-S[0-9]+$"),
+    ) |>
+    group_by(Dataset, Method, Integration, Type, Metric, Label) |>
+    summarise(Value = mean(Value), .groups = "drop")
+
+ggplot(label_milo, aes(x = Label, y = Method, fill = Value)) +
+    geom_tile() +
+    facet_wrap(~ Dataset, nrow = 1) +
+    scale_fill_viridis_c() +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+```
+
+## Differences
+
+Differences in Milo scores compared to full dataset.
+
+```{r label-Milo-diff}
+label_milo_diff <- label_milo |>
+    pivot_wider(names_from = Dataset, values_from = Value) |>
+    mutate(
+        EpithelialDiff = HLCAEpithelial - HLCA,
+        ImmuneDiff = HLCAImmune - HLCA
+    ) |>
+    select(
+        -HLCA,
+        -HLCAEpithelial,
+        -HLCAImmune
+    ) |>
+    pivot_longer(
+        EpithelialDiff:ImmuneDiff,
+        names_to = "Dataset",
+        values_to = "Difference"
+    ) |>
+    filter(!is.na(Difference))
+
+ggplot(label_milo_diff, aes(x = Label, y = Method, fill = Difference)) +
+    geom_tile() +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1)
+    ) +
+    facet_wrap(~ Dataset, nrow = 1) +
+    theme_features() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5)
+    )
+```
+
+# Figures
+
+Final figures for the lineages analysis.
+
+```{r figure}
+type_names <- c(
+    "IntegrationBatch" = "Integration (Batch)",
+    "IntegrationBio" = "Integration (Bio)",
+    "Mapping" = "Mapping",
+    "Classification" = "Classification",
+    "Unseen" = "Unseen populations"
+)
+
+types_palette <- c("#f781bf", RColorBrewer::brewer.pal(5, "Set1"))
+
+methods_meta <- read_tsv(
+    here::here("data", "methods-metadata.tsv"),
+    col_types = cols(
+        Method     = col_character(),
+        Name       = col_character(),
+        IsBaseline = col_logical()
+    )
+)
+method_names <- methods_meta$Name
+names(method_names) <- methods_meta$Method
+
+methods_order <- metrics_summary_all |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Method, Type) |>
+    summarise(Value = mean(Value), .groups = "drop") |>
+    filter(Type == "Overall") |>
+    arrange(Value) |>
+    pull(Method)
+
+metrics_ranks_plotting <- metrics_ranks |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", str_replace(type_names, " ", "\n"))
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        )
+    )
+
+ranks_plot <- ggplot(
+    metrics_ranks_plotting,
+    aes(
+        x = Dataset, y = Method, fill = Type,
+        alpha = length(unique(Method)) -  Rank)
+) +
+    geom_tile() +
+    facet_wrap(~ Type, nrow = 1) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    scale_fill_manual(values = types_palette, guide = "none") +
+    scale_alpha_continuous(
+        limits = c(length(unique(metrics_ranks_plotting$Method)), 1),
+        breaks = c(0, 5, 10, 15, 20, 25, 30),
+        range = c(0.1, 1.0),
+        trans = "reverse"
+    ) +
+    labs(
+        title = "Method ranks for HLCA subsets",
+        alpha = "Rank"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.grid.major = element_blank(),
+    )
+
+overlaps_plotting <- overlaps |>
+    filter(str_detect(Method, "random", negate = TRUE)) |>
+    mutate(
+        Method = Method |>
+            str_replace_all("_", "-") |>
+            str_replace("seurat-v3", "seurat_v3") |>
+            str_replace("cell-ranger", "cell_ranger") |>
+            factor(
+                levels = methods_order,
+                labels = method_names[methods_order]
+            ),
+        Dataset1 = factor(
+            Dataset1,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        ),
+        Dataset2 = factor(
+            Dataset2,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        )
+    ) |>
+    mutate(
+        Combination = paste(Dataset1, Dataset2, sep = " vs "),
+        Combination = factor(
+            Combination,
+            levels = c(
+                "Full vs Immune",
+                "Full vs Epithelial",
+                "Epithelial vs Immune"
+            )
+        )
+    )
+    
+overlaps_plot <- ggplot(
+    overlaps_plotting, aes(x = Combination, y = Method, fill = Jaccard)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    labs(
+        title = "Selected\nfeatures",
+        fill = "Jaccard index"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        panel.grid = element_blank()
+    )
+
+marker_overlap_means_plotting <- marker_overlap_means |>
+    filter(
+        Method != "all-features",
+        str_detect(Method, "random", negate = TRUE)
+    ) |>
+    mutate(
+        Method = Method |>
+            str_replace_all("_", "-") |>
+            str_replace("seurat-v3", "seurat_v3") |>
+            str_replace("cell-ranger", "cell_ranger") |>
+            factor(
+                levels = methods_order,
+                labels = method_names[methods_order]
+            ),
+        Dataset = factor(
+            Dataset,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        )
+    )
+
+markers_overlap_plot <- ggplot(
+    marker_overlap_means_plotting,
+    aes(x = Dataset, y = Method, colour = MeanProp, size = SDProp)
+) +
+    geom_point(shape = "square") +
+    facet_wrap(~ Lineage, nrow = 1) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_viridis_c() +
+        scale_size_continuous(
+        trans = "reverse",
+        limits = c(max(marker_overlap_means_plotting$SDProp), 0),
+        range = c(0.1, 2.5)
+    ) +
+    labs(
+        title = "Overlap with marker gene sets",
+        colour = "Mean proportion of markers",
+        size = "SD proportion of markers"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank()
+    )
+
+top_panel <- wrap_plots(
+    ranks_plot,
+    overlaps_plot,
+    markers_overlap_plot,
+    nrow = 1,
+    widths = c(1, 0.1, 0.6),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+labels_clust <- label_milo |>
+    filter(Dataset == "HLCA") |>
+    select(Method, Label, Value) |>
+    pivot_wider(names_from = Label, values_from = Value) |>
+    column_to_rownames("Method") |>
+    as.matrix() |>
+    t() |>
+    dist() |>
+    hclust()
+
+# Arrange labels by lineage then clustering order
+labels_order <- label_milo |>
+    mutate(
+        Lineage = case_when(
+            Label %in%
+                (filter(label_milo, Dataset == "HLCAImmune") |>
+                pull(Label) |> unique()) ~
+                "Immune",
+            Label %in%
+                (filter(label_milo, Dataset == "HLCAEpithelial") |>
+                pull(Label) |> unique()) ~
+                "Epithelial",
+            TRUE ~ "Other"
+        ),
+        Lineage = factor(
+            Lineage,
+            levels = c("Immune", "Epithelial", "Other")
+        ),
+        Label = factor(
+            Label,
+            levels = labels_clust$labels[labels_clust$order]
+        )
+    ) |>
+    filter(Dataset == "HLCA") |>
+    arrange(Lineage, Label) |>
+    pull(Label) |>
+    as.character() |>
+    unique()
+
+label_milo_plotting <- label_milo |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        ),
+        Label = factor(
+            Label,
+            levels = labels_order
+        )
+    )
+
+milo_plot <- ggplot(
+    label_milo_plotting,
+    aes(x = Label, y = Method, fill = Value)
+) +
+    geom_tile() +
+    facet_grid(. ~ Dataset, scales = "free_x", space = "free_x") +
+    scale_fill_viridis_c(option = "magma") +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    labs(
+        title = "Unssen cell label MILO scores",
+        fill = "Milo score"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.grid = element_blank()
+    )
+
+label_milo_diff_plotting <- label_milo_diff |>
+    mutate(
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = c("ImmuneDiff", "EpithelialDiff"),
+            labels = c("Immune", "Epithelial")
+        ),
+        Label = factor(
+            Label,
+            levels = labels_order
+        )
+    )
+
+milo_diff_plot <- ggplot(
+    label_milo_diff_plotting,
+    aes(x = Label, y = Method, fill = Difference)
+) +
+    geom_tile() +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1)
+    ) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    facet_grid(. ~ Dataset, scales = "free_x", space = "free_x") +
+    labs(
+        title = "Difference in scores"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank()
+    )
+
+milo_panel <- wrap_plots(
+    milo_plot,
+    milo_diff_plot,
+    nrow = 1,
+    widths = c(1, 0.4),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+lineages_figure <- wrap_plots(
+    top_panel,
+    milo_panel,
+    heights = c(1.0, 0.9),
+    nrow = 2
+)
+
+lineages_figure
+```
+
+# Output
+
+Save output files
+
+```{r output}
+save_figure_files(
+    lineages_figure,
+    here::here("analysis", "output", "lineages"),
+    height = 11
+)
+```
+
+# Session info {.unnumbered}
+
+```{r session-info}
+sessioninfo::session_info()
+```

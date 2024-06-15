@@ -1,0 +1,11 @@
+Dataset	Name	Features	ReferenceCells	ReferenceBatches	ReferenceLabels	QueryCells	QueryBatches	UnseenLabels
+fetalLiver	Fetal liver	26686	62384	11	23	26449	3	4
+HLCA	HLCA	27987	314573	9	47	251400	5	14
+HLCAEpithelial	HLCA (Epithelial)	27673	118374	8	17	162875	5	6
+HLCAImmune	HLCA (immune)	26618	155385	7	16	52795	2	4
+humanEndoderm	Human endoderm	27855	100580	10	21	44784	4	5
+neurips	NeurIPS	13953	70061	9	42	16715	3	2
+reedBreast	Reed breast	33691	337339	24	32	197649	17	7
+scEiaD	scEiaD	19560	360270	69	41	48496	18	6
+scIBPancreas	scIB pancreas	18319	12731	7	12	3243	2	1
+splat	splat	9984	30041	4	7	69936	2	3
