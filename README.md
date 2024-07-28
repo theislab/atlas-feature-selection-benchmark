@@ -21,3 +21,7 @@ For more information please refer to the documentation on the [wiki](https://git
 * `nextflow.config` - Main **Nextflow** config file
 * `README.md` - This README
 * `style_bin.sh` - A script for styling the files in `bin/`
+
+## Data files
+
+Data files for this project are available from [FigShare](https://figshare.com/projects/Benchmarking_feature_selection_for_scRNA-seq_integration/214819).
