@@ -542,6 +542,80 @@ summary_plot <- wrap_plots(
 summary_plot
 ```
 
+# Supplementary
+
+Extended figures for supplementary materials.
+
+## Number of features by dataset
+
+```{r supplementary-datasets, fig.width = 8, out.width = "100%"}
+dataset_features_plot <- ggplot(
+    mutate(metrics_summary_plotting, Dataset = str_replace(Dataset, "\n", " "))
+) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = StandardValue, y = Dataset),
+        size = 0.5, alpha = 0.3
+    ) +
+    geom_point(
+        data = mutate(dataset_means, Dataset = str_replace(Dataset, "\n", " ")),
+        aes(x = StandardValue, y = Dataset, fill = StandardValue ),
+        shape = "circle filled", size = 2
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    facet_grid(SelFeatures ~ Type, scales = "free_y", space = "free_y") +
+    labs(
+        title = "Standardised values by dataset",
+        x = "Standardised value",
+        fill = "Mean feature\ncorrelation"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+    )
+
+dataset_features_plot
+```
+
+## Number of features by method
+
+```{r supplementary-methods, fig.width = 8, out.width = "100%"}
+method_features_plot <- ggplot(metrics_summary_plotting) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = StandardValue, y = Method),
+        size = 0.5, alpha = 0.3
+    ) +
+    geom_point(
+        data = method_means,
+        aes(x = StandardValue, y = Method, fill = StandardValue ),
+        shape = "circle filled", size = 2
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    facet_grid(SelFeatures ~ Type, scales = "free_y", space = "free_y") +
+    labs(
+        title = "Standardised values by method",
+        x = "Standardised value",
+        fill = "Mean feature\ncorrelation"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+    )
+
+method_features_plot
+```
+
 # Output
 
 Save output files
@@ -551,6 +625,18 @@ save_figure_files(
     summary_plot,
     here::here("analysis", "output", "num-features"),
     height = 5.5
+)
+
+save_figure_files(
+    dataset_features_plot,
+    here::here("analysis", "output", "dataset-num-features"),
+    height = 8
+)
+
+save_figure_files(
+    method_features_plot,
+    here::here("analysis", "output", "method-num-features"),
+    height = 8
 )
 ```
 
