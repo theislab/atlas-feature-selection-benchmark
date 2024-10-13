@@ -703,6 +703,56 @@ lineages_figure <- wrap_plots(
 lineages_figure
 ```
 
+# Supplementary
+
+Extended figures for supplementary materials.
+
+## Marker overlaps
+
+```{r supplementary-overlaps, fig.height = 10, out.width = "100%"}
+marker_overlaps_plotting <- marker_overlaps |>
+    filter(
+        Method != "all-features",
+        str_detect(Method, "random", negate = TRUE)
+    ) |>
+    mutate(
+        Method = Method |>
+            str_replace_all("_", "-") |>
+            str_replace("seurat-v3", "seurat_v3") |>
+            str_replace("cell-ranger", "cell_ranger") |>
+            factor(
+                levels = methods_order,
+                labels = method_names[methods_order]
+            ),
+        Dataset = factor(
+            Dataset,
+            levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
+            labels = c("Full", "Immune", "Epithelial")
+        )
+    )
+ 
+markers_overlap_plot <- ggplot(marker_overlaps_plotting) +
+    geom_tile(aes(x = Label, y = Method, fill = Prop)) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    facet_grid(Dataset ~ Lineage, scales = "free_x", space = "free_x") +
+    labs(
+        title = "Overlap with marker gene sets by lineage",
+        fill = "Proportion of marker genes selected"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid = element_blank(),
+        panel.spacing.x = unit(0, "cm")
+    )
+
+markers_overlap_plot
+```
+
 # Output
 
 Save output files
@@ -712,6 +762,12 @@ save_figure_files(
     lineages_figure,
     here::here("analysis", "output", "lineages"),
     height = 11
+)
+
+save_figure_files(
+    markers_overlap_plot,
+    here::here("analysis", "output", "markers-overlap"),
+    height = 10
 )
 ```
 

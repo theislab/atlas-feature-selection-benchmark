@@ -1580,7 +1580,6 @@ ranks_plot <- ggplot(metric_ranks) +
 ranks_plot
 ```
 
-
 ## Selected feature overlap
 
 ```{r supplementary-overlaps, fig.height = 12, out.width = "100%"}
