@@ -1636,6 +1636,258 @@ dataset_overlaps_plot <- ggplot(overlaps_all_plotting) +
 dataset_overlaps_plot
 ```
 
+## Integration scores
+
+```{r supplementary-integration-scores, fig.height = 9, out.width = "100%"}
+integration_summary_long <- integration_summary |>
+    pivot_longer(
+        cols = scVI:Symphony,
+        names_to = "Integration",
+        values_to = "Value"
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_scores_all_plot <- ggplot(integration_summary_long) +
+    annotate(
+        "rect",
+        xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf,
+        fill = "red", alpha = 0.1
+    ) +
+    annotate(
+        "rect",
+        xmin = 1, xmax = Inf, ymin = -Inf, ymax = Inf,
+        fill = "blue", alpha = 0.1
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = 1, colour = "blue") +
+    ggforce::geom_sina(
+        aes(x = Value, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_summary_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    scale_fill_viridis_c(option = "magma") +
+    scale_x_continuous(limits = c(-3, 3), breaks = -3:3) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Metric summary scores by integration",
+        x = "Metric type summary score",
+        fill = "Mean score",
+        caption = paste(
+            "Note:", sum(abs(integration_summary_long$Value) > 3),
+            "values outside the range [-3, 3] are not shown"
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_scores_all_plot
+```
+
+## Integration scores differences
+
+```{r supplementary-integration-scores-diffs, fig.height = 6, out.width = "100%"}
+integration_diffs_long <- integration_diffs |>
+    select(-scVI, -scANVI, -Symphony) |>
+    pivot_longer(
+        cols = scANVIDiff:SymphonyDiff,
+        names_to = "Integration",
+        values_to = "Difference"
+    ) |>
+    mutate(
+        Integration = str_remove(Integration, "Diff")
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_diffs_all_plot <- ggplot(integration_diffs_long) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = Difference, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_diff_means_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green"
+    ) +
+    scale_x_continuous(limits = c(-3, 3), breaks = -3:3) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Difference in metric summary scores by integration",
+        x = "Difference in metric type summary score",
+        fill = "Mean difference",
+        caption = paste(
+            "Note:", sum(abs(integration_diffs_long$Difference) > 3),
+            "values outside the range [-3, 3] are not shown"
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_diffs_all_plot
+```
+
+## Integration ranks
+
+```{r supplementary-integration-ranks, fig.height = 9, out.width = "100%"}
+integration_ranks_plotting <- integration_ranks |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI-1", "scANVI-1", "Symphony-1"),
+            labels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_ranks_all_plot <- ggplot(integration_ranks_plotting) +
+    ggforce::geom_sina(
+        aes(
+            x = length(unique(integration_ranks$Method)) - Rank + 1,
+            y = Method
+        ),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_ranks_means_plotting,
+        aes(
+            x = length(unique(integration_ranks$Method)) - MeanRank + 1,
+            y = Method,
+            fill = MeanRank
+        ),
+        shape = "circle filled", size = 1.5
+    ) +
+    scale_fill_viridis_c() +
+    scale_x_reverse(
+        limits = c(length(unique(integration_ranks$Method)) + 1, 0),
+        breaks = c(1, 10, 20, 30)
+    ) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Metric summary score ranks by integration",
+        x = "Metric type summary score rank",
+        fill = "Mean rank",
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_ranks_all_plot
+```
+
+## Integration ranks differences
+
+```{r supplementary-integration-ranks-diffs, fig.height = 6, out.width = "100%"}
+integration_rank_diffs_long <- integration_rank_diffs |>
+    select(-scVI, -scANVI, -Symphony) |>
+    pivot_longer(
+        cols = scANVIDiff:SymphonyDiff,
+        names_to = "Integration",
+        values_to = "Difference"
+    ) |>
+    mutate(
+        Integration = str_remove(Integration, "Diff")
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_rank_diffs_all_plot <- ggplot(integration_rank_diffs_long) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = Difference, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_ranks_diff_means_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Tropic",
+        rev = TRUE
+    ) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Difference in metric summary score ranks by integration",
+        x = "Difference in metric type summary score rank",
+        fill = "Mean difference",
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_rank_diffs_all_plot
+```
+
 # Output
 
 Save output files
@@ -1662,6 +1914,30 @@ save_figure_files(
 save_figure_files(
     ranks_plot,
     here::here("analysis", "output", "metric-ranks"),
+    height = 6
+)
+
+save_figure_files(
+    integration_scores_all_plot,
+    here::here("analysis", "output", "integration-scores"),
+    height = 9
+)
+
+save_figure_files(
+    integration_diffs_all_plot,
+    here::here("analysis", "output", "integration-score-diffs"),
+    height = 6
+)
+
+save_figure_files(
+    integration_ranks_all_plot,
+    here::here("analysis", "output", "integration-ranks"),
+    height = 9
+)
+
+save_figure_files(
+    integration_rank_diffs_all_plot,
+    here::here("analysis", "output", "integration-rank-diffs"),
     height = 6
 )
 ```
