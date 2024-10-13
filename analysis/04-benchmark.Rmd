@@ -1516,6 +1516,66 @@ integration_figure <- wrap_plots(
 integration_figure
 ```
 
+# Supplementary
+
+Extended figures for supplementary materials.
+
+## Selected feature overlap
+
+```{r supplementary-overlaps, fig.height = 12, out.width = "100%"}
+overlaps_all_plotting <- overlaps |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    )
+
+dataset_overlaps_plot <- ggplot(overlaps_all_plotting) +
+    geom_tile(aes(x = Method2, y = Method1, fill = Jaccard)) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    coord_fixed() +
+    facet_wrap(~ Dataset, nrow = 4) +
+    labs(
+        title = "Overlap in selected features by dataset",
+        fill = "Jaccard\nIndex"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid = element_blank()
+    )
+
+dataset_overlaps_plot
+```
+
 # Output
 
 Save output files
@@ -1531,6 +1591,12 @@ save_figure_files(
     integration_figure,
     here::here("analysis", "output", "integration"),
     height = 6
+)
+
+save_figure_files(
+    dataset_overlaps_plot,
+    here::here("analysis", "output", "dataset-overlaps"),
+    height = 12
 )
 ```
 
