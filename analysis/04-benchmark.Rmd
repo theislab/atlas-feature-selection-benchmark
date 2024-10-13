@@ -1520,6 +1520,67 @@ integration_figure
 
 Extended figures for supplementary materials.
 
+## Metric ranks
+
+```{r supplementary-ranks, fig.height = 6, out.width = "100%"}
+metric_ranks <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(Value)) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    )
+ 
+ranks_plot <- ggplot(metric_ranks) +
+    ggforce::geom_sina(
+        aes(x = length(unique(Method)) - Rank + 1, y = Method),
+        size = 0.5, alpha = 0.3
+    ) +
+    geom_point(
+        data = metric_ranks_means,
+        aes(
+            x = length(unique(Method)) - MeanRank + 1,
+            y = Method,
+            fill = length(unique(Method)) - MeanRank + 1
+        ),
+        shape = "circle filled", size = 2
+    ) +
+    scale_fill_viridis_c(direction = -1) +
+    scale_x_reverse(
+        limits = c(length(unique(metric_ranks$Method)) + 1, 1),
+        breaks = c(1, 10, 20, 30)
+    ) +
+    facet_grid(. ~ Type, scales = "free_y", space = "free_y") +
+    labs(
+        title = "Method ranks by metric type",
+        x = "Method rank",
+        fill = "Mean rank"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+    )
+
+ranks_plot
+```
+
+
 ## Selected feature overlap
 
 ```{r supplementary-overlaps, fig.height = 12, out.width = "100%"}
@@ -1597,6 +1658,12 @@ save_figure_files(
     dataset_overlaps_plot,
     here::here("analysis", "output", "dataset-overlaps"),
     height = 12
+)
+
+save_figure_files(
+    ranks_plot,
+    here::here("analysis", "output", "metric-ranks"),
+    height = 6
 )
 ```
 
