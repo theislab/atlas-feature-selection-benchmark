@@ -409,6 +409,17 @@ wrap_plots(
 This figure summarised the effect of the number of selected features on metric values.
 
 ```{r summary}
+theme_features_heatmap <- theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title.x = element_blank(),
+        axis.text.x = element_blank(),
+        axis.title.y = element_blank(),
+        panel.grid = element_blank(),
+        strip.background = element_blank(),
+        strip.text = element_blank()
+    )
+
 overall_lineplot <- ggplot(
     metrics_summary_plotting,
     aes(x = SelFeatures, y = StandardValue, colour = Type, fill = Type)
@@ -479,16 +490,7 @@ datasets_heatmap <- ggplot(
             order = 2
         )
     ) +
-    theme_features_pub() +
-    theme(
-        legend.position = "bottom",
-        axis.title.x = element_blank(),
-        axis.text.x = element_blank(),
-        axis.title.y = element_blank(),
-        panel.grid = element_blank(),
-        strip.background = element_blank(),
-        strip.text = element_blank()
-    )
+    theme_features_heatmap
 
 methods_heatmap <- ggplot(
     method_means,
@@ -518,14 +520,9 @@ methods_heatmap <- ggplot(
             order = 2
         )
     ) + 
-    theme_features_pub() +
+    theme_features_heatmap +
     theme(
-        legend.position = "bottom",
-        axis.title.y = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
-        panel.grid = element_blank(),
-        strip.background = element_blank(),
-        strip.text.x = element_blank()
     )
 
 summary_plot <- wrap_plots(
@@ -542,9 +539,130 @@ summary_plot <- wrap_plots(
 summary_plot
 ```
 
-# Supplementary
+# Extended figures
 
-Extended figures for supplementary materials.
+## Number of features means and SDs
+
+```{r extended-features-means-sds, fig.width = 8, out.width = "100%"}
+sd_limits <- c(
+    min(method_means$SD, dataset_means$SD),
+    max(method_means$SD, dataset_means$SD)
+)
+
+datasets_means <- ggplot(
+    mutate(dataset_means, Dataset = str_replace(Dataset, "\n", " ")),
+    aes(x = SelFeatures, y = Dataset, colour = StandardValue)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Datasets",
+        x = "Number of selected features",
+        colour = "Mean standardised value"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_heatmap +
+    theme(
+        strip.text = element_text(
+            size = 6, colour = "white", margin = margin(4.4, 4.4, 4.4, 4.4)
+        ),
+        strip.background = element_rect(fill = "black")
+    )
+
+datasets_sds <- ggplot(
+    mutate(dataset_means, Dataset = str_replace(Dataset, "\n", " ")),
+    aes(x = SelFeatures, y = Dataset, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis", limits = sd_limits) +
+    facet_grid(. ~ Type) +
+    labs(
+        x = "Number of selected features",
+        colour = "Standard deviation of\nstandardised values"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_heatmap
+
+methods_means <- ggplot(
+    method_means,
+    aes(x = SelFeatures, y = Method, colour = StandardValue)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = mean_limits
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Methods",
+        x = "Number of selected features",
+        colour = "Mean standardised value",
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_heatmap
+
+methods_sds <- ggplot(
+    method_means,
+    aes(x = SelFeatures, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis", limits = sd_limits) +
+    facet_grid(. ~ Type) +
+    labs(
+        x = "Number of selected features",
+        colour = "Standard deviation of\nstandardised values"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) + 
+    theme_features_heatmap +
+    theme(
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+num_features_means_sds_plot <- wrap_plots(
+    datasets_means, datasets_sds, methods_means, methods_sds,
+    ncol = 1,
+    heights = c(1, 1, 1, 1),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+num_features_means_sds_plot
+```
+
+# Additional
+
+Other figures
 
 ## Number of features by dataset
 
@@ -625,6 +743,12 @@ save_figure_files(
     summary_plot,
     here::here("analysis", "output", "num-features"),
     height = 5.5
+)
+
+save_figure_files(
+    num_features_means_sds_plot,
+    here::here("analysis", "output", "num-features-means-sds"),
+    width = 7, height = 6
 )
 
 save_figure_files(
