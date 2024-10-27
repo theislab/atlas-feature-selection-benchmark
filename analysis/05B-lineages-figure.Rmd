@@ -703,13 +703,89 @@ lineages_figure <- wrap_plots(
 lineages_figure
 ```
 
-# Supplementary
+# Extended figures
 
-Extended figures for supplementary materials.
+## Marker gene overlaps
 
-## Marker overlaps
+```{r extended-overlaps-means-sds, fig.width = 8, out.width = "100%"}
+markers_overlap_means <- ggplot(
+    marker_overlap_means_plotting |>
+        mutate(
+            Method = fct_relabel(
+                Method,
+                \(.x) {
+                    str_remove(.x, " \\(N=2000\\)") |>
+                        str_remove("N=2000, ")
+                }
+            )
+        ) |>
+        mutate(
+            Lineage = case_when(
+                Lineage == "Epithelial" ~ "Epi.",
+                Lineage == "Endothelial" ~ "Endo",
+                Lineage == "Immune" ~ "Imm.",
+                Lineage == "Stroma" ~ "Strom."
+            )
+        ),
+    aes(x = Dataset, y = Method, colour = MeanProp)
+) +
+    geom_point(shape = "square", size = 1.5) +
+    facet_wrap(~ Lineage, nrow = 1) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_viridis_c() +
+    labs(colour = "Mean proportion of markers") +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 4),
+        panel.grid.major = element_blank(),
+        panel.spacing.x = unit(0, "cm"),
+        strip.text = element_text(size = 4, colour = "white"),
+        plot.margin = margin(0, 0.5, 0, 0.5)
+    )
 
-```{r supplementary-overlaps, fig.height = 10, out.width = "100%"}
+markers_overlap_sds <- ggplot(
+    marker_overlap_means_plotting |>
+        mutate(
+            Lineage = case_when(
+                Lineage == "Epithelial" ~ "Epi.",
+                Lineage == "Endothelial" ~ "Endo",
+                Lineage == "Immune" ~ "Imm.",
+                Lineage == "Stroma" ~ "Strom."
+            )
+        ),
+    aes(x = Dataset, y = Method, colour = SDProp)
+) +
+    geom_point(shape = "square", size = 1.5) +
+    facet_wrap(~ Lineage, nrow = 1) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_viridis_c(option = "cividis") +
+    labs(colour = "SD proportion of markers") +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        panel.grid.major = element_blank(),
+        panel.spacing.x = unit(0, "cm"),
+        strip.text = element_text(size = 4, colour = "white"),
+        plot.margin = margin(0, 0.5, 0, 0.5)
+    )
+
+markers_overlap_means_sds_plot <- wrap_plots(
+    markers_overlap_means, markers_overlap_sds,
+    nrow = 1,
+    widths = c(1, 1),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
 marker_overlaps_plotting <- marker_overlaps |>
     filter(
         Method != "all-features",
@@ -728,29 +804,102 @@ marker_overlaps_plotting <- marker_overlaps |>
             Dataset,
             levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
             labels = c("Full", "Immune", "Epithelial")
-        )
+        ),
+        Lineage = if_else(Lineage == "Endothelial", "Endo.", Lineage)
     )
- 
-markers_overlap_plot <- ggplot(marker_overlaps_plotting) +
+
+markers_overlap_celltypes_full <- marker_overlaps_plotting |>
+    filter(Dataset == "Full") |>
+    ggplot() +
     geom_tile(aes(x = Label, y = Method, fill = Prop)) +
     scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
     scale_x_discrete(expand = c(0, 0)) +
     scale_y_discrete(expand = c(0, 0), drop = FALSE) +
-    facet_grid(Dataset ~ Lineage, scales = "free_x", space = "free_x") +
+    facet_grid(. ~ Lineage, scales = "free_x", space = "free_x") +
     labs(
-        title = "Overlap with marker gene sets by lineage",
+        title = "Full",
         fill = "Proportion of marker genes selected"
     ) +
     theme_features_pub() +
     theme(
         legend.position = "bottom",
         axis.title = element_blank(),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
         panel.grid = element_blank(),
-        panel.spacing.x = unit(0, "cm")
+        panel.spacing.x = unit(0, "cm"),
+        strip.text = element_text(size = 4, colour = "white"),
+        plot.margin = margin(0, 0.5, 0, 0.5)
     )
 
-markers_overlap_plot
+markers_overlap_celltypes_immune <- marker_overlaps_plotting |>
+    filter(Dataset == "Immune") |>
+    ggplot() +
+    geom_tile(aes(x = Label, y = Method, fill = Prop)) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    facet_grid(. ~ Lineage, scales = "free_x", space = "free_x") +
+    labs(
+        title = "Immune",
+        fill = "Proportion of marker genes selected"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing.x = unit(0, "cm"),
+        strip.text = element_text(size = 4, colour = "white"),
+        plot.margin = margin(0, 0.5, 0, 0.5)
+    )
+
+markers_overlap_celltypes_epi <- marker_overlaps_plotting |>
+    filter(Dataset == "Epithelial") |>
+    ggplot() +
+    geom_tile(aes(x = Label, y = Method, fill = Prop)) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0), drop = FALSE) +
+    facet_grid(. ~ Lineage, scales = "free_x", space = "free_x") +
+    labs(
+        title = "Epithelial",
+        fill = "Proportion of marker genes selected"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        panel.grid = element_blank(),
+        panel.spacing.x = unit(0, "cm"),
+        strip.text = element_text(size = 4, colour = "white"),
+        plot.margin = margin(0, 0.5, 0, 0.5)
+    )
+
+markers_overlap_celltypes_plot <- wrap_plots(
+    markers_overlap_celltypes_full,
+    markers_overlap_celltypes_immune,
+    markers_overlap_celltypes_epi,
+    nrow = 1,
+    widths = c(1, 1, 1),
+    guides = "collect"
+) &
+    theme(
+        legend.position = "bottom",
+        legend.title.position = "top"
+    )
+
+markers_overlap_extended <- wrap_plots(
+    markers_overlap_means_sds_plot, markers_overlap_celltypes_plot,
+    nrow = 1,
+    widths = c(1, 3)
+)
+
+markers_overlap_extended
 ```
 
 # Output
@@ -765,9 +914,9 @@ save_figure_files(
 )
 
 save_figure_files(
-    markers_overlap_plot,
-    here::here("analysis", "output", "markers-overlap"),
-    height = 10
+    markers_overlap_extended,
+    here::here("analysis", "output", "markers-overlap-extended"),
+    width = 7, height = 6
 )
 ```
 
