@@ -1086,39 +1086,6 @@ mean_overlaps_plot <- ggplot(
         panel.grid = element_blank()
     )
 
-dataset_overlaps_plot <- overlaps |>
-    mutate(
-        Method1 = factor(
-            Method1,
-            levels = overlaps_clust_order
-        ),
-        Method2 = factor(
-            Method2,
-            levels = overlaps_clust_order
-        ),
-        Dataset = factor(
-            Dataset,
-            levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
-        )
-    ) |>
-ggplot(
-    aes(x = Method1, y = Method2, fill = Jaccard)
-) +
-    geom_tile() +
-    facet_wrap(~ Dataset, ncol = 4) +
-    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
-    scale_colour_manual(values = c("black", "white")) +
-    coord_equal() +
-    theme_features_pub() +
-    theme(
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(),
-        panel.background = element_rect(fill = "black"),
-        panel.grid = element_blank()
-    )
-
 cum_num_methods_plotting <- cum_num_methods |>
     filter(NumMethods %in% c(5, 10, 15, 20, 25)) |>
     mutate(
@@ -1516,9 +1483,113 @@ integration_figure <- wrap_plots(
 integration_figure
 ```
 
-# Supplementary
+# Extended figures
 
-Extended figures for supplementary materials.
+## Overlaps means and SDs
+
+```{r extended-overlaps-means-sds, fig.width = 8, out.width = "100%"}
+overlaps_means_plot <- ggplot(
+    overlaps_plotting,
+    aes(x = Method1, y = Method2, fill = Jaccard)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(position = "top") +
+    coord_equal() +
+    labs(fill = "Mean\nJaccard\nIndex",) +
+    guides(
+        fill = guide_colourbar(order = 1),
+        colour = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+overlaps_sds_plot <- ggplot(
+    overlaps_plotting,
+    aes(x = Method1, y = Method2, fill = JaccardSD)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(option = "cividis") +
+    scale_x_discrete(position = "top") +
+    coord_equal() +
+    labs(fill = "Jaccard\nIndex\nSD",) +
+    guides(
+        fill = guide_colourbar(order = 1),
+        colour = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+overlaps_means_sd_plot <- wrap_plots(
+    overlaps_means_plot, overlaps_sds_plot,
+    nrow = 1,
+    widths = c(1, 1)
+)
+
+overlaps_means_sd_plot
+```
+
+# Dataset overlaps
+
+```{r extended-dataset-overlaps, fig.width = 8, out.width = "100%"}
+dataset_overlaps_plot <- overlaps |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    ) |>
+ggplot(
+    aes(x = Method1, y = Method2, fill = Jaccard)
+) +
+    geom_tile() +
+    facet_wrap(~ Dataset, nrow = 2) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_colour_manual(values = c("black", "white")) +
+    coord_equal() +
+    theme_features_pub() +
+    theme(
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+dataset_overlaps_plot
+```
+
+# Additional
+
+Other figures
 
 ## Metric ranks
 
@@ -1906,9 +1977,15 @@ save_figure_files(
 )
 
 save_figure_files(
+    overlaps_means_sd_plot,
+    here::here("analysis", "output", "overlaps-means-sds"),
+    width = 7, height = 5
+)
+
+save_figure_files(
     dataset_overlaps_plot,
     here::here("analysis", "output", "dataset-overlaps"),
-    height = 12
+    height = 2.5
 )
 
 save_figure_files(
