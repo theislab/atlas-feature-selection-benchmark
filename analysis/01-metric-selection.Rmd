@@ -1115,7 +1115,8 @@ included_plot <- ggplot(included_data, aes(x = 1, y = Metric, fill = Include)) +
     theme_features_summary +
     theme(
         axis.text.x = element_blank(),
-        axis.ticks = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(size = 0.25),
         strip.text = element_blank(),
         strip.background = element_blank()
     )
@@ -1161,7 +1162,7 @@ ranges_plot <- ggplot(ranges_data) +
         Type ~ ., scales = "free_y", space = "free_y"
     ) +
     labs(
-        title = "Observed\nrange",
+        title = "Observed range",
         fill = "Mean range"
     ) +
     theme_features_summary +
@@ -1405,7 +1406,8 @@ tech_corr_means <- ggplot(tech_corr_data) +
     theme_features_summary +
     theme(
         strip.text = element_blank(),
-        strip.background = element_blank()
+        strip.background = element_blank(),
+        axis.ticks.y = element_line(size = 0.25)
     )
 
 tech_corr_sds <- ggplot(tech_corr_data) +

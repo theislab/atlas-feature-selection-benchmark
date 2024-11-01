@@ -580,7 +580,9 @@ datasets_means <- ggplot(
         strip.text = element_text(
             size = 6, colour = "white", margin = margin(4.4, 4.4, 4.4, 4.4)
         ),
-        strip.background = element_rect(fill = "black")
+        strip.background = element_rect(fill = "black"),
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank()
     )
 
 datasets_sds <- ggplot(
@@ -601,7 +603,11 @@ datasets_sds <- ggplot(
             order = 2
         )
     ) +
-    theme_features_heatmap
+    theme_features_heatmap +
+    theme(
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank()
+    )
 
 methods_means <- ggplot(
     method_means,
@@ -625,7 +631,11 @@ methods_means <- ggplot(
             order = 2
         )
     ) +
-    theme_features_heatmap
+    theme_features_heatmap +
+    theme(
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank()
+    )
 
 methods_sds <- ggplot(
     method_means,

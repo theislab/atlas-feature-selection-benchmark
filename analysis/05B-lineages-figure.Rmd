@@ -448,7 +448,6 @@ ranks_plot <- ggplot(
         legend.position = "bottom",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.title = element_blank(),
-        axis.ticks.y = element_blank(),
         panel.grid.major = element_blank(),
     )
 
@@ -652,7 +651,6 @@ milo_plot <- ggplot(
             angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.8
         ),
         axis.title = element_blank(),
-        axis.ticks.y = element_blank(),
         panel.grid = element_blank()
     )
 
@@ -789,6 +787,7 @@ markers_overlap_sds <- ggplot(
         axis.title = element_blank(),
         axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid.major = element_blank(),
         panel.spacing.x = unit(0, "cm"),
         strip.text = element_text(size = 4, colour = "white"),
@@ -846,6 +845,7 @@ markers_overlap_celltypes_full <- marker_overlaps_plotting |>
         axis.title = element_blank(),
         axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank(),
         panel.spacing.x = unit(0, "cm"),
         strip.text = element_text(size = 4, colour = "white"),
@@ -870,6 +870,7 @@ markers_overlap_celltypes_immune <- marker_overlaps_plotting |>
         axis.title = element_blank(),
         axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank(),
         panel.spacing.x = unit(0, "cm"),
         strip.text = element_text(size = 4, colour = "white"),
@@ -894,6 +895,7 @@ markers_overlap_celltypes_epi <- marker_overlaps_plotting |>
         axis.title = element_blank(),
         axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank(),
         panel.spacing.x = unit(0, "cm"),
         strip.text = element_text(size = 4, colour = "white"),
@@ -936,7 +938,7 @@ save_figure_files(
 save_figure_files(
     markers_overlap_extended,
     here::here("analysis", "output", "markers-overlap-extended"),
-    width = 7, height = 6
+    width = 7, height = 4
 )
 ```
 

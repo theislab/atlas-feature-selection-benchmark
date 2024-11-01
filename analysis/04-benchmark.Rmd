@@ -997,7 +997,8 @@ overall_ranks_figure <- ggplot(
     theme(
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.title = element_blank(),
-        axis.text.y = element_blank()
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()
     )
 
 overall_panel <- wrap_plots(
@@ -1506,6 +1507,183 @@ integration_figure
 
 # Extended figures
 
+## Dataset scores and ranks
+
+```{r extended-scores-ranks, fig.width = 8, out.width = "100%"}
+category_scores_plot <- ggplot(
+    metrics_summary_plotting |>
+        mutate(
+            Method = fct_relabel(
+                Method,
+                \(.x) {
+                    str_remove(.x, " \\(N=2000\\)") |>
+                        str_remove("N=2000, ") |>
+                        str_wrap(width = 15)
+                }
+            ),
+            Type = fct_recode(
+                Type,
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
+            )
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+    aes(x = Dataset, y = Method)
+) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                ) |>
+                    fct_relabel(
+                        \(.x) {
+                            str_remove(.x, " \\(N=2000\\)") |>
+                                str_remove("N=2000, ") |>
+                                str_wrap(width = 15)
+                        }
+                    )
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(aes(colour = Value), shape = "square", size = 1) +
+    scale_y_discrete(drop = FALSE) +
+    colorspace::scale_colour_continuous_divergingx(
+        palette = "Zissou 1",
+        limits = c(
+            -max(abs(metrics_summary_plotting$Value)),
+            max(abs(metrics_summary_plotting$Value))
+        )
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Metric category scores",
+        colour = "Metric category score"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 4),
+        axis.title = element_blank()
+    )
+
+metric_ranks <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(Value)) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        ) |>
+            fct_recode(
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
+            ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ) |>
+            fct_relabel(
+                \(.x) {
+                    str_remove(.x, " \\(N=2000\\)") |>
+                        str_remove("N=2000, ") |>
+                        str_wrap(width = 15)
+                }
+            ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    )
+
+category_ranks_plot <- ggplot(
+    metric_ranks,
+    aes(x = Dataset, y = Method, colour = Type)
+) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                ) |>
+                    fct_relabel(
+                        \(.x) {
+                            str_remove(.x, " \\(N=2000\\)") |>
+                                str_remove("N=2000, ") |>
+                                str_wrap(width = 15)
+                        }
+                    ),
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  Rank),
+        shape = "square", size = 1
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_alpha_continuous(
+        limits = c(length(unique(metric_ranks$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse",
+        breaks = scales::extended_breaks(n = 10)
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Metric category ranks",
+        alpha = "Mean category rank",
+    ) +
+    guides(
+        alpha = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks.y = element_blank()
+    )
+
+category_scores_ranks_plot <- wrap_plots(
+    category_scores_plot,
+    category_ranks_plot,
+    nrow = 1,
+    widths = c(1, 1)
+)
+
+category_scores_ranks_plot
+```
+
 ## Overlaps means and SDs
 
 ```{r extended-overlaps-means-sds, fig.width = 8, out.width = "100%"}
@@ -1631,7 +1809,10 @@ integration_scores_means_plot <- ggplot(
         colour = "Mean score"
     ) +
     facet_wrap(~ Integration, nrow = 1) +
-    theme_features_integration_extended
+    theme_features_integration_extended +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
 
 integration_scores_diffs_means_plot <- ggplot(
     integration_diff_means_plotting,
@@ -1664,7 +1845,8 @@ integration_ranks_means_plot <- ggplot(
     scale_alpha_continuous(
         limits = c(length(unique(integration_ranks_means$Method)), 1),
         range = c(0.1, 1.0),
-        trans = "reverse"
+        trans = "reverse",
+        breaks = scales::breaks_extended(n = 6)
     ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
@@ -1674,7 +1856,7 @@ integration_ranks_means_plot <- ggplot(
     guides(
         alpha = guide_legend(
             theme = theme(legend.text.position = "bottom"),
-            order = 1
+            nrow = 1
         )
     ) +
     theme_features_integration_extended +
@@ -1727,7 +1909,10 @@ integration_scores_sds <- ggplot(
         colour = "Standard deviation"
     ) +
     facet_wrap(~ Integration, nrow = 1) +
-    theme_features_integration_extended
+    theme_features_integration_extended +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
 
 integration_scores_diffs_sds <- ggplot(
     integration_diff_means_plotting,
@@ -2186,6 +2371,12 @@ save_figure_files(
     integration_figure,
     here::here("analysis", "output", "integration"),
     width = 7, height = 6
+)
+
+save_figure_files(
+    category_scores_ranks_plot,
+    here::here("analysis", "output", "category-scores-ranks"),
+    width = 7, height = 5.5
 )
 
 save_figure_files(
