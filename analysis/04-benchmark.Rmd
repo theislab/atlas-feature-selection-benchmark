@@ -1238,6 +1238,7 @@ theme_features_integration <- theme_features_pub() +
         panel.spacing.x = unit(0, "cm"),
         axis.title = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.y = element_blank(),
         legend.key.width = unit(0.35, "cm"),
         legend.key.spacing.x = unit(0.0, "cm"),
         legend.box = "vertical"
@@ -1281,7 +1282,10 @@ integration_scores_plot <- ggplot(
         option = "magma",
         limits = c(0, max(integration_summary_plotting$Mean))
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     labs(
         title = "Mean scores",
         colour = "Mean score",
@@ -1295,7 +1299,10 @@ integration_scores_plot <- ggplot(
         )
     ) +
     facet_wrap(~ Integration, nrow = 1) +
-    theme_features_integration
+    theme_features_integration +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
 
 # Integration difference heatmap
 integration_diff_means_plotting <- integration_diff_means |>
@@ -1338,7 +1345,10 @@ integration_scores_diffs_plot <- ggplot(
     colorspace::scale_colour_continuous_diverging(
         palette = "PurpleGreen",
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
         title = "Difference in\nmean scores",
@@ -1389,12 +1399,12 @@ integration_ranks_plot <- ggplot(
     scale_size_continuous(
         trans = "reverse",
         limits = c(max(integration_ranks_means$SDRank), 0),
-        range = c(0.1, 2.5)
+        range = c(0.1, 2), breaks = scales::breaks_extended(n = 6)
     ) +
     scale_alpha_continuous(
         limits = c(length(unique(integration_ranks_means$Method)), 1),
         range = c(0.1, 1.0),
-        trans = "reverse"
+        trans = "reverse", breaks = scales::breaks_extended(n = 6)
     ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
@@ -1405,6 +1415,7 @@ integration_ranks_plot <- ggplot(
     guides(
         alpha = guide_legend(
             theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
             order = 1
         ),
         size = guide_legend(
@@ -1458,7 +1469,10 @@ integration_diffs_ranks_plot <- ggplot(
         palette = "Tropic",
         rev = TRUE
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
         title = "Difference in\nmean ranks",
@@ -1469,6 +1483,7 @@ integration_diffs_ranks_plot <- ggplot(
         colour = guide_colourbar(order = 1),
         size = guide_legend(
             theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
             order = 2
         )
     ) +
@@ -2170,7 +2185,7 @@ save_figure_files(
 save_figure_files(
     integration_figure,
     here::here("analysis", "output", "integration"),
-    height = 6
+    width = 7, height = 6
 )
 
 save_figure_files(
