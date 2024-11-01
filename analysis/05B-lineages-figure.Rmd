@@ -410,8 +410,11 @@ metrics_ranks_plotting <- metrics_ranks |>
         Type = factor(
             Type,
             levels = c("Overall", names(type_names)),
-            labels = c("Overall", str_replace(type_names, " ", "\n"))
-        ),
+        ) |>
+            fct_recode(
+                "Int. (Batch)" = "IntegrationBatch",
+                "Int. (Bio)" = "IntegrationBio"
+            ),
         Dataset = factor(
             Dataset,
             levels = c("HLCA", "HLCAImmune", "HLCAEpithelial"),
@@ -445,6 +448,7 @@ ranks_plot <- ggplot(
         legend.position = "bottom",
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.title = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid.major = element_blank(),
     )
 
@@ -478,6 +482,11 @@ overlaps_plotting <- overlaps |>
                 "Full vs Immune",
                 "Full vs Epithelial",
                 "Epithelial vs Immune"
+            ),
+            labels = c(
+                "Full vs Imm.",
+                "Full vs Epi.",
+                "Epi. vs Imm."
             )
         )
     )
@@ -499,6 +508,7 @@ overlaps_plot <- ggplot(
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
         axis.title = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank()
     )
 
@@ -531,10 +541,11 @@ markers_overlap_plot <- ggplot(
     facet_wrap(~ Lineage, nrow = 1) +
     scale_y_discrete(drop = FALSE) +
     scale_colour_viridis_c() +
-        scale_size_continuous(
+    scale_size_continuous(
         trans = "reverse",
         limits = c(max(marker_overlap_means_plotting$SDProp), 0),
-        range = c(0.1, 2.5)
+        range = c(0.1, 1.8),
+        breaks = scales::breaks_extended(n = 3)
     ) +
     labs(
         title = "Overlap with marker gene sets",
@@ -547,6 +558,7 @@ markers_overlap_plot <- ggplot(
         axis.title = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid.major = element_blank()
     )
 
@@ -616,7 +628,8 @@ label_milo_plotting <- label_milo |>
         ),
         Label = factor(
             Label,
-            levels = labels_order
+            levels = labels_order,
+            labels = stringr::str_wrap(labels_order, 16)
         )
     )
 
@@ -635,8 +648,11 @@ milo_plot <- ggplot(
     ) +
     theme_features_pub() +
     theme(
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.x = element_text(
+            angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.8
+        ),
         axis.title = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank()
     )
 
@@ -654,7 +670,8 @@ label_milo_diff_plotting <- label_milo_diff |>
         ),
         Label = factor(
             Label,
-            levels = labels_order
+            levels = labels_order,
+            labels = stringr::str_wrap(labels_order, 16)
         )
     )
 
@@ -676,8 +693,11 @@ milo_diff_plot <- ggplot(
     theme_features_pub() +
     theme(
         axis.title = element_blank(),
-        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.x = element_text(
+            angle = 90, hjust = 1, vjust = 0.5, lineheight = 0.8
+        ),
         axis.text.y = element_blank(),
+        axis.ticks.y = element_blank(),
         panel.grid = element_blank()
     )
 
@@ -910,7 +930,7 @@ Save output files
 save_figure_files(
     lineages_figure,
     here::here("analysis", "output", "lineages"),
-    height = 11
+    width = 7, height = 7.8
 )
 
 save_figure_files(
