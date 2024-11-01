@@ -412,7 +412,6 @@ This figure summarised the effect of the number of selected features on metric v
 theme_features_heatmap <- theme_features_pub() +
     theme(
         legend.position = "bottom",
-        axis.title.x = element_blank(),
         axis.text.x = element_blank(),
         axis.title.y = element_blank(),
         panel.grid = element_blank(),
@@ -446,6 +445,7 @@ overall_lineplot <- ggplot(
         legend.position = "none",
         axis.title.x = element_blank(),
         axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
         panel.grid = element_blank(),
     )
 
@@ -490,7 +490,11 @@ datasets_heatmap <- ggplot(
             order = 2
         )
     ) +
-    theme_features_heatmap
+    theme_features_heatmap +
+    theme(
+        axis.title.x = element_blank(),
+        axis.ticks.x = element_blank()
+    )
 
 methods_heatmap <- ggplot(
     method_means,
@@ -528,7 +532,7 @@ methods_heatmap <- ggplot(
 summary_plot <- wrap_plots(
     overall_lineplot, datasets_heatmap, methods_heatmap,
     ncol = 1,
-    heights = c(1, 0.7, 0.7),
+    heights = c(1, 1, 1),
     guides = "collect"
 ) &
     theme(
@@ -742,7 +746,7 @@ Save output files
 save_figure_files(
     summary_plot,
     here::here("analysis", "output", "num-features"),
-    height = 5.5
+    width = 7, height = 4.8
 )
 
 save_figure_files(
