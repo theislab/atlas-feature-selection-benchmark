@@ -1054,13 +1054,14 @@ ggplot(metrics_embedding, aes(x = UMAP1, y = UMAP2, colour = Type)) +
 
 This figure gives an overall summary of the properties considered above.
 
-```{r summary, fig.width = 8, out.width = "100%"}
+```{r summary, fig.width = 6, out.width = "100%"}
 theme_features_summary <- theme_features_pub() +
     theme(
         panel.grid = element_blank(),
         panel.spacing.y = unit(0, "cm"),
         axis.title = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.y = element_blank(),
         legend.key.width = unit(0.35, "cm")
     )
 
@@ -1114,6 +1115,7 @@ included_plot <- ggplot(included_data, aes(x = 1, y = Metric, fill = Include)) +
     theme_features_summary +
     theme(
         axis.text.x = element_blank(),
+        axis.ticks = element_blank(),
         strip.text = element_blank(),
         strip.background = element_blank()
     )
@@ -1132,7 +1134,8 @@ ranges_plot <- ggplot(ranges_data) +
         data = included_summary,
         aes(ymax = Excluded + 1),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_vline(xintercept = c(0.25, 0.5, 0.75), colour = "grey80") +
     ggridges::geom_density_ridges(
@@ -1145,7 +1148,7 @@ ranges_plot <- ggplot(ranges_data) +
         scale = 1.0, rel_min_height = 0.01,
         bandwidth = 0.05, from = 0, to = 1,
         quantile_lines = TRUE, quantiles = 0.5,
-        colour = "white",
+        colour = "white", size = 0.3
     ) +
     scale_fill_viridis_c(option = "magma", limits = c(0, 1)) +
     scale_x_continuous(
@@ -1181,7 +1184,8 @@ features_plot <- ggplot(features_data) +
         data = included_summary,
         aes(ymax = Excluded + 1),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_vline(xintercept = c(-0.5, 0, 0.5), colour = "grey80") +
     ggridges::geom_density_ridges(
@@ -1194,7 +1198,7 @@ features_plot <- ggplot(features_data) +
         scale = 1.0, rel_min_height = 0.01,
         bandwidth = 0.1, from = -1, to = 1,
         quantile_lines = TRUE, quantiles = 0.5,
-        colour = "white",
+        colour = "white", size = 0.3
     ) +
     colorspace::scale_fill_continuous_divergingx(
         palette = "Zissou 1",
@@ -1265,7 +1269,8 @@ tech_corr_plot <- ggplot(tech_corr_data) +
         data = included_summary,
         aes(ymax = Excluded + 0.5),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_point(
         aes(x = Feature, y = Metric, colour = MeanCorr, size =  SDCorr),
@@ -1276,7 +1281,7 @@ tech_corr_plot <- ggplot(tech_corr_data) +
         limits = c(-1, 1),
         rev = TRUE
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2)) +
     facet_grid(Type ~ ., scales = "free", space = "free") +
     labs(
         title = "Correlations\nwith dataset\nfeatures",
@@ -1325,7 +1330,8 @@ corr_plot <- ggplot(corr_data) +
             ),
         aes(ymax = Excluded + 0.5),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_point(
         aes(x = Metric2, y = Metric1, colour = Mean, size =  SD),
@@ -1336,7 +1342,7 @@ corr_plot <- ggplot(corr_data) +
         limits = c(-1, 1)
     ) +
     scale_size_continuous(
-        trans = "reverse", range = c(0.1, 2.5), guide = "none"
+        trans = "reverse", range = c(0.1, 2), guide = "none"
     ) +
     facet_grid(Metric1Type ~ Metric2Type, scales = "free", space = "free") +
     labs(
@@ -1752,7 +1758,7 @@ Save output files
 save_figure_files(
     summary_plot,
     here::here("analysis", "output", "metric-selection-summary"),
-    height = 6.5
+    width = 7, height = 5.8
 )
 
 save_figure_files(

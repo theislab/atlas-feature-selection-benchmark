@@ -223,13 +223,19 @@ theme_features <- function(...) {
 #'
 #' @return **{ggplot2}** `theme` object
 theme_features_pub <- function(...) {
-    theme_features(base_size = 8, ...) +
+    theme_features(base_size = 7, ...) +
         theme(
-            plot.title = element_text(size = 8),
+            plot.title = element_text(size = 7),
+            plot.margin = margin(0.05, 0.05, 0.05, 0.05, "cm"),
+            panel.spacing = unit(0.06, "cm"),
             strip.text = element_text(size = 6),
+            axis.title = element_text(size = 6),
+            axis.text = element_text(size = 5),
+            axis.ticks = element_line(size = 0.25),
             legend.title = element_text(size = 6),
             legend.text = element_text(size = 5),
-            legend.key.size = unit(0.4, "cm")
+            legend.key.size = unit(0.3, "cm"),
+            legend.ticks = element_line(size = 0.25)
         )
 }
 
