@@ -890,10 +890,11 @@ integration_ranks_diff_means |>
 overall_values_figure <- ggplot(
     mutate(
         metrics_summary_plotting,
-        Type = factor(
+        Type = fct_recode(
             Type,
-            levels = levels(Type),
-            labels = str_replace(levels(Type), " ", "\n")
+            "Int. (Batch)" = "Integration (Batch)",
+            "Int. (Bio)" = "Integration (Bio)",
+            "Unseen" = "Unseen populations"
         )
     ),
     aes(x = Value, y = Method, fill = Type)
@@ -924,19 +925,20 @@ overall_values_figure <- ggplot(
         linewidth = 3, colour = "grey50",
     ) + 
     ggforce::geom_sina(
-        alpha = 0.5, shape = "circle filled", colour  = "white"
+        size = 0.8, alpha = 0.5, shape = "circle filled", colour  = "white"
     ) +
     geom_point(
         data = mutate(
             metric_means,
-            Type = factor(
+            Type = fct_recode(
                 Type,
-                levels = levels(Type),
-                labels = str_replace(levels(Type), " ", "\n")
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
             )
         ),
         aes(fill = Type),
-        shape = "diamond filled", size = 1.8, colour = "white"
+        shape = "diamond filled", size = 1.2, colour = "white"
     ) +
     scale_colour_manual(values = types_palette) +
     scale_fill_manual(values = types_palette) +
@@ -979,7 +981,7 @@ overall_ranks_figure <- ggplot(
     scale_size_continuous(
         trans = "reverse",
         limits = c(max(metric_ranks_means$SDRank), 0),
-        range = c(0.1, 2.5)
+        range = c(0.1, 1.8)
     ) +
     scale_alpha_continuous(
         limits = c(length(unique(metric_ranks_means$Method)), 1),
@@ -1055,10 +1057,13 @@ mean_overlaps_plot <- ggplot(
         fill = Jaccard, colour = Jaccard > 0.5, size = JaccardSD
     )
 ) +
-    geom_point(shape = "square filled", stroke = 0.6) +
+    geom_point(shape = "square filled", stroke = 0.3) +
     scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
     scale_colour_manual(values = c("black", "white")) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse",
+        range = c(0.1, 1.8), breaks = scales::breaks_extended(n = 3)
+    ) +
     coord_equal() +
     labs(
         title = "Average overlap",
@@ -1082,6 +1087,7 @@ mean_overlaps_plot <- ggplot(
         legend.position = "bottom",
         axis.text.x = element_blank(),
         axis.title = element_blank(),
+        axis.ticks = element_blank(),
         panel.background = element_rect(fill = "black"),
         panel.grid = element_blank()
     )
@@ -1092,7 +1098,7 @@ cum_num_methods_plotting <- cum_num_methods |>
         Dataset = factor(
             Dataset,
             levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
+            labels = dataset_names
         )
     )
 
@@ -1100,7 +1106,7 @@ num_methods_plot <- ggplot(
     cum_num_methods_plotting,
     aes(y = Dataset, x = CumFeatures, fill = factor(NumMethods))
 ) +
-    geom_point(size = 1.5, shape = "circle filled") +
+    geom_point(size = 1, shape = "circle filled") +
     scale_fill_viridis_d(option = "plasma") +
     scale_x_log10(breaks = c(10, 100, 500, 1000, 5000, 10000)) +
     labs(
@@ -1139,7 +1145,7 @@ num_selected_plotting <- num_selected |>
         Dataset = factor(
             Dataset,
             levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
+            labels = dataset_names
         )
     )
 
@@ -1151,7 +1157,7 @@ num_selected_plot <- ggplot(
     geom_point(
         aes(fill = Dataset),
         position = position_jitter(width = 0, height = 0.2, seed = 1),
-        shape = "circle filled", alpha = 0.8, colour = "grey20"
+        size = 1, shape = "circle filled", alpha = 0.8, colour = "grey20"
     ) +
     geom_point(
         data = num_selected_means_plotting,
@@ -1548,7 +1554,7 @@ overlaps_means_sd_plot <- wrap_plots(
 overlaps_means_sd_plot
 ```
 
-# Dataset overlaps
+## Dataset overlaps
 
 ```{r extended-dataset-overlaps, fig.width = 8, out.width = "100%"}
 dataset_overlaps_plot <- overlaps |>
@@ -1585,6 +1591,191 @@ ggplot(
     )
 
 dataset_overlaps_plot
+```
+
+## Integration means
+
+```{r extended-integration-means}
+theme_features_integration_extended <- theme_features_integration +
+    theme(
+        axis.text.x = element_text(size = 5, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 5),
+    )
+
+integration_scores_means_plot <- ggplot(
+    integration_summary_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(
+        option = "magma",
+        limits = c(0, max(integration_summary_plotting$Mean))
+    ) +
+    labs(
+        title = "Scores",
+        colour = "Mean score"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    theme_features_integration_extended
+
+integration_scores_diffs_means_plot <- ggplot(
+    integration_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "PurpleGreen",
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in scores",
+        colour = "Mean difference"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_ranks_means_plot <- ggplot(
+    integration_ranks_means_plotting,
+    aes(x = Type, y = Method, colour = Type)
+) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  MeanRank),
+        shape = "square"
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_alpha_continuous(
+        limits = c(length(unique(integration_ranks_means$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Ranks",
+        alpha = "Mean rank"
+    ) +
+    guides(
+        alpha = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 1
+        )
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+integration_diffs_ranks_means_plot <- ggplot(
+    integration_ranks_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Tropic",
+        rev = TRUE
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in ranks",
+        colour = "Mean difference"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_means_plot <- wrap_plots(
+    integration_scores_means_plot,
+    integration_scores_diffs_means_plot,
+    integration_ranks_means_plot,
+    integration_diffs_ranks_means_plot,
+    nrow = 1,
+    widths = c(3, 2, 3, 2)
+)
+
+integration_means_plot
+```
+
+## Integration SDs
+
+```{r extended-integration-sds}
+integration_scores_sds <- ggplot(
+    integration_summary_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    labs(
+        title = "Scores",
+        colour = "Standard deviation"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    theme_features_integration_extended
+
+integration_scores_diffs_sds <- ggplot(
+    integration_diff_means_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in scores",
+        colour = "Difference SD"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_ranks_sds <- ggplot(
+    integration_ranks_means_plotting,
+    aes(x = Type, y = Method, colour = SDRank)
+) +
+    geom_point(shape = "square") +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Ranks",
+        colour = "Rank SD"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+integration_diffs_ranks_sds <- ggplot(
+    integration_ranks_diff_means_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in ranks",
+        colour = "Difference SD"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_sds_plot <- wrap_plots(
+    integration_scores_sds,
+    integration_scores_diffs_sds,
+    integration_ranks_sds,
+    integration_diffs_ranks_sds,
+    nrow = 1,
+    widths = c(3, 2, 3, 2)
+)
+
+integration_sds_plot
 ```
 
 # Additional
@@ -1967,7 +2158,13 @@ Save output files
 save_figure_files(
     benchmark_figure,
     here::here("analysis", "output", "benchmark"),
-    height = 11
+    width = 7, height = 7.5
+)
+
+save_figure_files(
+    overlaps_panel,
+    here::here("analysis", "output", "benchmark-overlaps"),
+    width = 7, height = 3
 )
 
 save_figure_files(
@@ -1986,6 +2183,18 @@ save_figure_files(
     dataset_overlaps_plot,
     here::here("analysis", "output", "dataset-overlaps"),
     height = 2.5
+)
+
+save_figure_files(
+    integration_means_plot,
+    here::here("analysis", "output", "integration-means"),
+    width = 7, height = 4
+)
+
+save_figure_files(
+    integration_sds_plot,
+    here::here("analysis", "output", "integration-sds"),
+    width = 7, height = 4
 )
 
 save_figure_files(
