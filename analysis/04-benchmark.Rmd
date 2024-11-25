@@ -890,10 +890,11 @@ integration_ranks_diff_means |>
 overall_values_figure <- ggplot(
     mutate(
         metrics_summary_plotting,
-        Type = factor(
+        Type = fct_recode(
             Type,
-            levels = levels(Type),
-            labels = str_replace(levels(Type), " ", "\n")
+            "Int. (Batch)" = "Integration (Batch)",
+            "Int. (Bio)" = "Integration (Bio)",
+            "Unseen" = "Unseen populations"
         )
     ),
     aes(x = Value, y = Method, fill = Type)
@@ -924,19 +925,20 @@ overall_values_figure <- ggplot(
         linewidth = 3, colour = "grey50",
     ) + 
     ggforce::geom_sina(
-        alpha = 0.5, shape = "circle filled", colour  = "white"
+        size = 0.8, alpha = 0.5, shape = "circle filled", colour  = "white"
     ) +
     geom_point(
         data = mutate(
             metric_means,
-            Type = factor(
+            Type = fct_recode(
                 Type,
-                levels = levels(Type),
-                labels = str_replace(levels(Type), " ", "\n")
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
             )
         ),
         aes(fill = Type),
-        shape = "diamond filled", size = 1.8, colour = "white"
+        shape = "diamond filled", size = 1.2, colour = "white"
     ) +
     scale_colour_manual(values = types_palette) +
     scale_fill_manual(values = types_palette) +
@@ -979,7 +981,7 @@ overall_ranks_figure <- ggplot(
     scale_size_continuous(
         trans = "reverse",
         limits = c(max(metric_ranks_means$SDRank), 0),
-        range = c(0.1, 2.5)
+        range = c(0.1, 1.8)
     ) +
     scale_alpha_continuous(
         limits = c(length(unique(metric_ranks_means$Method)), 1),
@@ -995,7 +997,8 @@ overall_ranks_figure <- ggplot(
     theme(
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
         axis.title = element_blank(),
-        axis.text.y = element_blank()
+        axis.text.y = element_blank(),
+        axis.ticks.y = element_blank()
     )
 
 overall_panel <- wrap_plots(
@@ -1055,10 +1058,13 @@ mean_overlaps_plot <- ggplot(
         fill = Jaccard, colour = Jaccard > 0.5, size = JaccardSD
     )
 ) +
-    geom_point(shape = "square filled", stroke = 0.6) +
+    geom_point(shape = "square filled", stroke = 0.3) +
     scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
     scale_colour_manual(values = c("black", "white")) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse",
+        range = c(0.1, 1.8), breaks = scales::breaks_extended(n = 3)
+    ) +
     coord_equal() +
     labs(
         title = "Average overlap",
@@ -1082,39 +1088,7 @@ mean_overlaps_plot <- ggplot(
         legend.position = "bottom",
         axis.text.x = element_blank(),
         axis.title = element_blank(),
-        panel.background = element_rect(fill = "black"),
-        panel.grid = element_blank()
-    )
-
-dataset_overlaps_plot <- overlaps |>
-    mutate(
-        Method1 = factor(
-            Method1,
-            levels = overlaps_clust_order
-        ),
-        Method2 = factor(
-            Method2,
-            levels = overlaps_clust_order
-        ),
-        Dataset = factor(
-            Dataset,
-            levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
-        )
-    ) |>
-ggplot(
-    aes(x = Method1, y = Method2, fill = Jaccard)
-) +
-    geom_tile() +
-    facet_wrap(~ Dataset, ncol = 4) +
-    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
-    scale_colour_manual(values = c("black", "white")) +
-    coord_equal() +
-    theme_features_pub() +
-    theme(
-        legend.position = "none",
-        axis.text = element_blank(),
-        axis.title = element_blank(),
+        axis.ticks = element_blank(),
         panel.background = element_rect(fill = "black"),
         panel.grid = element_blank()
     )
@@ -1125,7 +1099,7 @@ cum_num_methods_plotting <- cum_num_methods |>
         Dataset = factor(
             Dataset,
             levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
+            labels = dataset_names
         )
     )
 
@@ -1133,7 +1107,7 @@ num_methods_plot <- ggplot(
     cum_num_methods_plotting,
     aes(y = Dataset, x = CumFeatures, fill = factor(NumMethods))
 ) +
-    geom_point(size = 1.5, shape = "circle filled") +
+    geom_point(size = 1, shape = "circle filled") +
     scale_fill_viridis_d(option = "plasma") +
     scale_x_log10(breaks = c(10, 100, 500, 1000, 5000, 10000)) +
     labs(
@@ -1172,7 +1146,7 @@ num_selected_plotting <- num_selected |>
         Dataset = factor(
             Dataset,
             levels = names(dataset_names),
-            labels = str_replace(dataset_names, " ", "\n")
+            labels = dataset_names
         )
     )
 
@@ -1184,7 +1158,7 @@ num_selected_plot <- ggplot(
     geom_point(
         aes(fill = Dataset),
         position = position_jitter(width = 0, height = 0.2, seed = 1),
-        shape = "circle filled", alpha = 0.8, colour = "grey20"
+        size = 1, shape = "circle filled", alpha = 0.8, colour = "grey20"
     ) +
     geom_point(
         data = num_selected_means_plotting,
@@ -1265,6 +1239,7 @@ theme_features_integration <- theme_features_pub() +
         panel.spacing.x = unit(0, "cm"),
         axis.title = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.y = element_blank(),
         legend.key.width = unit(0.35, "cm"),
         legend.key.spacing.x = unit(0.0, "cm"),
         legend.box = "vertical"
@@ -1308,7 +1283,10 @@ integration_scores_plot <- ggplot(
         option = "magma",
         limits = c(0, max(integration_summary_plotting$Mean))
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     labs(
         title = "Mean scores",
         colour = "Mean score",
@@ -1322,7 +1300,10 @@ integration_scores_plot <- ggplot(
         )
     ) +
     facet_wrap(~ Integration, nrow = 1) +
-    theme_features_integration
+    theme_features_integration +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
 
 # Integration difference heatmap
 integration_diff_means_plotting <- integration_diff_means |>
@@ -1365,7 +1346,10 @@ integration_scores_diffs_plot <- ggplot(
     colorspace::scale_colour_continuous_diverging(
         palette = "PurpleGreen",
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
         title = "Difference in\nmean scores",
@@ -1416,12 +1400,12 @@ integration_ranks_plot <- ggplot(
     scale_size_continuous(
         trans = "reverse",
         limits = c(max(integration_ranks_means$SDRank), 0),
-        range = c(0.1, 2.5)
+        range = c(0.1, 2), breaks = scales::breaks_extended(n = 6)
     ) +
     scale_alpha_continuous(
         limits = c(length(unique(integration_ranks_means$Method)), 1),
         range = c(0.1, 1.0),
-        trans = "reverse"
+        trans = "reverse", breaks = scales::breaks_extended(n = 6)
     ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
@@ -1432,6 +1416,7 @@ integration_ranks_plot <- ggplot(
     guides(
         alpha = guide_legend(
             theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
             order = 1
         ),
         size = guide_legend(
@@ -1485,7 +1470,10 @@ integration_diffs_ranks_plot <- ggplot(
         palette = "Tropic",
         rev = TRUE
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(
+        trans = "reverse", range = c(0.1, 2),
+        breaks = scales::breaks_extended(n = 5)
+    ) +
     facet_wrap(~ Integration, nrow = 1) +
     labs(
         title = "Difference in\nmean ranks",
@@ -1496,6 +1484,7 @@ integration_diffs_ranks_plot <- ggplot(
         colour = guide_colourbar(order = 1),
         size = guide_legend(
             theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
             order = 2
         )
     ) +
@@ -1516,6 +1505,851 @@ integration_figure <- wrap_plots(
 integration_figure
 ```
 
+# Extended figures
+
+## Dataset scores and ranks
+
+```{r extended-scores-ranks, fig.width = 8, out.width = "100%"}
+category_scores_plot <- ggplot(
+    metrics_summary_plotting |>
+        mutate(
+            Method = fct_relabel(
+                Method,
+                \(.x) {
+                    str_remove(.x, " \\(N=2000\\)") |>
+                        str_remove("N=2000, ") |>
+                        str_wrap(width = 15)
+                }
+            ),
+            Type = fct_recode(
+                Type,
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
+            )
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        ),
+    aes(x = Dataset, y = Method)
+) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                ) |>
+                    fct_relabel(
+                        \(.x) {
+                            str_remove(.x, " \\(N=2000\\)") |>
+                                str_remove("N=2000, ") |>
+                                str_wrap(width = 15)
+                        }
+                    )
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(aes(colour = Value), shape = "square", size = 1) +
+    scale_y_discrete(drop = FALSE) +
+    colorspace::scale_colour_continuous_divergingx(
+        palette = "Zissou 1",
+        limits = c(
+            -max(abs(metrics_summary_plotting$Value)),
+            max(abs(metrics_summary_plotting$Value))
+        )
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Metric category scores",
+        colour = "Metric category score"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 4),
+        axis.title = element_blank()
+    )
+
+metric_ranks <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(Value)) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        ) |>
+            fct_recode(
+                "Int. (Batch)" = "Integration (Batch)",
+                "Int. (Bio)" = "Integration (Bio)",
+                "Unseen" = "Unseen populations"
+            ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ) |>
+            fct_relabel(
+                \(.x) {
+                    str_remove(.x, " \\(N=2000\\)") |>
+                        str_remove("N=2000, ") |>
+                        str_wrap(width = 15)
+                }
+            ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    )
+
+category_ranks_plot <- ggplot(
+    metric_ranks,
+    aes(x = Dataset, y = Method, colour = Type)
+) +
+    geom_linerange(
+        data = methods_meta |>
+            mutate(
+                Method = factor(
+                    Method,
+                    levels = methods_order,
+                    labels = method_names[methods_order]
+                ) |>
+                    fct_relabel(
+                        \(.x) {
+                            str_remove(.x, " \\(N=2000\\)") |>
+                                str_remove("N=2000, ") |>
+                                str_wrap(width = 15)
+                        }
+                    ),
+            ) |>
+            filter(IsBaseline),
+        aes(x = NULL, y = Method, fill = NULL),
+        xmin = -Inf, xmax = Inf,
+        linewidth = 3, colour = "grey50", alpha = 0.3
+    ) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  Rank),
+        shape = "square", size = 1
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_alpha_continuous(
+        limits = c(length(unique(metric_ranks$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse",
+        breaks = scales::extended_breaks(n = 10)
+    ) +
+    facet_grid(. ~ Type) +
+    labs(
+        title = "Metric category ranks",
+        alpha = "Mean category rank",
+    ) +
+    guides(
+        alpha = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            nrow = 1,
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(size = 4, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_blank(),
+        axis.title = element_blank(),
+        axis.ticks.y = element_blank()
+    )
+
+category_scores_ranks_plot <- wrap_plots(
+    category_scores_plot,
+    category_ranks_plot,
+    nrow = 1,
+    widths = c(1, 1)
+)
+
+category_scores_ranks_plot
+```
+
+## Overlaps means and SDs
+
+```{r extended-overlaps-means-sds, fig.width = 8, out.width = "100%"}
+overlaps_means_plot <- ggplot(
+    overlaps_plotting,
+    aes(x = Method1, y = Method2, fill = Jaccard)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(position = "top") +
+    coord_equal() +
+    labs(fill = "Mean\nJaccard\nIndex",) +
+    guides(
+        fill = guide_colourbar(order = 1),
+        colour = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+overlaps_sds_plot <- ggplot(
+    overlaps_plotting,
+    aes(x = Method1, y = Method2, fill = JaccardSD)
+) +
+    geom_tile() +
+    scale_fill_viridis_c(option = "cividis") +
+    scale_x_discrete(position = "top") +
+    coord_equal() +
+    labs(fill = "Jaccard\nIndex\nSD",) +
+    guides(
+        fill = guide_colourbar(order = 1),
+        colour = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            order = 2
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.text.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 0, vjust = 0.5),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+overlaps_means_sd_plot <- wrap_plots(
+    overlaps_means_plot, overlaps_sds_plot,
+    nrow = 1,
+    widths = c(1, 1)
+)
+
+overlaps_means_sd_plot
+```
+
+## Dataset overlaps
+
+```{r extended-dataset-overlaps, fig.width = 8, out.width = "100%"}
+dataset_overlaps_plot <- overlaps |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    ) |>
+ggplot(
+    aes(x = Method1, y = Method2, fill = Jaccard)
+) +
+    geom_tile() +
+    facet_wrap(~ Dataset, nrow = 2) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_colour_manual(values = c("black", "white")) +
+    coord_equal() +
+    theme_features_pub() +
+    theme(
+        legend.position = "none",
+        axis.text = element_blank(),
+        axis.title = element_blank(),
+        panel.background = element_rect(fill = "black"),
+        panel.grid = element_blank()
+    )
+
+dataset_overlaps_plot
+```
+
+## Integration means
+
+```{r extended-integration-means}
+theme_features_integration_extended <- theme_features_integration +
+    theme(
+        axis.text.x = element_text(size = 5, angle = 90, hjust = 1, vjust = 0.5),
+        axis.text.y = element_text(size = 5),
+    )
+
+integration_scores_means_plot <- ggplot(
+    integration_summary_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(
+        option = "magma",
+        limits = c(0, max(integration_summary_plotting$Mean))
+    ) +
+    labs(
+        title = "Scores",
+        colour = "Mean score"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    theme_features_integration_extended +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
+
+integration_scores_diffs_means_plot <- ggplot(
+    integration_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "PurpleGreen",
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in scores",
+        colour = "Mean difference"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_ranks_means_plot <- ggplot(
+    integration_ranks_means_plotting,
+    aes(x = Type, y = Method, colour = Type)
+) +
+    geom_point(
+        aes(alpha = length(unique(Method)) -  MeanRank),
+        shape = "square"
+    ) +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_manual(values = types_palette, guide = "none") +
+    scale_alpha_continuous(
+        limits = c(length(unique(integration_ranks_means$Method)), 1),
+        range = c(0.1, 1.0),
+        trans = "reverse",
+        breaks = scales::breaks_extended(n = 6)
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Ranks",
+        alpha = "Mean rank"
+    ) +
+    guides(
+        alpha = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+            nrow = 1
+        )
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+integration_diffs_ranks_means_plot <- ggplot(
+    integration_ranks_diff_means_plotting,
+    aes(x = Type, y = Method, colour = Mean)
+) +
+    geom_point(shape = "square") +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Tropic",
+        rev = TRUE
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in ranks",
+        colour = "Mean difference"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_means_plot <- wrap_plots(
+    integration_scores_means_plot,
+    integration_scores_diffs_means_plot,
+    integration_ranks_means_plot,
+    integration_diffs_ranks_means_plot,
+    nrow = 1,
+    widths = c(3, 2, 3, 2)
+)
+
+integration_means_plot
+```
+
+## Integration SDs
+
+```{r extended-integration-sds}
+integration_scores_sds <- ggplot(
+    integration_summary_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    labs(
+        title = "Scores",
+        colour = "Standard deviation"
+    ) +
+    facet_wrap(~ Integration, nrow = 1) +
+    theme_features_integration_extended +
+    theme(
+        axis.ticks.y = element_line(size = 0.25)
+    )
+
+integration_scores_diffs_sds <- ggplot(
+    integration_diff_means_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in scores",
+        colour = "Difference SD"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_ranks_sds <- ggplot(
+    integration_ranks_means_plotting,
+    aes(x = Type, y = Method, colour = SDRank)
+) +
+    geom_point(shape = "square") +
+    scale_y_discrete(drop = FALSE) +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Ranks",
+        colour = "Rank SD"
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+integration_diffs_ranks_sds <- ggplot(
+    integration_ranks_diff_means_plotting,
+    aes(x = Type, y = Method, colour = SD)
+) +
+    geom_point(shape = "square") +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_wrap(~ Integration, nrow = 1) +
+    labs(
+        title = "Difference in ranks",
+        colour = "Difference SD"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+    ) +
+    theme_features_integration_extended +
+    theme(
+        axis.text.y = element_blank(),
+    )
+
+integration_sds_plot <- wrap_plots(
+    integration_scores_sds,
+    integration_scores_diffs_sds,
+    integration_ranks_sds,
+    integration_diffs_ranks_sds,
+    nrow = 1,
+    widths = c(3, 2, 3, 2)
+)
+
+integration_sds_plot
+```
+
+# Additional
+
+Other figures
+
+## Metric ranks
+
+```{r supplementary-ranks, fig.height = 6, out.width = "100%"}
+metric_ranks <- metrics_summary |>
+    filter(Integration == "scVI-1") |>
+    pivot_longer(
+        cols = Classification:Overall,
+        names_to = "Type",
+        values_to = "Value"
+    ) |>
+    group_by(Dataset, Type) |>
+    mutate(Rank = rank(Value)) |>
+    mutate(
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        )
+    )
+ 
+ranks_plot <- ggplot(metric_ranks) +
+    ggforce::geom_sina(
+        aes(x = length(unique(Method)) - Rank + 1, y = Method),
+        size = 0.5, alpha = 0.3
+    ) +
+    geom_point(
+        data = metric_ranks_means,
+        aes(
+            x = length(unique(Method)) - MeanRank + 1,
+            y = Method,
+            fill = length(unique(Method)) - MeanRank + 1
+        ),
+        shape = "circle filled", size = 2
+    ) +
+    scale_fill_viridis_c(direction = -1) +
+    scale_x_reverse(
+        limits = c(length(unique(metric_ranks$Method)) + 1, 1),
+        breaks = c(1, 10, 20, 30)
+    ) +
+    facet_grid(. ~ Type, scales = "free_y", space = "free_y") +
+    labs(
+        title = "Method ranks by metric type",
+        x = "Method rank",
+        fill = "Mean rank"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+    )
+
+ranks_plot
+```
+
+## Selected feature overlap
+
+```{r supplementary-overlaps, fig.height = 12, out.width = "100%"}
+overlaps_all_plotting <- overlaps |>
+    mutate(
+        Method1 = factor(
+            Method1,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        ),
+        Method2 = factor(
+            Method2,
+            levels = overlaps_clust_order,
+            labels = str_remove(
+                str_remove(
+                    method_names[overlaps_clust_order_formatted],
+                    "N=2000,?\\s?"
+                ),
+                "\\s\\(\\)"
+            )
+        ),
+        Dataset = factor(
+            Dataset,
+            levels = names(dataset_names),
+            labels = dataset_names
+        )
+    )
+
+dataset_overlaps_plot <- ggplot(overlaps_all_plotting) +
+    geom_tile(aes(x = Method2, y = Method1, fill = Jaccard)) +
+    scale_fill_viridis_c(option = "plasma", limits = c(0, 1)) +
+    scale_x_discrete(expand = c(0, 0)) +
+    scale_y_discrete(expand = c(0, 0)) +
+    coord_fixed() +
+    facet_wrap(~ Dataset, nrow = 4) +
+    labs(
+        title = "Overlap in selected features by dataset",
+        fill = "Jaccard\nIndex"
+    ) +
+    theme_features_pub() +
+    theme(
+        legend.position = "bottom",
+        axis.title = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.grid = element_blank()
+    )
+
+dataset_overlaps_plot
+```
+
+## Integration scores
+
+```{r supplementary-integration-scores, fig.height = 9, out.width = "100%"}
+integration_summary_long <- integration_summary |>
+    pivot_longer(
+        cols = scVI:Symphony,
+        names_to = "Integration",
+        values_to = "Value"
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_scores_all_plot <- ggplot(integration_summary_long) +
+    annotate(
+        "rect",
+        xmin = -Inf, xmax = 0, ymin = -Inf, ymax = Inf,
+        fill = "red", alpha = 0.1
+    ) +
+    annotate(
+        "rect",
+        xmin = 1, xmax = Inf, ymin = -Inf, ymax = Inf,
+        fill = "blue", alpha = 0.1
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    geom_vline(xintercept = 1, colour = "blue") +
+    ggforce::geom_sina(
+        aes(x = Value, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_summary_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    scale_fill_viridis_c(option = "magma") +
+    scale_x_continuous(limits = c(-3, 3), breaks = -3:3) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Metric summary scores by integration",
+        x = "Metric type summary score",
+        fill = "Mean score",
+        caption = paste(
+            "Note:", sum(abs(integration_summary_long$Value) > 3),
+            "values outside the range [-3, 3] are not shown"
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_scores_all_plot
+```
+
+## Integration scores differences
+
+```{r supplementary-integration-scores-diffs, fig.height = 6, out.width = "100%"}
+integration_diffs_long <- integration_diffs |>
+    select(-scVI, -scANVI, -Symphony) |>
+    pivot_longer(
+        cols = scANVIDiff:SymphonyDiff,
+        names_to = "Integration",
+        values_to = "Difference"
+    ) |>
+    mutate(
+        Integration = str_remove(Integration, "Diff")
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_diffs_all_plot <- ggplot(integration_diffs_long) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = Difference, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_diff_means_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green"
+    ) +
+    scale_x_continuous(limits = c(-3, 3), breaks = -3:3) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Difference in metric summary scores by integration",
+        x = "Difference in metric type summary score",
+        fill = "Mean difference",
+        caption = paste(
+            "Note:", sum(abs(integration_diffs_long$Difference) > 3),
+            "values outside the range [-3, 3] are not shown"
+        )
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_diffs_all_plot
+```
+
+## Integration ranks
+
+```{r supplementary-integration-ranks, fig.height = 9, out.width = "100%"}
+integration_ranks_plotting <- integration_ranks |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scVI-1", "scANVI-1", "Symphony-1"),
+            labels = c("scVI", "scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_ranks_all_plot <- ggplot(integration_ranks_plotting) +
+    ggforce::geom_sina(
+        aes(
+            x = length(unique(integration_ranks$Method)) - Rank + 1,
+            y = Method
+        ),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_ranks_means_plotting,
+        aes(
+            x = length(unique(integration_ranks$Method)) - MeanRank + 1,
+            y = Method,
+            fill = MeanRank
+        ),
+        shape = "circle filled", size = 1.5
+    ) +
+    scale_fill_viridis_c() +
+    scale_x_reverse(
+        limits = c(length(unique(integration_ranks$Method)) + 1, 0),
+        breaks = c(1, 10, 20, 30)
+    ) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Metric summary score ranks by integration",
+        x = "Metric type summary score rank",
+        fill = "Mean rank",
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_ranks_all_plot
+```
+
+## Integration ranks differences
+
+```{r supplementary-integration-ranks-diffs, fig.height = 6, out.width = "100%"}
+integration_rank_diffs_long <- integration_rank_diffs |>
+    select(-scVI, -scANVI, -Symphony) |>
+    pivot_longer(
+        cols = scANVIDiff:SymphonyDiff,
+        names_to = "Integration",
+        values_to = "Difference"
+    ) |>
+    mutate(
+        Integration = str_remove(Integration, "Diff")
+    ) |>
+    mutate(
+        Integration = factor(
+            Integration,
+            levels = c("scANVI", "Symphony")
+        ),
+        Method = factor(
+            Method,
+            levels = methods_order,
+            labels = method_names[methods_order]
+        ),
+        Type = factor(
+            Type,
+            levels = c("Overall", names(type_names)),
+            labels = c("Overall", type_names)
+        )
+    )
+
+integration_rank_diffs_all_plot <- ggplot(integration_rank_diffs_long) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(
+        aes(x = Difference, y = Method),
+        size = 1, alpha = 0.3
+    ) +
+    geom_point(
+        data = integration_ranks_diff_means_plotting,
+        aes(x = Mean, y = Method, fill = Mean),
+        shape = "circle filled", size = 1.5
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Tropic",
+        rev = TRUE
+    ) +
+    facet_grid(Integration ~ Type) +
+    labs(
+        title = "Difference in metric summary score ranks by integration",
+        x = "Difference in metric type summary score rank",
+        fill = "Mean difference",
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+    )
+
+integration_rank_diffs_all_plot
+```
+
 # Output
 
 Save output files
@@ -1524,12 +2358,78 @@ Save output files
 save_figure_files(
     benchmark_figure,
     here::here("analysis", "output", "benchmark"),
-    height = 11
+    width = 7, height = 7.5
+)
+
+save_figure_files(
+    overlaps_panel,
+    here::here("analysis", "output", "benchmark-overlaps"),
+    width = 7, height = 3
 )
 
 save_figure_files(
     integration_figure,
     here::here("analysis", "output", "integration"),
+    width = 7, height = 6
+)
+
+save_figure_files(
+    category_scores_ranks_plot,
+    here::here("analysis", "output", "category-scores-ranks"),
+    width = 7, height = 5.5
+)
+
+save_figure_files(
+    overlaps_means_sd_plot,
+    here::here("analysis", "output", "overlaps-means-sds"),
+    width = 7, height = 5
+)
+
+save_figure_files(
+    dataset_overlaps_plot,
+    here::here("analysis", "output", "dataset-overlaps"),
+    height = 2.5
+)
+
+save_figure_files(
+    integration_means_plot,
+    here::here("analysis", "output", "integration-means"),
+    width = 7, height = 4
+)
+
+save_figure_files(
+    integration_sds_plot,
+    here::here("analysis", "output", "integration-sds"),
+    width = 7, height = 4
+)
+
+save_figure_files(
+    ranks_plot,
+    here::here("analysis", "output", "metric-ranks"),
+    height = 6
+)
+
+save_figure_files(
+    integration_scores_all_plot,
+    here::here("analysis", "output", "integration-scores"),
+    height = 9
+)
+
+save_figure_files(
+    integration_diffs_all_plot,
+    here::here("analysis", "output", "integration-score-diffs"),
+    height = 6
+)
+
+save_figure_files(
+    integration_ranks_all_plot,
+    here::here("analysis", "output", "integration-ranks"),
+    height = 9
+)
+
+save_figure_files(
+    integration_rank_diffs_all_plot,
+    here::here("analysis", "output", "integration-rank-diffs"),
     height = 6
 )
 ```

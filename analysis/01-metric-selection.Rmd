@@ -1054,13 +1054,14 @@ ggplot(metrics_embedding, aes(x = UMAP1, y = UMAP2, colour = Type)) +
 
 This figure gives an overall summary of the properties considered above.
 
-```{r summary, fig.width = 8, out.width = "100%"}
+```{r summary, fig.width = 6, out.width = "100%"}
 theme_features_summary <- theme_features_pub() +
     theme(
         panel.grid = element_blank(),
         panel.spacing.y = unit(0, "cm"),
         axis.title = element_blank(),
         axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        axis.ticks.y = element_blank(),
         legend.key.width = unit(0.35, "cm")
     )
 
@@ -1114,6 +1115,8 @@ included_plot <- ggplot(included_data, aes(x = 1, y = Metric, fill = Include)) +
     theme_features_summary +
     theme(
         axis.text.x = element_blank(),
+        axis.ticks.x = element_blank(),
+        axis.ticks.y = element_line(size = 0.25),
         strip.text = element_blank(),
         strip.background = element_blank()
     )
@@ -1132,7 +1135,8 @@ ranges_plot <- ggplot(ranges_data) +
         data = included_summary,
         aes(ymax = Excluded + 1),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_vline(xintercept = c(0.25, 0.5, 0.75), colour = "grey80") +
     ggridges::geom_density_ridges(
@@ -1145,7 +1149,7 @@ ranges_plot <- ggplot(ranges_data) +
         scale = 1.0, rel_min_height = 0.01,
         bandwidth = 0.05, from = 0, to = 1,
         quantile_lines = TRUE, quantiles = 0.5,
-        colour = "white",
+        colour = "white", size = 0.3
     ) +
     scale_fill_viridis_c(option = "magma", limits = c(0, 1)) +
     scale_x_continuous(
@@ -1158,7 +1162,7 @@ ranges_plot <- ggplot(ranges_data) +
         Type ~ ., scales = "free_y", space = "free_y"
     ) +
     labs(
-        title = "Observed\nrange",
+        title = "Observed range",
         fill = "Mean range"
     ) +
     theme_features_summary +
@@ -1181,7 +1185,8 @@ features_plot <- ggplot(features_data) +
         data = included_summary,
         aes(ymax = Excluded + 1),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_vline(xintercept = c(-0.5, 0, 0.5), colour = "grey80") +
     ggridges::geom_density_ridges(
@@ -1194,7 +1199,7 @@ features_plot <- ggplot(features_data) +
         scale = 1.0, rel_min_height = 0.01,
         bandwidth = 0.1, from = -1, to = 1,
         quantile_lines = TRUE, quantiles = 0.5,
-        colour = "white",
+        colour = "white", size = 0.3
     ) +
     colorspace::scale_fill_continuous_divergingx(
         palette = "Zissou 1",
@@ -1265,7 +1270,8 @@ tech_corr_plot <- ggplot(tech_corr_data) +
         data = included_summary,
         aes(ymax = Excluded + 0.5),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_point(
         aes(x = Feature, y = Metric, colour = MeanCorr, size =  SDCorr),
@@ -1276,7 +1282,7 @@ tech_corr_plot <- ggplot(tech_corr_data) +
         limits = c(-1, 1),
         rev = TRUE
     ) +
-    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2)) +
     facet_grid(Type ~ ., scales = "free", space = "free") +
     labs(
         title = "Correlations\nwith dataset\nfeatures",
@@ -1325,7 +1331,8 @@ corr_plot <- ggplot(corr_data) +
             ),
         aes(ymax = Excluded + 0.5),
         xmin = -Inf, xmax = Inf, ymin = -Inf,
-        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+        colour = scales::alpha("#7570b3", 0.5), linewidth = 0.3,
+        fill = "#7570b3", alpha = 0.15
     ) +
     geom_point(
         aes(x = Metric2, y = Metric1, colour = Mean, size =  SD),
@@ -1336,7 +1343,7 @@ corr_plot <- ggplot(corr_data) +
         limits = c(-1, 1)
     ) +
     scale_size_continuous(
-        trans = "reverse", range = c(0.1, 2.5), guide = "none"
+        trans = "reverse", range = c(0.1, 2), guide = "none"
     ) +
     facet_grid(Metric1Type ~ Metric2Type, scales = "free", space = "free") +
     labs(
@@ -1362,6 +1369,344 @@ summary_plot <- wrap_plots(
     )
 
 summary_plot
+```
+
+# Extended figures
+
+## Correlation means and SDs
+
+```{r extended-means-sds, fig.width = 7, out.width = "100%"}
+tech_corr_means <- ggplot(tech_corr_data) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Feature, y = Metric, colour = MeanCorr),
+        shape = "square", size = 1.5
+    ) +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Tropic",
+        limits = c(-1, 1),
+        rev = TRUE
+    ) +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    facet_grid(Type ~ ., scales = "free", space = "free") +
+    labs(
+        colour = "Mean",
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+        )
+    ) +
+    theme_features_summary +
+    theme(
+        strip.text = element_blank(),
+        strip.background = element_blank(),
+        axis.ticks.y = element_line(size = 0.25)
+    )
+
+tech_corr_sds <- ggplot(tech_corr_data) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Feature, y = Metric, colour = SDCorr),
+        shape = "square", size = 1.5
+    ) +
+    scale_colour_viridis_c(option = "cividis") +
+    scale_size_continuous(trans = "reverse", range = c(0.1, 2.5)) +
+    facet_grid(Type ~ ., scales = "free", space = "free") +
+    labs(
+        colour = "SD"
+    ) +
+    guides(
+        colour = guide_colourbar(order = 1),
+        size = guide_legend(
+            theme = theme(legend.text.position = "bottom"),
+        )
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank(),
+        strip.text = element_blank(),
+        strip.background = element_blank()
+    )
+
+corr_means <- ggplot(corr_data) +
+    geom_rect(
+        data = included_summary |>
+            mutate(
+                Metric1Type = fct_relabel(Type, ~ str_replace(., " ", "\n"))
+            ),
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Metric2, y = Metric1, colour = Mean),
+        shape = "square", size = 1.5
+    ) +
+    colorspace::scale_colour_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1)
+    ) +
+    facet_grid(Metric1Type ~ Metric2Type, scales = "free", space = "free") +
+    labs(
+        colour = "Mean",
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank(),
+        strip.background.y = element_blank(),
+        strip.text.y = element_blank()
+    )
+
+corr_sds <- ggplot(corr_data) +
+    geom_rect(
+        data = included_summary |>
+            mutate(
+                Metric1Type = fct_relabel(Type, ~ str_replace(., " ", "\n"))
+            ),
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_point(
+        aes(x = Metric2, y = Metric1, colour = SD),
+        shape = "square", size = 1.5
+    ) +
+    scale_colour_viridis_c(option = "cividis") +
+    facet_grid(Metric1Type ~ Metric2Type, scales = "free", space = "free") +
+    labs(
+        colour = "SD",
+    ) +
+    theme_features_summary +
+    theme(
+        axis.text.y = element_blank()
+    )
+
+means_sds_plot <- wrap_plots(
+    wrap_plots(
+        tech_corr_means, tech_corr_sds,
+        nrow = 1,
+        widths = c(1, 1),
+        guides = "collect"
+    ) &
+        theme(
+            legend.position = "bottom",
+            legend.title.position = "top",
+            axis.text = element_text(size = 4),
+            plot.margin = margin(0, 0.5, 0, 0.5)
+        ),
+    plot_spacer() & theme(plot.margin = margin(0, 1.5, 0, 1.5)),
+    wrap_plots(
+        corr_means, corr_sds,
+        nrow = 1,
+        widths = c(1, 1),
+        guides = "collect"
+    ) &
+        theme(
+            legend.position = "bottom",
+            legend.title.position = "top",
+            strip.text = element_text(size = 4),
+            axis.text = element_text(size = 4),
+            plot.margin = margin(0, 0.5, 0, 0.5)
+        ),
+    nrow = 1,
+    widths = c(1, 0, 5)
+)
+
+means_sds_plot
+```
+
+# Additional
+
+Other figures
+
+## Correlations with technical factors
+
+```{r supplementary-technical, fig.width = 8, out.width = "100%"}
+tech_corrs <- bind_rows(
+    features_corrs |> mutate(Feature = "Features"),
+    cells_corrs |> mutate(Feature = "ReferenceCells"),
+    batches_corrs |> mutate(Feature = "ReferenceBatches"),
+    labels_corrs |> mutate(Feature = "ReferenceLabels"),
+    query_cells_corrs |> mutate(Feature = "QueryCells"),
+    query_batches_corrs |> mutate(Feature = "QueryBatches"),
+    unseen_labels_corrs |> mutate(Feature = "UnseenLabels")
+) |>
+    mutate(
+        Metric = factor(Metric, levels = metrics_order),
+        Type = factor(
+            Type,
+            levels = types_order,
+            labels = names(types_order)
+        ),
+        Feature = factor(
+            Feature,
+            levels = c(
+                "Features",
+                "ReferenceCells",
+                "ReferenceBatches",
+                "ReferenceLabels",
+                "QueryCells",
+                "QueryBatches",
+                "UnseenLabels"
+            ),
+            labels = c(
+                "Features",
+                "Reference cells",
+                "Reference batches",
+                "Reference labels",
+                "Query cells",
+                "Query batches",
+                "Unseen labels"
+            )
+        )
+    )
+
+tech_corrs_plot <- ggplot(tech_corrs) +
+    geom_rect(
+        data = included_summary,
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(aes(x = Corr, y = Metric), size = 0.5, alpha = 0.3) +
+    geom_point(
+        data = tech_corr_data,
+        aes(x = MeanCorr, y = Metric, fill = MeanCorr ),
+        shape = "circle filled", size = 2
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Tropic",
+        limits = c(-1, 1),
+        rev = TRUE
+    ) +
+    facet_grid(Type ~ Feature, scales = "free_y", space = "free_y") +
+    labs(
+        title = "Correlations with dataset features",
+        x = "Correlation",
+        fill = "Mean feature\ncorrelation"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+    )
+
+tech_corrs_plot
+```
+
+## Correlations between metrics
+
+```{r supplementary-metrics, fig.width = 8, fig.height = 11, out.width = "100%"}
+metric_corrs <- metrics |>
+    select(Dataset, Method, Integration, Metric, Value) |>
+    pivot_wider(names_from = "Metric", values_from = "Value") |>
+    group_by(Dataset, Integration) |>
+    group_split() |>
+    map_dfr(\(.metrics) {
+        .metrics |>
+            corrr::correlate(diagonal = 1, quiet = TRUE) |>
+            corrr::stretch()
+    }) |>
+    rename(
+        Metric1 = x,
+        Metric2 = y,
+        Corr    = r
+    ) |>
+    left_join(
+        metric_types,
+        by = c(Metric1 = "Metric")
+    ) |>
+    rename(Metric1Type = Type) |>
+    left_join(
+        metric_types,
+        by = c(Metric2 = "Metric")
+    ) |>
+    rename(Metric2Type = Type) |>
+    mutate(
+        Metric1 = factor(Metric1, levels = metrics_order),
+        Metric1Type = factor(
+            Metric1Type,
+            levels = types_order,
+            labels = str_replace(names(types_order), " ", "\n")
+        ),
+        Metric2 = factor(
+            Metric2,
+            levels = rev(metrics_order),
+            labels = rev(names(metrics_order))
+        ),
+        Metric2Type = factor(
+            Metric2Type,
+            levels = types_order,
+            labels = str_replace(names(types_order), " ", "\n")
+        )
+    )
+
+metric_corr_panels <- map(levels(metric_corrs$Metric2Type), function(.type2) {
+    ggplot(filter(metric_corrs, Metric2Type == .type2)) +
+    geom_rect(
+        data = included_summary |>
+            mutate(
+                Metric1Type = fct_relabel(Type, ~ str_replace(., " ", "\n"))
+            ),
+        aes(ymax = Excluded + 0.5),
+        xmin = -Inf, xmax = Inf, ymin = -Inf,
+        colour = scales::alpha("#7570b3", 0.5), fill = "#7570b3", alpha = 0.15
+    ) +
+    geom_vline(xintercept = 0, colour = "red") +
+    ggforce::geom_sina(aes(x = Corr, y = Metric1), size = 0.5, alpha = 0.3) +
+    geom_point(
+        data = filter(corr_data, Metric2Type == .type2),
+        aes(x = Mean, y = Metric1, fill = Mean ),
+        shape = "circle filled", size = 1.5
+    ) +
+    colorspace::scale_fill_continuous_diverging(
+        palette = "Purple-Green",
+        limits = c(-1, 1)
+    ) +
+    facet_grid(Metric1Type ~ Metric2, scales = "free_y", space = "free_y") +
+    labs(
+        title = paste(str_replace(.type2, "\n", " "), "metrics"),
+        x = "Correlation",
+        fill = "Mean feature\ncorrelation"
+    ) +
+    theme_features_pub() +
+    theme(
+        axis.title.y = element_blank(),
+        axis.text.x = element_text(angle = 90, hjust = 1, vjust = 0.5),
+        panel.spacing.y = unit(0, "cm"),
+        strip.text = element_text(size = 4)
+    )
+})
+
+metric_corr_plot_ref <- patchwork::wrap_plots(
+    metric_corr_panels[1:2],
+    ncol = 1,
+    guides = "collect"
+)
+
+metric_corr_plot_ref
+
+metric_corr_plot_query <- patchwork::wrap_plots(
+    metric_corr_panels[3:5],
+    ncol = 1,
+    guides = "collect"
+)
+
+metric_corr_plot_query
 ```
 
 # Conclusions
@@ -1415,7 +1760,31 @@ Save output files
 save_figure_files(
     summary_plot,
     here::here("analysis", "output", "metric-selection-summary"),
+    width = 7, height = 5.8
+)
+
+save_figure_files(
+    means_sds_plot,
+    here::here("analysis", "output", "metric-selection-means-sds"),
+    width = 7, height = 5
+)
+
+save_figure_files(
+    tech_corrs_plot,
+    here::here("analysis", "output", "technical-feature-correlations"),
     height = 6.5
+)
+
+save_figure_files(
+    metric_corr_plot_ref,
+    here::here("analysis", "output", "metric-correlations-ref"),
+    height = 8
+)
+
+save_figure_files(
+    metric_corr_plot_query,
+    here::here("analysis", "output", "metric-correlations-query"),
+    height = 12
 )
 ```
 

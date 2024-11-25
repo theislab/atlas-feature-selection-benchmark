@@ -335,7 +335,7 @@ baseline_ranges_plotting <- baseline_ranges |>
 baselines_plot <- ggplot(baseline_ranges_plotting, aes(y = fct_rev(Dataset))) +
     geom_linerange(
         aes(xmin = Lower, xmax = Upper, colour = Type),
-        linewidth = 2, alpha = 0.5
+        linewidth = 1.5, alpha = 0.5
     ) +
     geom_point(
         data = baselines_plotting,
@@ -363,7 +363,7 @@ baselines_plot <- ggplot(baseline_ranges_plotting, aes(y = fct_rev(Dataset))) +
         fill = "Baseline method",
         colour = "Metric type"
     ) +
-    facet_wrap(~ Metric) +
+    facet_wrap(~ Metric, nrow = 3) +
     theme_features() +
     theme(
         legend.position  = "bottom", 
@@ -862,7 +862,7 @@ save_figure_files(
             axis.title.y     = element_blank()
         ),
     here::here("analysis", "output", "baseline-ranges"),
-    height = 5.0
+    width = 7, height = 3.1
 )
 
 save_figure_files(
