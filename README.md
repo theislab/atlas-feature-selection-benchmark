@@ -1,6 +1,8 @@
 # Atlas feature selection benchmarking
 
+[![PAPER](https://img.shields.io/badge/Nature%20Methods-10.1038%2Fs41592--025--02624--3-eb5b25)](https://doi.org/10.1038/s41592-025-02624-3)
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.13995812.svg)](https://doi.org/10.5281/zenodo.13995812)
+[![DATA](https://img.shields.io/badge/figshare-10.6084%2Fm9.figshare.c.7521966-a60845?logo=figshare)](https://doi.org/10.6084/m9.figshare.c.7521966)
 
 This repository contains code for benchmarking the effect of feature selection on scRNA-seq atlas construction and use.
 
@@ -28,7 +30,7 @@ For more information please refer to the documentation on the [wiki](https://git
 
 ## Data files
 
-Data files for this project are available from [figshare](https://figshare.com/projects/Benchmarking_feature_selection_for_scRNA-seq_integration/214819).
+Data files for this project are available from [figshare](https://doi.org/10.6084/m9.figshare.c.7521966).
 The analysis reports in the `analysis/` directory assume:
 
 * [Metric files](https://figshare.com/articles/dataset/Metric_scores/26390911) are downloaded to the `data/` directory
